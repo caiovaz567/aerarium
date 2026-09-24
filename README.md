@@ -27,7 +27,7 @@ Outros comandos: `npm run test:watch`, `npm run format`, `npm run typecheck` e `
 
 ## Supabase local
 
-Instale e inicie o [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/), com o suporte a contêineres Linux funcionando. Depois:
+O passo a passo desta máquina está em [docs/AMBIENTE_WINDOWS.md](docs/AMBIENTE_WINDOWS.md). Instale e inicie o [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/), com o suporte a contêineres Linux funcionando. Depois:
 
 ```sh
 npm run supabase:start

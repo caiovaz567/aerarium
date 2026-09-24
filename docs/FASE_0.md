@@ -17,9 +17,11 @@ A referência `docs/referencia/aerarium-v1.html` foi preservada. O antigo `index
 
 ## Pendência de ambiente
 
-O Supabase CLI foi inicializado, mas `npm run supabase:start` falhou porque Docker e Podman não estão instalados/disponíveis no PATH. `wsl --status` também informa que WSL não está instalado. Portanto, o requisito de banco local rodando ainda não foi validado.
+O Supabase CLI foi inicializado. Na primeira validação, `npm run supabase:start` falhou por ausência de Docker/Podman.
 
-Após instalar e iniciar Docker Desktop com contêineres Linux, executar `npm run supabase:start` e verificar `npm run supabase:status` antes de encerrar integralmente a Fase 0.
+Na continuação, Docker Desktop foi instalado para o usuário e o Docker CLI respondeu com versão 29.8.0. A instalação do WSL retornou `0x80073d28` por exigir administrador. A tentativa com elevação do Windows retornou que a operação foi cancelada. O WSL continua pendente, e o banco local ainda não foi iniciado nem validado.
+
+Siga [AMBIENTE_WINDOWS.md](AMBIENTE_WINDOWS.md) para concluir o WSL e iniciar Docker Desktop. Depois, executar `npm run supabase:start` e verificar `npm run supabase:status` antes de encerrar integralmente a Fase 0.
 
 ## Pontos para as próximas fases
 
