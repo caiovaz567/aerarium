@@ -1,0 +1,1 @@
+-- Os dados fictícios serão adicionados na Fase 1, junto com as tabelas.

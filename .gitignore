@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env*
+!.env.example
+scripts/data/
+aerarium-backup-*.json
+coverage/
+playwright-report/
+test-results/
+.artifacts/
+supabase/.temp/
+supabase/.branches/
+*.tsbuildinfo
+*.log
+.DS_Store

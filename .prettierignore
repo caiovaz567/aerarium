@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.artifacts/
+package-lock.json
+docs/referencia/
+docs/PLANO_AERARIUM.md
+scripts/data/
+aerarium-backup-*.json
+.env*
+supabase/.temp/
+supabase/.branches/
