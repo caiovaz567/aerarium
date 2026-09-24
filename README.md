@@ -25,18 +25,18 @@ npm run e2e
 
 Outros comandos: `npm run test:watch`, `npm run format`, `npm run typecheck` e `npm run preview`.
 
-## Supabase local
+## Supabase na nuvem
 
-O passo a passo desta máquina está em [docs/AMBIENTE_WINDOWS.md](docs/AMBIENTE_WINDOWS.md). Instale e inicie o [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/), com o suporte a contêineres Linux funcionando. Depois:
+O desenvolvimento usa um projeto Supabase hospedado, separado da produção. Docker e WSL não são necessários. O passo a passo está em [docs/SUPABASE_NUVEM.md](docs/SUPABASE_NUVEM.md).
 
 ```sh
-npm run supabase:start
-npm run supabase:status
+npm run supabase:login
+npm run supabase:projects
 ```
 
-Copie `.env.example` para `.env.local` e preencha a chave pública `anon` exibida pelo Supabase local. Não use `service_role` em variáveis `VITE_*`. A Fase 0 ainda não conecta a interface ao banco.
+O projeto de desenvolvimento foi criado com o nome `Aerarium`. Depois de vincular esse projeto, copie `.env.example` para `.env.local` (sem sobrescrever um arquivo existente) e preencha a URL e a chave pública `sb_publishable_...` do projeto. Confira com `npm run supabase:check`. O comando testa o endpoint público de configurações de autenticação, sem escrever dados nem imprimir chaves. A Fase 0 ainda não conecta a interface ao banco.
 
-Para parar: `npm run supabase:stop`. Para recriar o banco local pelas migrations: `npm run supabase -- db reset`. Tabelas, policies e dados fictícios entram na Fase 1. Veja também a [documentação do ambiente local](https://supabase.com/docs/guides/local-development/cli/getting-started).
+Tabelas, policies e dados fictícios entram na Fase 1, por migrations versionadas. Não execute reset remoto. Os comandos `supabase:start`, `supabase:stop` e `supabase:status` ficam disponíveis apenas como alternativa local com Docker.
 
 ## Arquivos privados
 

@@ -27,7 +27,13 @@ A versão anterior do app (referência de telas e comportamento) está em `docs/
 - `npm run lint`: ESLint. `npm run format:check`: Prettier.
 - `npm run build`: verificar TypeScript e gerar o build.
 - `npm run check`: lint, formatação, testes unitários e build.
-- `npm run supabase:start`, `npm run supabase:stop`, `npm run supabase:status`: ambiente local (requer Docker).
-- `npm run supabase -- db reset`: recriar o banco local pelas migrations e seed.
+- `npm run supabase:login`: autenticar o CLI na conta Supabase.
+- `npm run supabase:projects`: listar os projetos acessíveis.
+- `npm run supabase:check`: validar acesso ao projeto em `.env.local` usando a chave pública.
+- `npm run supabase -- link --project-ref REF`: vincular o projeto de desenvolvimento.
+- `npm run supabase -- db push --dry-run`: revisar migrations pendentes antes de aplicar com `db push`.
+- `supabase:start`, `supabase:stop` e `supabase:status` são opcionais, exclusivos da stack local com Docker.
+
+Desenvolvimento usa Supabase na nuvem, conforme `docs/SUPABASE_NUVEM.md`. Não executar reset remoto nem seed/testes em produção. No front, usar `VITE_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`); nunca `sb_secret_...`, `service_role`, senha do banco ou token pessoal.
 
 Estado e pendências da fundação: `docs/FASE_0.md`.

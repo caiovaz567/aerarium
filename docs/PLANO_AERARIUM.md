@@ -42,6 +42,10 @@ O nome vem do latim: o *aerarium* era o tesouro público da Roma Antiga, guardad
 
 Região do Supabase: **São Paulo (sa-east-1)**.
 
+**Decisão de ambiente aprovada durante a Fase 0:** desenvolver com Supabase hospedado, sem exigir Docker ou WSL no computador. O projeto criado pelo usuário se chama `Aerarium` (nome sugerido inicialmente: `aerarium-dev`) e será usado para desenvolvimento e testes, com dados fictícios; produção será um projeto separado, `aerarium-prod`. A importação real só começa na Fase 3, em ambiente de teste designado. Migrations continuam versionadas em `supabase/migrations/`. O guia operacional está em `docs/SUPABASE_NUVEM.md`.
+
+Novos projetos usam a chave pública `sb_publishable_...`, na variável `VITE_SUPABASE_PUBLISHABLE_KEY`, em substituição a `VITE_SUPABASE_ANON_KEY`. Chaves `sb_secret_...`, `service_role`, senha do banco e token pessoal do CLI nunca entram em variáveis `VITE_*` nem no Git.
+
 ---
 
 ## 3. Estrutura de pastas
@@ -583,11 +587,11 @@ Regra de ouro: **uma fase por vez**. No fim de cada fase o Claude Code para, mos
 
 * Projeto Vite + React + TypeScript (modo estrito), ESLint, Prettier, Vitest, Playwright.
 * `src/styles/tokens.css` com os tokens da seção 7.1 e as fontes.
-* Supabase CLI inicializado (`supabase/`), projeto local rodando.
-* `.env.example` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. `.gitignore` com `scripts/data/`, `.env*` (menos o `.env.example`).
+* Supabase CLI inicializado (`supabase/`), autenticado e vinculado ao projeto de desenvolvimento na nuvem, na região São Paulo. Docker e WSL são opcionais.
+* `.env.example` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. `.gitignore` com `scripts/data/`, `.env*` (menos o `.env.example`).
 * README curto com os comandos.
 
-**Pronto quando:** `npm run dev` abre uma página com o cabeçalho do Aerarium (templo + nome), nos dois temas, e `npm test` passa.
+**Pronto quando:** `npm run dev` abre uma página com o cabeçalho do Aerarium (templo + nome), nos dois temas, `npm test` passa, e `npm run supabase:check` confirma acesso ao projeto de desenvolvimento com a chave pública. A checagem de conexão não substitui os testes de banco da Fase 1.
 
 ### Fase 1: banco
 
@@ -595,7 +599,7 @@ Regra de ouro: **uma fase por vez**. No fim de cada fase o Claude Code para, mos
 * `seed.sql` com dados fictícios: 3 cartões, 4 meses, parcelas no meio do cronograma, uma assinatura, uma fatura paga.
 * Teste de RLS com dois usuários.
 
-**Pronto quando:** `supabase db reset` sobe tudo sem erro, o teste de RLS passa e as views devolvem os totais esperados pro seed (conferidos à mão e documentados no próprio teste).
+**Pronto quando:** todas as migrations são aplicadas sem erro em um projeto de desenvolvimento vazio com `supabase db push`, o seed fictício é carregado nesse ambiente, o teste de RLS com dois usuários passa e as views devolvem os totais esperados pro seed (conferidos à mão e documentados no próprio teste). Testes isolam e removem apenas seus próprios dados. Não usar `db reset --linked` nem executar seed/testes em produção. A reprodução completa em banco vazio deve usar um ambiente descartável de testes, sem apagar o ambiente com dados reais.
 
 ### Fase 2: domínio em TypeScript
 
@@ -667,8 +671,8 @@ Seções 10.2 e 10.3.
 
 ### 10.1 Supabase
 
-1. Criar o projeto na região São Paulo.
-2. Aplicar as migrations (`supabase link` e `supabase db push`).
+1. Usar o projeto `Aerarium`, já criado na região São Paulo, para desenvolvimento. Criar `aerarium-prod` separadamente quando chegar a etapa de produção.
+2. Autenticar o CLI (`supabase login`), vincular o projeto de desenvolvimento (`supabase link --project-ref ...`) e aplicar migrations versionadas (`supabase db push`). Conferir o destino e executar `supabase db push --dry-run` antes de aplicar. Esses passos não exigem a stack local.
 3. **Authentication → Providers → Google:** criar um OAuth Client no Google Cloud Console (tipo "Web application") com o redirect `https://<projeto>.supabase.co/auth/v1/callback`, e colar o Client ID e o Secret no Supabase.
 4. **Authentication → URL Configuration:** Site URL com o domínio da Vercel, e `http://localhost:5173` nos redirects permitidos.
 5. Backups: conferir o que o plano do Supabase oferece, e manter a exportação manual (botão "Baixar meus dados") como segurança extra.
@@ -676,7 +680,7 @@ Seções 10.2 e 10.3.
 ### 10.2 Vercel
 
 1. Importar o repositório do GitHub.
-2. Variáveis de ambiente: `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. A chave anon pode ficar no front porque quem protege os dados é o RLS. A `service_role` **nunca** vai pra Vercel.
+2. Variáveis de ambiente: `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`, apontando para o ambiente correto (preview em desenvolvimento, produção em `aerarium-prod`). A chave pública pode ficar no front porque quem protege os dados é o RLS. `service_role` e `sb_secret_...` **nunca** vão para o front nem para as variáveis da Vercel deste app.
 3. `vercel.json` com rewrite de todas as rotas pra `index.html` (app de página única).
 4. Domínio: o `.vercel.app` serve. Domínio próprio é opcional.
 
@@ -739,7 +743,7 @@ Seções 10.2 e 10.3.
 
 **Importar meus dados (Fase 3):**
 
-> O backup está em `scripts/data/aerarium-backup-2026-09-24.json`. Rode o import pra conta do e-mail X no ambiente local primeiro e me mostre o relatório de conferência mês a mês.
+> O backup está em `scripts/data/aerarium-backup-2026-09-24.json`. Rode o import pra conta do e-mail X no projeto de teste designado para a Fase 3 e me mostre o relatório de conferência mês a mês.
 
 ---
 

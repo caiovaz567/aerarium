@@ -1,5 +1,7 @@
 # Preparar o ambiente local no Windows
 
+> Alternativa opcional. O fluxo escolhido agora usa Supabase na nuvem, sem Docker ou WSL. Siga [SUPABASE_NUVEM.md](SUPABASE_NUVEM.md). O conteúdo abaixo registra a tentativa anterior e só se aplica se houver decisão futura de usar banco local.
+
 O Aerarium usa Docker Desktop com contêineres Linux para executar o Supabase local. Não é necessário criar conta no Supabase nem configurar o Google para concluir esta etapa.
 
 ## Situação desta máquina
