@@ -32,8 +32,12 @@ A versão anterior do app (referência de telas e comportamento) está em `docs/
 - `npm run supabase:check`: validar acesso ao projeto em `.env.local` usando a chave pública.
 - `npm run supabase -- link --project-ref REF`: vincular o projeto de desenvolvimento.
 - `npm run supabase -- db push --dry-run`: revisar migrations pendentes antes de aplicar com `db push`.
+- `npm run db:test`: testes SQL com dois usuários fictícios e rollback no projeto de desenvolvimento registrado.
+- `npm run db:seed`: carregar dados fictícios idempotentes, somente no desenvolvimento.
+- `npm run db:preflight`: ensaiar migrations, seed e testes com rollback, somente em banco de desenvolvimento vazio.
 - `supabase:start`, `supabase:stop` e `supabase:status` são opcionais, exclusivos da stack local com Docker.
 
 Desenvolvimento usa Supabase na nuvem, conforme `docs/SUPABASE_NUVEM.md`. Não executar reset remoto nem seed/testes em produção. No front, usar `VITE_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`); nunca `sb_secret_...`, `service_role`, senha do banco ou token pessoal.
 
 Estado e pendências da fundação: `docs/FASE_0.md`.
+Banco, decisões consolidadas e verificações da Fase 1: `docs/FASE_1.md`. As regras em TypeScript de `src/domain` são o escopo da Fase 2.

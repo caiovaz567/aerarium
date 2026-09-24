@@ -157,6 +157,21 @@ Copia do mês anterior:
 
 Se o cartão tiver `closing_day`, um gasto lançado **depois** do fechamento cai automaticamente na fatura do mês seguinte. O modal de lançamento já mostra o mês certo selecionado, e o usuário pode trocar.
 
+### 4.9 Decisões que mudam em relação à v1 e esclarecimentos da Fase 1
+
+Escolhas consolidadas com a autonomia delegada pelo usuário. Estas regras prevalecem sobre ambiguidades do HTML e do modelo inicial abaixo:
+
+* **Centavos na última parcela:** `final_adjustment`, zero por padrão, ajusta somente a última parcela. Exemplo: R$ 100 em três parcelas de R$ 33,33 termina em R$ 33,34. O ajuste deve ser menor, em módulo, que um centavo por parcela, e não pode zerar ou negativar a última. O cálculo em centavos no TypeScript entra na Fase 2.
+* **Assinaturas sem histórico de versões:** a configuração atual de valor, cartão e atividade vale para todas as faturas abertas, inclusive de meses anteriores. Faturas pagas preservam seu total. Assinatura sem cartão é informativa e não cria automaticamente uma conta ou saída.
+* **Congelamento somente do total:** `total` usa `closed_total` quando a fatura está paga. `calculated_total` e as partes mostram o cálculo atual e podem divergir do total pago. A futura tela deve explicar essa diferença. Não há fotografia histórica de cada componente nesta versão.
+* **Reabertura preserva pagamento manual:** cada pagamento automático referencia a fatura que o criou (`invoice_id`). Reabrir remove somente esses pagamentos. Um pagamento manual anterior da mesma parcela não é substituído ao pagar a fatura e permanece ao reabri-la.
+* **Histórico coerente:** o banco recusa pagamento fora do cronograma e edição que deixe pagamentos existentes fora dele. Para mover um plano com pagamentos automáticos para outro cartão, é necessário reabrir suas faturas antes. Identificador e dono são imutáveis, assim como a referência de um mês e o cartão/mês de uma fatura.
+* **Déficit anterior:** somente a entrada `carryover` pode ser negativa; existe no máximo uma por mês. Entradas totais menores ou iguais a zero geram `committed_ratio = null`, para a interface apresentar o percentual como indisponível.
+* **Exclusão de cartão:** conforme as FKs do plano, remove suas faturas, gastos e pagamentos automáticos; preserva planos e assinaturas sem cartão e os pagamentos manuais. Isso pode alterar os resumos de meses anteriores. A futura confirmação e restauração precisam considerar todos esses registros, não apenas o cartão.
+* **Datas padrão:** datas de gasto e pagamento usam `America/Sao_Paulo`. O mês explicitamente escolhido pelo usuário prevalece sobre a sugestão de fechamento; o banco não realoca o gasto sozinho.
+* **Estimativa e importação:** alterar `other_amount` remove a estimativa; confirmar o mesmo valor exige enviar `estimated = false`. Para importar fatura paga, inserir primeiro a composição e depois marcar paga, pois o banco calcula o congelamento. Valores históricos que divirjam da composição devem ser conciliados e relatados na Fase 3, sem sobrescrever silenciosamente `closed_total`.
+* **Texto do atalho:** a recusa de "Sei o total" deve mencionar também os gastos lançados: "O total não pode ser menor que parcelas + assinaturas + gastos lançados (R$ X)".
+
 ---
 
 ## 5. Banco de dados (Supabase)
@@ -170,6 +185,8 @@ Se o cartão tiver `closing_day`, um gasto lançado **depois** do fechamento cai
 * Totais são **calculados** (views e funções), não gravados. A única exceção é `invoices.closed_total`.
 
 ### 5.2 Tabelas
+
+O SQL abaixo descreve o modelo inicial. A definição executável completa está nas migrations de `supabase/migrations/`, incluindo `final_adjustment`, `installment_payments.invoice_id`, constraints e triggers das decisões da seção 4.9. Não executar este bloco isoladamente para criar o banco.
 
 ```sql
 create table cards (

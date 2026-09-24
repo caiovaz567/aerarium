@@ -1,6 +1,6 @@
 # Aerarium
 
-Finanças pessoais, mês a mês. Vite + React + TypeScript, com Supabase nas próximas fases. O escopo completo está em [docs/PLANO_AERARIUM.md](docs/PLANO_AERARIUM.md).
+Finanças pessoais, mês a mês. Vite + React + TypeScript, com banco Supabase. O escopo completo está em [docs/PLANO_AERARIUM.md](docs/PLANO_AERARIUM.md).
 
 ## Começar
 
@@ -36,10 +36,18 @@ npm run supabase:projects
 
 O projeto de desenvolvimento foi criado com o nome `Aerarium`. Depois de vincular esse projeto, copie `.env.example` para `.env.local` (sem sobrescrever um arquivo existente) e preencha a URL e a chave pública `sb_publishable_...` do projeto. Confira com `npm run supabase:check`. O comando testa o endpoint público de configurações de autenticação, sem escrever dados nem imprimir chaves. A Fase 0 ainda não conecta a interface ao banco.
 
-Tabelas, policies e dados fictícios entram na Fase 1, por migrations versionadas. Não execute reset remoto. Os comandos `supabase:start`, `supabase:stop` e `supabase:status` ficam disponíveis apenas como alternativa local com Docker.
+O banco da Fase 1 tem migrations, RLS, views, bucket privado de fotos e seed fictício. Para verificar o projeto de desenvolvimento já vinculado:
+
+```sh
+npm run db:test
+```
+
+Os testes de banco usam dois usuários fictícios e revertem todas as alterações com rollback. Exigem o login administrativo do CLI, sem chave secreta no frontend. `npm run db:seed` carrega o seed de desenvolvimento sem duplicar registros. Ambos conferem o projeto vinculado contra `supabase/development.json`. Totais esperados e reprodução em banco vazio estão em [docs/FASE_1.md](docs/FASE_1.md).
+
+Não execute reset remoto. Os comandos `supabase:start`, `supabase:stop` e `supabase:status` ficam disponíveis apenas como alternativa local com Docker.
 
 ## Arquivos privados
 
 Backups devem ficar em `scripts/data/`, fora do Git. O backup já existente na raiz também está ignorado pelo padrão `aerarium-backup-*.json`. O servidor Vite bloqueia esses caminhos e arquivos `.env`. Nunca coloque dados pessoais em `public/`, pois seu conteúdo é distribuído no build.
 
-A referência original está preservada em `docs/referencia/aerarium-v1.html`. Estado da entrega: [docs/FASE_0.md](docs/FASE_0.md).
+A referência original está preservada em `docs/referencia/aerarium-v1.html`. Entregas: [Fase 0](docs/FASE_0.md) e [Fase 1](docs/FASE_1.md). A interface ainda não tem login nem consome as tabelas.

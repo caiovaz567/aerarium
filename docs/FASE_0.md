@@ -1,6 +1,6 @@
 # Fase 0: fundação
 
-**Status: concluída com Supabase na nuvem.** Interface validada, ferramentas configuradas, CLI autenticado, repositório vinculado e conexão remota verificada. A Fase 1 ainda não começou.
+**Status: concluída com Supabase na nuvem.** Interface validada, ferramentas configuradas, CLI autenticado, repositório vinculado e conexão remota verificada. Este registro retrata o encerramento da Fase 0; a continuação está em [FASE_1.md](FASE_1.md).
 
 ## Escopo
 

@@ -53,7 +53,7 @@ Chaves `sb_secret_...`, a antiga `service_role`, senha do banco e token pessoal 
 
 ## Banco e próximas fases
 
-Migrations continuam em `supabase/migrations/`. Na Fase 1, depois de conferir que o destino é o projeto de desenvolvimento:
+As migrations da Fase 1 já estão aplicadas, com seed e testes registrados em [FASE_1.md](FASE_1.md). Para mudanças futuras, depois de conferir que o destino é o projeto de desenvolvimento:
 
 ```sh
 npm run supabase -- migration list
@@ -62,6 +62,8 @@ npm run supabase -- db push
 ```
 
 Seed e testes usam o ambiente de desenvolvimento e seus próprios usuários/dados. Não usar `db reset --linked`, não rodar testes destrutivos em produção e não confundir a checagem de conectividade com o teste de isolamento entre usuários.
+
+`npm run db:test` executa os testes SQL com rollback. `npm run db:seed` carrega os dados fictícios persistentes. Os dois verificam o destino em `supabase/development.json`. O ensaio `npm run db:preflight` só serve para banco vazio e não deve ser executado no projeto atual já instalado.
 
 O Google OAuth entra na Fase 4. Para concluir a configuração da Fase 0, bastam o CLI autenticado, projeto de desenvolvimento vinculado e a checagem com chave pública aprovada.
 
