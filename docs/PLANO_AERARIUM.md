@@ -474,7 +474,7 @@ Cada item abaixo veio de algo que eu reclamei na v1. Valem como critério de ace
 4. **Ícones são SVG**, nunca caracteres como ‹ › +, que não centralizam direito.
 5. **Modais no centro da tela**, com fundo escurecido e desfocado e animação curta de "pop". Em tela baixa (teclado aberto no iPhone), o modal sobe pro topo. Modal nunca tem rolagem lateral.
 6. **Barras fixas ao rolar:** a barra de meses (Meses e Cartões) e a barra de voltar da tela do cartão grudam logo abaixo do cabeçalho, com uma sombra leve quando grudadas. Nesse momento a sombra do cabeçalho some, pra não duplicar.
-7. **Botão de lançar** flutuante no canto inferior direito, acima da barra de abas, sempre visível. As três abas ficam com larguras iguais. No computador vira o botão "+ Lançar" ao lado das abas.
+7. **Botão de lançar** sempre visível. **Mudança da Fase 4, pedida pelo usuário:** no celular, a barra de baixo tem cinco espaços iguais (Meses, Cartões, **+** no meio e levantado, Assinaturas, Ajustes), e a engrenagem sai do cabeçalho. No computador vira o botão "+ Lançar" ao lado das abas, e Ajustes fica no cabeçalho.
 8. **Lixeira visível** nas linhas, sem precisar abrir o item. Toda exclusão mostra um aviso com **Desfazer**.
 9. **Sem legenda e sem texto óbvio** quando o visual já explica (ex.: linha tracejada = previsão).
 10. **Sem repetição:** a observação da fatura só aparece quando diz algo além do nome padrão.
@@ -490,7 +490,7 @@ Cada item abaixo veio de algo que eu reclamei na v1. Valem como critério de ace
 ### 8.1 Estrutura geral
 
 * **Cabeçalho** fixo: marca à esquerda; à direita o estado de sincronização ("Salvo", "Salvando…", "Não salvou") e o botão Excel.
-* **Abas** embaixo no celular: Meses, Cartões, Assinaturas. No computador (a partir de 760px), um seletor em pílula logo abaixo do cabeçalho.
+* **Abas** embaixo no celular: Meses, Cartões, o botão +, Assinaturas e Ajustes (item 7 da seção 7.4). No computador (a partir de 760px), um seletor em pílula logo abaixo do cabeçalho, com Ajustes no cabeçalho.
 * **Rotas:** `/meses/:ym`, `/cartoes`, `/cartoes/:id`, `/assinaturas`, `/config`, `/login`.
 * Área segura do iPhone respeitada (`viewport-fit=cover` + `env(safe-area-inset-*)`).
 * Conteúdo com largura máxima de 720px no computador, centralizado.

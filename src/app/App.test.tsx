@@ -42,7 +42,7 @@ describe('rotas protegidas', () => {
 })
 
 describe('esqueleto', () => {
-  it('cabeçalho com marca, estado salvo e configurações', () => {
+  it('cabeçalho com marca, estado salvo e ajustes', () => {
     const { sync } = renderApp('/meses/2026-09')
     const banner = screen.getByRole('banner')
     expect(banner).toContainElement(
@@ -56,13 +56,12 @@ describe('esqueleto', () => {
       'data-state',
       'error',
     )
-    expect(screen.getByRole('link', { name: 'Configurações' })).toHaveAttribute(
-      'href',
-      '/config',
-    )
+    // One in the header (computer) and one in the bottom bar (phone); CSS shows one.
+    for (const link of screen.getAllByRole('link', { name: 'Ajustes' }))
+      expect(link).toHaveAttribute('href', '/config')
   })
 
-  it('três abas e navegação entre elas', () => {
+  it('abas e navegação entre elas', () => {
     renderApp('/meses/2026-09')
     const tabs = ['Meses', 'Cartões', 'Assinaturas']
     for (const name of tabs)

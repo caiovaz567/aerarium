@@ -139,8 +139,9 @@ body.has-stuck .app-header.scrolled {
   left: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--line);
   background: var(--surface);
 }
@@ -163,15 +164,14 @@ body.has-stuck .app-header.scrolled {
 .tab[aria-current='page'] {
   color: var(--accent);
 }
+/* Phones: raised, in the middle of the bottom bar. */
 .tab-add {
-  position: fixed;
-  right: max(16px, env(safe-area-inset-right, 0px));
-  bottom: calc(78px + env(safe-area-inset-bottom, 0px));
-  z-index: 21;
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
+  justify-self: center;
+  width: 56px;
+  height: 56px;
+  margin-top: -22px;
   padding: 0;
   border: 0;
   border-radius: 20px;
@@ -206,14 +206,32 @@ body.has-stuck .app-header.scrolled {
   max-width: calc(var(--content-width) + 32px);
   margin-inline: auto;
   padding: 4px max(16px, env(safe-area-inset-right, 0px))
-    calc(160px + env(safe-area-inset-bottom, 0px))
+    calc(104px + env(safe-area-inset-bottom, 0px))
     max(16px, env(safe-area-inset-left, 0px));
 }
 .app-content:focus {
   outline: none;
 }
 
+/* Five slots get tight on the narrowest phones. */
+@media (max-width: 360px) {
+  .tab {
+    font-size: 10.5px;
+  }
+}
+
+/* Ajustes: bottom bar on phones, header on wide screens. */
+.header-config {
+  display: none;
+}
+
 @media (min-width: 760px) {
+  .header-config {
+    display: grid;
+  }
+  .tab-config {
+    display: none;
+  }
   .tabs {
     position: static;
     display: flex;
@@ -241,8 +259,8 @@ body.has-stuck .app-header.scrolled {
     box-shadow: var(--shadow);
   }
   .tab-add {
-    position: static;
     order: 9;
+    margin-top: 0;
     display: flex;
     align-items: center;
     gap: 6px;

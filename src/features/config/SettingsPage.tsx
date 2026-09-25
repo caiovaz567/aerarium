@@ -10,7 +10,7 @@ export function SettingsPage() {
 
   return (
     <section className="panel">
-      <h2>Configurações</h2>
+      <h2>Ajustes</h2>
       <p className="muted">
         Conectado como <b>{email}</b>
       </p>

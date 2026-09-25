@@ -7,9 +7,9 @@
 - **Login** (`src/features/login`): entrar com Google, entrar ou criar conta com e-mail e senha, "Esqueci a senha" e a página `/redefinir-senha`, que recebe o link do e-mail. Mensagens de erro do Supabase traduzidas (`src/data/auth.ts`). Depois de entrar, vai pro mês atual (ou pra tela que a pessoa tentou abrir).
 - **Rotas protegidas** (`src/app/routes.tsx`): `/meses/:ym`, `/cartoes`, `/cartoes/:id`, `/assinaturas`, `/config`. Sem sessão, tudo leva a `/login`. Mês inválido volta pro mês atual.
 - **Sessão** (`src/app/AuthProvider.tsx`): cliente Supabase com PKCE e só a chave pública (`src/data/supabase.ts`, que recusa outra chave). Ao sair, o cache de dados é apagado para não aparecer nada da conta anterior.
-- **Cabeçalho**: marca, estado "Salvo / Salvando… / Não salvou" e botão de Configurações.
-- **Abas**: embaixo no celular, com larguras iguais; em pílula abaixo do cabeçalho a partir de 760px.
-- **Botão de lançar**: flutuante acima das abas no celular, "+ Lançar" ao lado das abas no computador. Por enquanto abre um modal avisando que o lançamento chega na Fase 7.
+- **Cabeçalho**: marca e estado "Salvo / Salvando… / Não salvou". No computador, também a engrenagem de Ajustes.
+- **Abas**: no celular, barra embaixo com cinco espaços iguais: Meses, Cartões, + (no meio, levantado), Assinaturas e Ajustes. A partir de 760px, pílula abaixo do cabeçalho.
+- **Botão de lançar**: no meio da barra no celular, "+ Lançar" ao lado das abas no computador. Por enquanto abre um modal avisando que o lançamento chega na Fase 7.
 - **Componentes** (`src/ui`): `Modal` (centro, fundo escurecido e desfocado, pop, Esc, foco preso e devolvido, sobe pro topo em tela baixa), aviso com Desfazer (`useToast`, 6 s com ação e 2,2 s sem, como a v1), `StickyBar` (gruda abaixo do cabeçalho, com sombra; a do cabeçalho some), `EmptyState`, ícones SVG.
 - **TanStack Query** (`src/data/queryClient.ts`): cliente configurado, rastreador do estado de sincronização e o helper `optimistic` (aplica na hora, desfaz se o servidor falhar, recarrega no fim).
 - **Configurações**: mostra a conta e o botão Sair (só este aparelho). Baixar dados e apagar conta ficam na Fase 10.
@@ -18,7 +18,7 @@
 ## Decisões
 
 - Login com e-mail e senha além do Google, por decisão do usuário (plano atualizado na Fase 3).
-- Entrada para Configurações: ícone de engrenagem no cabeçalho. O plano não definia onde ficaria.
+- Ajustes (a tela `/config`): na barra de baixo no celular, com o + no meio, a pedido do usuário depois de ver a primeira versão (antes, a engrenagem ficava no cabeçalho e o + flutuava no canto). No computador, engrenagem no cabeçalho. O nome curto "Ajustes" cabe nos cinco espaços.
 - "Sair" encerra só a sessão deste aparelho (`scope: 'local'`).
 - Senha com pelo menos 6 caracteres, o mínimo padrão do Supabase.
 - React Router 8 no modo declarativo (`BrowserRouter` + `Routes`).

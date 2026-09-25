@@ -35,33 +35,40 @@ test('abas navegam, sem rolagem lateral em nenhuma tela', async ({
       path: testInfo.outputPath(`${name.toLowerCase()}.png`),
     })
   }
-  await page.getByRole('link', { name: 'Configurações' }).click()
+  await page.getByRole('link', { name: 'Ajustes' }).click()
   await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible()
   await noSideScroll(page)
   expect(errors).toEqual([])
 })
 
-test('celular: abas embaixo com larguras iguais e + acima delas', async ({
+test('celular: barra embaixo com 5 espaços iguais e o + no meio', async ({
   page,
   isMobile,
 }) => {
   test.skip(!isMobile, 'Layout de celular.')
   await page.goto(`/meses/${currentMonth()}`)
   const viewport = page.viewportSize()!
-  const nav = await page
+  const nav = (await page
     .getByRole('navigation', { name: 'Seções' })
-    .boundingBox()
-  expect(Math.round(nav!.y + nav!.height)).toBe(viewport.height)
-  const widths = await page
+    .boundingBox())!
+  expect(Math.round(nav.y + nav.height)).toBe(viewport.height)
+  const tabs = await page
     .locator('.tab')
-    .evaluateAll((tabs) => tabs.map((tab) => tab.getBoundingClientRect().width))
-  expect(widths).toHaveLength(3)
-  expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1)
-  const add = await page
+    .evaluateAll((items) =>
+      items.map((item) => item.getBoundingClientRect().width),
+    )
+  expect(tabs).toHaveLength(4)
+  expect(Math.max(...tabs) - Math.min(...tabs)).toBeLessThan(1)
+  await expect(
+    page.getByRole('banner').getByRole('link', { name: 'Ajustes' }),
+  ).toBeHidden()
+  const add = (await page
     .getByRole('button', { name: 'Lançar gasto ou entrada' })
-    .boundingBox()
-  expect(add!.y + add!.height).toBeLessThanOrEqual(nav!.y)
-  expect(add!.x + add!.width).toBeGreaterThan(viewport.width - 40)
+    .boundingBox())!
+  // Centered horizontally, raised above the bar, and never covering the tabs.
+  expect(Math.abs(add.x + add.width / 2 - viewport.width / 2)).toBeLessThan(2)
+  expect(add.y).toBeLessThan(nav.y)
+  expect(add.width).toBeLessThanOrEqual(tabs[0]!)
 })
 
 test('computador: abas em pílula abaixo do cabeçalho com "Lançar" ao lado', async ({

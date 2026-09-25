@@ -70,7 +70,7 @@ test('entra, cai no mês atual e sai', async ({ page }) => {
   await page.getByLabel('Senha').fill(process.env.E2E_PASSWORD!)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(new RegExp(`/meses/${currentMonth()}$`))
-  await page.getByRole('link', { name: 'Configurações' }).click()
+  await page.getByRole('link', { name: 'Ajustes' }).click()
   await expect(page.getByText(process.env.E2E_EMAIL!)).toBeVisible()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect(page).toHaveURL(/\/login$/)

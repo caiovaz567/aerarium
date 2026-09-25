@@ -51,7 +51,12 @@ function Header() {
       <div className="app-header-inner">
         <Brand />
         <SyncStatus />
-        <Link className="icon-button" to="/config" aria-label="Configurações">
+        {/* On phones, Ajustes lives in the bottom bar instead. */}
+        <Link
+          className="icon-button header-config"
+          to="/config"
+          aria-label="Ajustes"
+        >
           <GearIcon />
         </Link>
       </div>
@@ -88,6 +93,10 @@ export function AppShell() {
         <NavLink className="tab" to="/assinaturas">
           <RepeatIcon />
           Assinaturas
+        </NavLink>
+        <NavLink className="tab tab-config" to="/config">
+          <GearIcon />
+          Ajustes
         </NavLink>
       </nav>
       <main id="conteudo" className="app-content" tabIndex={-1}>
