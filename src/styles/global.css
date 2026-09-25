@@ -356,6 +356,16 @@ body.has-stuck .app-header.scrolled {
 .panel p {
   margin: 0;
 }
+.panel h3 {
+  margin: 8px 0 0;
+  font-size: 15px;
+}
+.plain-list {
+  margin: 0;
+  padding: 0;
+  color: var(--muted);
+  list-style: none;
+}
 
 /* Buttons and fields */
 .btn {

@@ -1,6 +1,6 @@
 # Fase 4: login e esqueleto
 
-**Status: código concluído. Falta o usuário ligar o Google no painel** (passos abaixo). Login com e-mail e senha já funciona no projeto de desenvolvimento.
+**Status: concluída.** Login com e-mail e senha e com Google funcionando no projeto de desenvolvimento.
 
 ## Entrega
 
@@ -12,7 +12,7 @@
 - **Botão de lançar**: no meio da barra no celular, "+ Lançar" ao lado das abas no computador. Por enquanto abre um modal avisando que o lançamento chega na Fase 7.
 - **Componentes** (`src/ui`): `Modal` (centro, fundo escurecido e desfocado, pop, Esc, foco preso e devolvido, sobe pro topo em tela baixa), aviso com Desfazer (`useToast`, 6 s com ação e 2,2 s sem, como a v1), `StickyBar` (gruda abaixo do cabeçalho, com sombra; a do cabeçalho some), `EmptyState`, ícones SVG.
 - **TanStack Query** (`src/data/queryClient.ts`): cliente configurado, rastreador do estado de sincronização e o helper `optimistic` (aplica na hora, desfaz se o servidor falhar, recarrega no fim).
-- **Configurações**: mostra a conta e o botão Sair (só este aparelho). Baixar dados e apagar conta ficam na Fase 10.
+- **Ajustes**: mostra a conta, as formas de entrar (e-mail e senha, Google) e o botão Sair (só este aparelho). Com o botão **Conectar conta Google**, quem entrou com e-mail e senha liga o Google à mesma conta, mesmo com outro e-mail (`linkIdentity`). Baixar dados e apagar conta ficam na Fase 10.
 - **Meses** já tem a barra do mês (anterior e próximo). Lista de meses e "+" pra criar mês ficam na Fase 5.
 
 ## Decisões
@@ -70,7 +70,9 @@ Enquanto o Google estiver desligado, o botão "Entrar com Google" mostra "Entrar
 ## Pontos para depois
 
 - **E-mails para outras pessoas:** o serviço de e-mail padrão do Supabase é limitado (poucos envios por hora e, pelas regras atuais, só para membros da equipe do projeto). Para outras pessoas criarem conta com e-mail e senha, configurar um SMTP próprio antes da produção (Fase 9 ou 10).
-- **Mesma pessoa, Google e senha:** se o e-mail do Google for o mesmo da conta com senha, o Supabase deve juntar as duas formas de login na mesma conta. Conferir quando o Google estiver ligado.
+- **Mesma pessoa, Google e senha:** o Supabase só junta as contas sozinho quando o e-mail é o mesmo. O Google do usuário usa outro e-mail, então o primeiro login criou uma conta nova e vazia. Com o ok do usuário, essa conta vazia foi apagada, e o botão "Conectar conta Google" foi criado. Ele exige ligar **Allow manual linking** no Supabase (Authentication → Sign In / Providers).
+- **Tela de consentimento do Google:** mostra `idvbrfbudoxvubxpqdzs.supabase.co`. Plano: na publicação, registrar um domínio próprio e verificar a marca no Google (grátis, pede política de privacidade), para aparecer "Aerarium". Domínio personalizado no Supabase exige plano pago.
+- **Google em modo de teste:** só entram os e-mails em "Usuários de teste" no Google Auth Platform. Publicar o app lá na Fase 9.
 - Proteção contra senhas vazadas depende do plano Pro do Supabase (ver Fase 1).
 
 ## Próxima fase

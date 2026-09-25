@@ -16,6 +16,23 @@ const MESSAGES: Record<string, string> = {
     'Muitas tentativas em pouco tempo. Espera um pouco e tenta de novo.',
   provider_disabled: 'Entrar com Google ainda não está ligado.',
   otp_expired: 'Esse link expirou. Pede outro.',
+  manual_linking_disabled: 'Conectar outra forma de entrar está desligado.',
+  identity_already_exists:
+    'Essa conta Google já está ligada a outra conta do Aerarium.',
+}
+
+/** Error the auth server appends to the URL when it sends the person back. */
+export function authErrorFromUrl(url: string): string | null {
+  const { search, hash } = new URL(url)
+  const params = new URLSearchParams(search)
+  new URLSearchParams(hash.slice(1)).forEach((value, key) =>
+    params.set(key, value),
+  )
+  if (!params.has('error') && !params.has('error_code')) return null
+  return authMessage({
+    code: params.get('error_code') ?? undefined,
+    status: 400,
+  })
 }
 
 /** Friendly Portuguese text for Supabase Auth errors. */
@@ -51,6 +68,15 @@ export async function signInWithGoogle() {
   const { error } = await supabase().auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: `${origin()}/` },
+  })
+  if (error) throw new Error(authMessage(error))
+}
+
+/** Adds Google to the account that is signed in, so both ways reach the same data. */
+export async function linkGoogle() {
+  const { error } = await supabase().auth.linkIdentity({
+    provider: 'google',
+    options: { redirectTo: `${origin()}/config` },
   })
   if (error) throw new Error(authMessage(error))
 }

@@ -1,6 +1,6 @@
 import { MutationObserver } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
-import { authMessage } from './auth'
+import { authErrorFromUrl, authMessage } from './auth'
 import { createQueryClient, optimistic, SyncTracker } from './queryClient'
 
 describe('estado de sincronização', () => {
@@ -72,6 +72,20 @@ describe('atualização otimista', () => {
 })
 
 describe('mensagens de login', () => {
+  it('lê o erro que o servidor manda de volta na URL', () => {
+    expect(authErrorFromUrl('http://x/config')).toBeNull()
+    expect(
+      authErrorFromUrl(
+        'http://x/config?error=server_error&error_code=identity_already_exists',
+      ),
+    ).toBe('Essa conta Google já está ligada a outra conta do Aerarium.')
+    expect(
+      authErrorFromUrl(
+        'http://x/config#error=x&error_code=manual_linking_disabled',
+      ),
+    ).toBe('Conectar outra forma de entrar está desligado.')
+  })
+
   it('traduz códigos conhecidos, falta de rede e o resto', () => {
     expect(authMessage({ code: 'invalid_credentials', status: 400 })).toBe(
       'E-mail ou senha errados.',

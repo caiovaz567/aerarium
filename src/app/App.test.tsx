@@ -1,5 +1,6 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import type { Session } from '@supabase/supabase-js'
 import { renderApp } from '../test/renderApp'
 import { currentMonth } from './paths'
 import { monthName } from '../domain/months'
@@ -99,10 +100,43 @@ describe('esqueleto', () => {
     expect(add).toHaveFocus()
   })
 
-  it('configurações mostram a conta e o botão de sair', () => {
-    renderApp('/config')
+  it('ajustes mostram a conta, as formas de entrar e o botão de sair', () => {
+    renderApp('/config', {
+      status: 'signed-in',
+      recovery: false,
+      session: {
+        user: {
+          email: 'teste@example.test',
+          identities: [{ provider: 'email', identity_data: {} }],
+        },
+      } as Session,
+    })
     expect(screen.getByText('teste@example.test')).toBeInTheDocument()
+    expect(screen.getByText('E-mail e senha')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Conectar conta Google' }),
+    ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument()
+  })
+
+  it('com Google conectado, mostra a conta e esconde o botão', () => {
+    renderApp('/config', {
+      status: 'signed-in',
+      recovery: false,
+      session: {
+        user: {
+          email: 'teste@example.test',
+          identities: [
+            { provider: 'email', identity_data: {} },
+            { provider: 'google', identity_data: { email: 'g@gmail.test' } },
+          ],
+        },
+      } as Session,
+    })
+    expect(screen.getByText('Google (g@gmail.test)')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Conectar conta Google' }),
+    ).not.toBeInTheDocument()
   })
 
   it('cartão inexistente oferece voltar', () => {
