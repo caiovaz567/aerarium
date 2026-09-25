@@ -1,0 +1,232 @@
+import type { ChartPoint } from '../../domain/chartSeries'
+import {
+  installmentSchedule,
+  installmentStatus,
+} from '../../domain/installments'
+import { invoiceTotals } from '../../domain/invoices'
+import { cents, sumMoney, type Cents } from '../../domain/money'
+import { dayMonth, type ISODate, type Month } from '../../domain/months'
+import type { Card, Finance, InvoiceRow, PlanRow } from '../../data/finance'
+
+/** The three numbers on the card page. */
+export function cardStats(cardId: string, finance: Finance) {
+  const statuses = finance.plans
+    .filter((plan) => plan.cardId === cardId)
+    .map((plan) => installmentStatus(plan, finance.payments))
+  const open = statuses.filter((item) => !item.settled)
+  return {
+    outstanding: sumMoney(open.map((item) => item.outstanding)),
+    lastMonth:
+      open
+        .map((item) => item.lastMonth)
+        .sort()
+        .pop() ?? null,
+    subscriptions: sumMoney(
+      finance.subscriptions
+        .filter((item) => item.cardId === cardId && item.active)
+        .map((item) => item.amount),
+    ),
+  }
+}
+
+/** "em aberto", "paga", "estimada", "previsão", "sem fatura", "nada previsto". */
+export function pointStatus(point: ChartPoint, current: Month) {
+  if (point.kind === 'empty')
+    return {
+      text: point.month > current ? 'nada previsto' : 'sem fatura',
+      tone: '',
+    }
+  if (point.kind === 'forecast')
+    return {
+      text: point.invoiceId ? 'estimada' : 'previsão',
+      tone: 'forecast',
+    }
+  return point.paid
+    ? { text: 'paga', tone: 'ok' }
+    : { text: 'em aberto', tone: '' }
+}
+
+export interface DetailItem {
+  readonly key: string
+  readonly kind: 'installment' | 'subscription' | 'other'
+  readonly name: string
+  readonly sub: string
+  readonly amount: Cents
+}
+
+/** "O que tem em outubro": what makes up the selected month. */
+export function monthDetail(
+  cardId: string,
+  point: ChartPoint,
+  finance: Finance,
+  current: Month,
+) {
+  const items: DetailItem[] = []
+  let warning: Cents | null = null
+  if (point.kind !== 'empty') {
+    for (const plan of finance.plans.filter((item) => item.cardId === cardId))
+      for (const item of installmentSchedule(plan, finance.payments))
+        if (item.month === point.month)
+          items.push({
+            key: `plan-${plan.id}`,
+            kind: 'installment',
+            name: plan.description,
+            sub: item.paidOn
+              ? `paga em ${dayMonth(item.paidOn)}`
+              : `parcela ${item.number}/${item.totalInstallments}`,
+            amount: item.amount,
+          })
+    const subscriptions = finance.subscriptions.filter(
+      (item) => item.cardId === cardId && item.active,
+    )
+    if (subscriptions.length)
+      items.push({
+        key: 'subscriptions',
+        kind: 'subscription',
+        name: 'Assinaturas',
+        sub: subscriptions.map((item) => item.name).join(', '),
+        amount: sumMoney(subscriptions.map((item) => item.amount)),
+      })
+    const invoice = finance.invoices.find((item) => item.id === point.invoiceId)
+    if (invoice) {
+      const expenses = finance.expenses.filter(
+        (item) => item.invoiceId === invoice.id,
+      )
+      for (const expense of expenses)
+        items.push({
+          key: `expense-${expense.id}`,
+          kind: 'other',
+          name: expense.description,
+          sub: `gasto em ${dayMonth(expense.spentOn)}`,
+          amount: expense.amount,
+        })
+      if (invoice.otherAmount > 0 && point.kind === 'real')
+        items.push({
+          key: 'other',
+          kind: 'other',
+          name: expenses.length
+            ? 'Outros gastos não detalhados'
+            : 'Outros gastos',
+          sub: 'o resto da fatura',
+          amount: invoice.otherAmount,
+        })
+      const totals = invoiceTotals(invoice, finance)
+      if (invoice.paid && totals.total < totals.calculatedTotal)
+        warning = cents(totals.calculatedTotal - totals.total)
+    }
+  }
+  const emptyText =
+    point.kind === 'empty'
+      ? point.month > current
+        ? 'Nada previsto pra esse mês ainda'
+        : 'Nenhuma fatura desse cartão nesse mês'
+      : items.length
+        ? null
+        : 'Nada previsto nesse mês'
+  return { items, warning, emptyText }
+}
+
+export interface PlanLine {
+  readonly plan: PlanRow
+  readonly number: number
+  readonly totalInstallments: number
+  readonly amount: Cents
+  readonly paid: boolean
+  readonly paidOn: ISODate | null
+  readonly paidWithInvoice: boolean
+  readonly remaining: number
+  readonly outstanding: Cents
+}
+
+/** A plan as seen in one month (its installment there, if any). */
+export function planLine(
+  plan: PlanRow,
+  target: Month,
+  finance: Finance,
+): PlanLine | null {
+  const item = installmentSchedule(plan, finance.payments).find(
+    (entry) => entry.month === target,
+  )
+  if (!item) return null
+  const status = installmentStatus(plan, finance.payments)
+  return {
+    plan,
+    number: item.number,
+    totalInstallments: item.totalInstallments,
+    amount: item.amount,
+    paid: item.paid,
+    paidOn: item.paidOn,
+    paidWithInvoice: item.source === 'invoice',
+    remaining: status.remaining,
+    outstanding: status.outstanding,
+  }
+}
+
+export interface CardBlock {
+  readonly card: Card
+  readonly invoice: InvoiceRow | null
+  readonly total: Cents
+  readonly installments: Cents
+  readonly subscriptions: Cents
+  /** Total minus installments and subscriptions; negative means the invoice is short. */
+  readonly other: Cents
+  readonly plans: readonly PlanLine[]
+  readonly subscriptionNames: readonly string[]
+}
+
+/** Aba Cartões for one month (seção 8.3). */
+export function cardsView(finance: Finance, target: Month) {
+  const blocks: CardBlock[] = finance.cards.map((card) => {
+    const invoice =
+      finance.invoices.find(
+        (item) => item.cardId === card.id && item.month === target,
+      ) ?? null
+    const totals = invoice ? invoiceTotals(invoice, finance) : null
+    const plans = finance.plans
+      .filter((plan) => plan.cardId === card.id)
+      .flatMap((plan) => planLine(plan, target, finance) ?? [])
+    const subscriptions = finance.subscriptions.filter(
+      (item) => item.cardId === card.id && item.active,
+    )
+    const total = totals?.total ?? cents(0)
+    const installments = sumMoney(plans.map((item) => item.amount))
+    const subscriptionTotal = sumMoney(subscriptions.map((item) => item.amount))
+    return {
+      card,
+      invoice,
+      total,
+      installments,
+      subscriptions: subscriptionTotal,
+      other: cents(total - installments - subscriptionTotal),
+      plans,
+      subscriptionNames: subscriptions.map((item) => item.name),
+    }
+  })
+  const withInvoice = blocks.filter((block) => block.invoice)
+  const loose = finance.plans
+    .filter((plan) => plan.cardId === null)
+    .flatMap((plan) => planLine(plan, target, finance) ?? [])
+  const statuses = finance.plans.map((plan) => ({
+    plan,
+    status: installmentStatus(plan, finance.payments),
+  }))
+  return {
+    blocks,
+    loose,
+    totals: {
+      total: sumMoney(withInvoice.map((block) => block.total)),
+      installments: sumMoney(withInvoice.map((block) => block.installments)),
+      subscriptions: sumMoney(withInvoice.map((block) => block.subscriptions)),
+      other: sumMoney(withInvoice.map((block) => block.other)),
+    },
+    outstanding: sumMoney(statuses.map((item) => item.status.outstanding)),
+    archived: statuses
+      .filter((item) => item.status.settled)
+      .map(({ plan, status }) => ({
+        plan,
+        settledOn: status.settledOn,
+        paidCount: status.paidCount,
+        card: finance.cards.find((card) => card.id === plan.cardId) ?? null,
+      })),
+  }
+}

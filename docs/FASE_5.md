@@ -45,4 +45,4 @@ Achado pelos testes e corrigido: numa versão nova do Chrome, `window.scrollTo` 
 
 ## Próxima fase
 
-A Fase 6 faz a aba Cartões e a tela de cada cartão, com o gráfico (seções 8.3 e 8.4). Aguardar confirmação antes de iniciá-la, conforme `CLAUDE.md`.
+A Fase 6 faz a aba Cartões e a tela de cada cartão, com o gráfico (seções 8.3 e 8.4): ver [FASE_6.md](FASE_6.md).

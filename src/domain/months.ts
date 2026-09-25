@@ -89,3 +89,9 @@ export function dayMonth(value: ISODate): string {
   const date = isoDate(value)
   return `${date.slice(8, 10)}/${date.slice(5, 7)}`
 }
+
+/** "24/09/2026". */
+export function dateBR(value: ISODate): string {
+  const date = isoDate(value)
+  return `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)}`
+}

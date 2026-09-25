@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
-import { currentMonth, monthPath } from '../../app/paths'
+import { currentMonth, monthPath, parseMonth } from '../../app/paths'
 import type { BillRow, Finance, IncomeRow } from '../../data/finance'
-import { monthSnapshot, ops } from '../../data/financeOps'
+import { ops } from '../../data/financeOps'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
-import {
-  addMonths,
-  month,
-  monthLabel,
-  monthName,
-  type Month,
-} from '../../domain/months'
+import { monthLabel, monthName, type Month } from '../../domain/months'
 import { EmptyState } from '../../ui/EmptyState'
+import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { BillModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
 import { IncomesBlock, OutflowsBlock } from './MonthBlocks'
-import { MonthBar } from './MonthBar'
-import { MonthListModal, NewMonthModal } from './MonthModals'
+import { NewMonthModal } from './MonthModals'
+import { MonthNav } from './MonthNav'
 import { MonthSummary } from './MonthSummary'
 import {
   buildNewMonth,
@@ -31,29 +26,11 @@ type Dialog =
   | { readonly kind: 'income'; readonly id: string }
   | { readonly kind: 'bill'; readonly id: string }
   | { readonly kind: 'invoice'; readonly id: string }
-  | { readonly kind: 'list' }
   | {
       readonly kind: 'new'
       readonly target: Month
       readonly previous: Month | null
     }
-
-function parseMonth(value: string | undefined): Month | null {
-  try {
-    return value ? month(value) : null
-  } catch {
-    return null
-  }
-}
-
-function Loading() {
-  return (
-    <div aria-busy="true" aria-label="Carregando">
-      <div className="skel" />
-      <div className="skel" />
-    </div>
-  )
-}
 
 /** /meses and /: opens today's month, or the closest one that exists. */
 export function MonthsIndex() {
@@ -79,23 +56,7 @@ export function MonthsPage() {
 
   if (query.isPending) return <Loading />
   // A failed background reload keeps showing what is already loaded.
-  if (!query.data)
-    return (
-      <EmptyState
-        title="Não consegui carregar seus dados"
-        action={
-          <button
-            type="button"
-            className="btn primary"
-            onClick={() => query.refetch()}
-          >
-            Tentar de novo
-          </button>
-        }
-      >
-        Confere a internet e tenta de novo.
-      </EmptyState>
-    )
+  if (!query.data) return <LoadError onRetry={() => query.refetch()} />
 
   const finance: Finance = query.data
   const refs = finance.months.map((item) => item.ref)
@@ -161,8 +122,6 @@ export function MonthsPage() {
     )
 
   const view = monthView(finance, selected)
-  const openNew = () =>
-    setDialog({ kind: 'new', target: addMonths(last, 1), previous: last })
 
   const deleteIncome = (income: IncomeRow) => {
     run(ops.removeIncome(income))
@@ -204,21 +163,6 @@ export function MonthsPage() {
       },
     )
   }
-  const deleteMonth = () => {
-    const snapshot = monthSnapshot(finance, selected)
-    const index = refs.indexOf(selected)
-    const neighbor = refs[index - 1] ?? refs[index + 1]!
-    run(ops.removeMonth(snapshot))
-    close()
-    navigate(monthPath(neighbor), { replace: true })
-    toast(`${monthLabel(selected)} excluído`, {
-      label: 'Desfazer',
-      onClick: () => {
-        run(ops.createMonth(snapshot))
-        navigate(monthPath(selected))
-      },
-    })
-  }
 
   const income =
     dialog?.kind === 'income'
@@ -236,12 +180,7 @@ export function MonthsPage() {
   return (
     <>
       <h2 className="visually-hidden">Meses</h2>
-      <MonthBar
-        selected={selected}
-        months={refs}
-        onOpenList={() => setDialog({ kind: 'list' })}
-        onCreateNext={openNew}
-      />
+      <MonthNav finance={finance} selected={selected} pathFor={monthPath} />
       <MonthSummary month={selected} balance={view.balance} />
       <IncomesBlock
         incomes={view.incomes}
@@ -320,21 +259,6 @@ export function MonthsPage() {
           }}
         />
       )}
-      {dialog?.kind === 'list' && (
-        <MonthListModal
-          finance={finance}
-          selected={selected}
-          next={addMonths(last, 1)}
-          onClose={close}
-          onPick={(ref) => {
-            close()
-            navigate(monthPath(ref))
-          }}
-          onCreate={openNew}
-          onDelete={deleteMonth}
-        />
-      )}
-      {newMonthDialog}
     </>
   )
 }

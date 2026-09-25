@@ -9,6 +9,7 @@ import '@fontsource/figtree/latin-700.css'
 import './styles/tokens.css'
 import './styles/global.css'
 import './styles/months.css'
+import './styles/cards.css'
 import { App } from './app/App'
 
 const root = document.getElementById('root')

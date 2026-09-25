@@ -329,6 +329,55 @@ export const ops = {
     }
   },
 
+  /** Deleting a plan also deletes its payments (cascade). */
+  removePlan(plan: PlanRow): FinanceOp {
+    return {
+      run: () => ok(table('installment_plans').delete().eq('id', plan.id)),
+      apply: (f) => ({
+        ...f,
+        plans: without(f.plans, plan.id),
+        payments: f.payments.filter((item) => item.planId !== plan.id),
+      }),
+    }
+  },
+
+  restorePlan(plan: PlanRow, payments: readonly PaymentRow[]): FinanceOp {
+    return {
+      run: async () => {
+        await ok(
+          table('installment_plans').insert({
+            id: plan.id,
+            card_id: plan.cardId,
+            description: plan.description,
+            installment_amount: toDecimal(plan.installmentAmount),
+            final_adjustment: toDecimal(plan.finalAdjustment),
+            total_installments: plan.totalInstallments,
+            first_month: monthDate(plan.firstMonth),
+            note: plan.note,
+          }),
+        )
+        if (payments.length)
+          await ok(
+            table('installment_payments').insert(
+              payments.map((item) => ({
+                id: item.id,
+                plan_id: item.planId,
+                month: monthDate(item.month),
+                paid_on: item.paidOn,
+                source: item.source,
+                invoice_id: item.invoiceId,
+              })),
+            ),
+          )
+      },
+      apply: (f) => ({
+        ...f,
+        plans: [...f.plans, plan],
+        payments: [...f.payments, ...payments],
+      }),
+    }
+  },
+
   /** A whole month with its rows. If any insert fails, the month is removed again. */
   createMonth(month: MonthSnapshot): FinanceOp {
     return {

@@ -1,5 +1,4 @@
 import { Link } from 'react-router'
-import { monthPath } from '../../app/paths'
 import { monthLabel, monthName, type Month } from '../../domain/months'
 import {
   ChevronDownIcon,
@@ -13,11 +12,13 @@ import { StickyBar } from '../../ui/StickyBar'
 export function MonthBar({
   selected,
   months,
+  pathFor,
   onOpenList,
   onCreateNext,
 }: {
   readonly selected: Month
   readonly months: readonly Month[]
+  readonly pathFor: (month: Month) => string
   readonly onOpenList: () => void
   readonly onCreateNext: () => void
 }) {
@@ -29,7 +30,7 @@ export function MonthBar({
       {previous ? (
         <Link
           className="icon-button"
-          to={monthPath(previous)}
+          to={pathFor(previous)}
           aria-label="Mês anterior"
         >
           <ChevronLeftIcon />
@@ -59,7 +60,7 @@ export function MonthBar({
       {next ? (
         <Link
           className="icon-button"
-          to={monthPath(next)}
+          to={pathFor(next)}
           aria-label="Próximo mês"
         >
           <ChevronRightIcon />
