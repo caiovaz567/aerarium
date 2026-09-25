@@ -1,7 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { unlink, writeFile } from 'node:fs/promises'
-import { currentMonth } from './session'
 
 const background = { light: 'rgb(241, 242, 246)', dark: 'rgb(13, 15, 21)' }
 
@@ -69,7 +68,7 @@ test('entra, cai no mês atual e sai', async ({ page }) => {
   await page.getByLabel('E-mail').fill(process.env.E2E_EMAIL!)
   await page.getByLabel('Senha').fill(process.env.E2E_PASSWORD!)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
-  await expect(page).toHaveURL(new RegExp(`/meses/${currentMonth()}$`))
+  await expect(page).toHaveURL(/\/meses\/\d{4}-\d{2}$/)
   await page.getByRole('link', { name: 'Ajustes' }).click()
   await expect(page.getByText(process.env.E2E_EMAIL!)).toBeVisible()
   await page.getByRole('button', { name: 'Sair' }).click()

@@ -11,14 +11,3 @@ export function signedIn() {
   )
   test.use({ storageState: SESSION })
 }
-
-/** Current month as the app computes it (São Paulo time). */
-export function currentMonth() {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Sao_Paulo',
-    year: 'numeric',
-    month: '2-digit',
-  }).formatToParts(new Date())
-  const get = (type: string) => parts.find((part) => part.type === type)!.value
-  return `${get('year')}-${get('month')}`
-}

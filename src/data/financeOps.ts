@@ -1,0 +1,406 @@
+import { setInvoicePaid } from '../domain/invoices'
+import { toDecimal, type Cents } from '../domain/money'
+import type { ISODate, Month } from '../domain/months'
+import type {
+  BillRow,
+  ExpenseRow,
+  Finance,
+  IncomeRow,
+  InvoiceRow,
+  MonthEntry,
+  PaymentRow,
+  PlanRow,
+} from './finance'
+import { supabase } from './supabase'
+
+/**
+ * One change: `run` writes to Supabase (RLS applies), `apply` shows it on screen
+ * right away. The cache is refetched afterwards, so `apply` only has to be close.
+ */
+export interface FinanceOp {
+  readonly run: () => Promise<void>
+  readonly apply: (finance: Finance) => Finance
+}
+
+type Result = PromiseLike<{ error: { message: string } | null }>
+async function ok(request: Result) {
+  const { error } = await request
+  if (error) throw new Error(error.message)
+}
+const table = (name: string) => supabase().from(name)
+const monthDate = (value: Month) => `${value}-01`
+
+function patch<T extends { readonly id: string }>(
+  list: readonly T[],
+  id: string,
+  changes: Partial<T>,
+): T[] {
+  return list.map((item) => (item.id === id ? { ...item, ...changes } : item))
+}
+const without = <T extends { readonly id: string }>(
+  list: readonly T[],
+  id: string,
+) => list.filter((item) => item.id !== id)
+
+const incomeRecord = (row: IncomeRow) => ({
+  id: row.id,
+  month_id: row.monthId,
+  description: row.description,
+  amount: toDecimal(row.amount),
+  kind: row.kind,
+  sort_order: row.sortOrder,
+})
+const billRecord = (row: BillRow) => ({
+  id: row.id,
+  month_id: row.monthId,
+  description: row.description,
+  amount: toDecimal(row.amount),
+  paid: row.paid,
+  paid_on: row.paidOn,
+  sort_order: row.sortOrder,
+})
+const invoiceRecord = (row: InvoiceRow) => ({
+  id: row.id,
+  card_id: row.cardId,
+  month_id: row.monthId,
+  other_amount: toDecimal(row.otherAmount),
+  estimated: row.estimated,
+  note: row.note,
+})
+const expenseRecord = (row: ExpenseRow) => ({
+  id: row.id,
+  invoice_id: row.invoiceId,
+  description: row.description,
+  amount: toDecimal(row.amount),
+  spent_on: row.spentOn,
+})
+
+/** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
+async function insertInvoices(
+  invoices: readonly InvoiceRow[],
+  expenses: readonly ExpenseRow[],
+) {
+  if (invoices.length)
+    await ok(table('invoices').insert(invoices.map(invoiceRecord)))
+  if (expenses.length)
+    await ok(table('invoice_expenses').insert(expenses.map(expenseRecord)))
+  for (const invoice of invoices.filter((item) => item.paid))
+    await ok(
+      table('invoices')
+        .update({ paid: true, paid_on: invoice.paidOn })
+        .eq('id', invoice.id),
+    )
+}
+
+/** Mirror of the database trigger: paying an invoice pays its card installments. */
+function withInvoicePaid(
+  finance: Finance,
+  invoiceId: string,
+  paid: boolean,
+  date: ISODate,
+): Finance {
+  // Always the latest row, so an edit queued just before is not lost.
+  const invoice = finance.invoices.find((item) => item.id === invoiceId)
+  if (!invoice) return finance
+  const unpaid = { ...invoice, paid: false, paidOn: null, closedTotal: null }
+  const result = setInvoicePaid(paid ? unpaid : invoice, paid, date, finance)
+  const payments: PaymentRow[] = result.payments.map(
+    (item) =>
+      finance.payments.find(
+        (old) => old.planId === item.planId && old.month === item.month,
+      ) ?? { ...item, id: `pendente-${item.planId}-${item.month}` },
+  )
+  return {
+    ...finance,
+    invoices: patch(finance.invoices, invoiceId, result.invoice),
+    payments,
+  }
+}
+
+export const ops = {
+  billPaid(bill: BillRow, paid: boolean, today: ISODate): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('bills')
+            .update({ paid, paid_on: paid ? today : null })
+            .eq('id', bill.id),
+        ),
+      apply: (f) => ({
+        ...f,
+        bills: patch(f.bills, bill.id, { paid, paidOn: paid ? today : null }),
+      }),
+    }
+  },
+
+  invoicePaid(invoice: InvoiceRow, paid: boolean, today: ISODate): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('invoices')
+            .update({ paid, paid_on: paid ? today : null })
+            .eq('id', invoice.id),
+        ),
+      apply: (f) => withInvoicePaid(f, invoice.id, paid, today),
+    }
+  },
+
+  /** Standalone installments (no card) are paid one by one, dated today. */
+  loosePaid(plan: PlanRow, target: Month, paid: boolean, today: ISODate) {
+    const id = crypto.randomUUID()
+    return {
+      run: () =>
+        paid
+          ? ok(
+              table('installment_payments').insert({
+                id,
+                plan_id: plan.id,
+                month: monthDate(target),
+                paid_on: today,
+                source: 'manual',
+              }),
+            )
+          : ok(
+              table('installment_payments')
+                .delete()
+                .eq('plan_id', plan.id)
+                .eq('month', monthDate(target))
+                .eq('source', 'manual'),
+            ),
+      apply: (f) => ({
+        ...f,
+        payments: paid
+          ? [
+              ...f.payments,
+              {
+                id,
+                planId: plan.id,
+                month: target,
+                paidOn: today,
+                source: 'manual' as const,
+                invoiceId: null,
+              },
+            ]
+          : f.payments.filter(
+              (item) => !(item.planId === plan.id && item.month === target),
+            ),
+      }),
+    } satisfies FinanceOp
+  },
+
+  updateIncome(
+    income: IncomeRow,
+    changes: { description: string; amount: Cents },
+  ): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('incomes')
+            .update({
+              description: changes.description,
+              amount: toDecimal(changes.amount),
+            })
+            .eq('id', income.id),
+        ),
+      apply: (f) => ({ ...f, incomes: patch(f.incomes, income.id, changes) }),
+    }
+  },
+
+  removeIncome(income: IncomeRow): FinanceOp {
+    return {
+      run: () => ok(table('incomes').delete().eq('id', income.id)),
+      apply: (f) => ({ ...f, incomes: without(f.incomes, income.id) }),
+    }
+  },
+
+  restoreIncome(income: IncomeRow): FinanceOp {
+    return {
+      run: () => ok(table('incomes').insert(incomeRecord(income))),
+      apply: (f) => ({ ...f, incomes: [...f.incomes, income] }),
+    }
+  },
+
+  updateBill(
+    bill: BillRow,
+    changes: { description: string; amount: Cents; paid: boolean },
+    today: ISODate,
+  ): FinanceOp {
+    const paidOn = changes.paid ? (bill.paidOn ?? today) : null
+    return {
+      run: () =>
+        ok(
+          table('bills')
+            .update({
+              description: changes.description,
+              amount: toDecimal(changes.amount),
+              paid: changes.paid,
+              paid_on: paidOn,
+            })
+            .eq('id', bill.id),
+        ),
+      apply: (f) => ({
+        ...f,
+        bills: patch(f.bills, bill.id, { ...changes, paidOn }),
+      }),
+    }
+  },
+
+  removeBill(bill: BillRow): FinanceOp {
+    return {
+      run: () => ok(table('bills').delete().eq('id', bill.id)),
+      apply: (f) => ({ ...f, bills: without(f.bills, bill.id) }),
+    }
+  },
+
+  restoreBill(bill: BillRow): FinanceOp {
+    return {
+      run: () => ok(table('bills').insert(billRecord(bill))),
+      apply: (f) => ({ ...f, bills: [...f.bills, bill] }),
+    }
+  },
+
+  /** Other amount, estimate flag and note of an invoice. */
+  updateInvoice(
+    invoice: InvoiceRow,
+    changes: { otherAmount: Cents; estimated: boolean; note: string | null },
+  ): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('invoices')
+            .update({
+              other_amount: toDecimal(changes.otherAmount),
+              estimated: changes.estimated,
+              note: changes.note,
+            })
+            .eq('id', invoice.id),
+        ),
+      apply: (f) => ({
+        ...f,
+        invoices: patch(f.invoices, invoice.id, changes),
+      }),
+    }
+  },
+
+  removeExpense(expense: ExpenseRow): FinanceOp {
+    return {
+      run: () => ok(table('invoice_expenses').delete().eq('id', expense.id)),
+      apply: (f) => ({ ...f, expenses: without(f.expenses, expense.id) }),
+    }
+  },
+
+  restoreExpense(expense: ExpenseRow): FinanceOp {
+    return {
+      run: () => ok(table('invoice_expenses').insert(expenseRecord(expense))),
+      apply: (f) => ({ ...f, expenses: [...f.expenses, expense] }),
+    }
+  },
+
+  /** Deleting an invoice also drops its launched expenses and automatic payments. */
+  removeInvoice(invoice: InvoiceRow): FinanceOp {
+    return {
+      run: () => ok(table('invoices').delete().eq('id', invoice.id)),
+      apply: (f) => ({
+        ...f,
+        invoices: without(f.invoices, invoice.id),
+        expenses: f.expenses.filter((item) => item.invoiceId !== invoice.id),
+        payments: f.payments.filter((item) => item.invoiceId !== invoice.id),
+      }),
+    }
+  },
+
+  restoreInvoice(
+    invoice: InvoiceRow,
+    expenses: readonly ExpenseRow[],
+    today: ISODate,
+  ): FinanceOp {
+    return {
+      run: () => insertInvoices([invoice], expenses),
+      apply: (f) => {
+        const restored = {
+          ...f,
+          invoices: [...f.invoices, { ...invoice, paid: false }],
+          expenses: [...f.expenses, ...expenses],
+        }
+        return invoice.paid
+          ? withInvoicePaid(restored, invoice.id, true, invoice.paidOn ?? today)
+          : restored
+      },
+    }
+  },
+
+  /** A whole month with its rows. If any insert fails, the month is removed again. */
+  createMonth(month: MonthSnapshot): FinanceOp {
+    return {
+      run: async () => {
+        await ok(
+          table('months').insert({
+            id: month.entry.id,
+            ref: monthDate(month.entry.ref),
+          }),
+        )
+        try {
+          if (month.incomes.length)
+            await ok(table('incomes').insert(month.incomes.map(incomeRecord)))
+          if (month.bills.length)
+            await ok(table('bills').insert(month.bills.map(billRecord)))
+          await insertInvoices(month.invoices, month.expenses)
+        } catch (error) {
+          await table('months').delete().eq('id', month.entry.id)
+          throw error
+        }
+      },
+      apply: (f) => ({
+        ...f,
+        months: [...f.months, month.entry].sort((a, b) =>
+          a.ref.localeCompare(b.ref),
+        ),
+        incomes: [...f.incomes, ...month.incomes],
+        bills: [...f.bills, ...month.bills],
+        invoices: [...f.invoices, ...month.invoices],
+        expenses: [...f.expenses, ...month.expenses],
+      }),
+    }
+  },
+
+  removeMonth(month: MonthSnapshot): FinanceOp {
+    const invoiceIds = new Set(month.invoices.map((item) => item.id))
+    return {
+      run: () => ok(table('months').delete().eq('id', month.entry.id)),
+      apply: (f) => ({
+        ...f,
+        months: without(f.months, month.entry.id),
+        incomes: f.incomes.filter((item) => item.monthId !== month.entry.id),
+        bills: f.bills.filter((item) => item.monthId !== month.entry.id),
+        invoices: f.invoices.filter((item) => !invoiceIds.has(item.id)),
+        expenses: f.expenses.filter((item) => !invoiceIds.has(item.invoiceId)),
+        payments: f.payments.filter(
+          (item) => !item.invoiceId || !invoiceIds.has(item.invoiceId),
+        ),
+      }),
+    }
+  },
+}
+
+/** Everything that belongs to one month, used to create, delete and undo. */
+export interface MonthSnapshot {
+  readonly entry: MonthEntry
+  readonly incomes: readonly IncomeRow[]
+  readonly bills: readonly BillRow[]
+  readonly invoices: readonly InvoiceRow[]
+  readonly expenses: readonly ExpenseRow[]
+}
+
+export function monthSnapshot(finance: Finance, ref: Month): MonthSnapshot {
+  const entry = finance.months.find((item) => item.ref === ref)
+  if (!entry) throw new RangeError('Mês não encontrado.')
+  const invoices = finance.invoices.filter((item) => item.monthId === entry.id)
+  const ids = new Set(invoices.map((item) => item.id))
+  return {
+    entry,
+    incomes: finance.incomes.filter((item) => item.monthId === entry.id),
+    bills: finance.bills.filter((item) => item.monthId === entry.id),
+    invoices,
+    expenses: finance.expenses.filter((item) => ids.has(item.invoiceId)),
+  }
+}

@@ -84,3 +84,18 @@ export const GoogleIcon = () => (
     />
   </svg>
 )
+export const CheckIcon = () => (
+  <Stroke strokeWidth={3}>
+    <path d="M5 12.5l4.5 4.5L19 7.5" />
+  </Stroke>
+)
+export const TrashIcon = () => (
+  <Stroke>
+    <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+  </Stroke>
+)
+export const ChevronDownIcon = () => (
+  <Stroke strokeWidth={2.4}>
+    <path d="M6 9l6 6 6-6" />
+  </Stroke>
+)

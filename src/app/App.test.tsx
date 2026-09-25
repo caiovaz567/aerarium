@@ -4,6 +4,8 @@ import type { Session } from '@supabase/supabase-js'
 import { renderApp } from '../test/renderApp'
 import { currentMonth } from './paths'
 import { monthName } from '../domain/months'
+import { defaultMonth } from '../features/meses/monthView'
+import { financeFixture } from '../test/financeFixture'
 
 describe('rotas protegidas', () => {
   it('sem sessão, qualquer tela leva pro login', () => {
@@ -24,7 +26,11 @@ describe('rotas protegidas', () => {
 
   it('com sessão, a raiz abre o mês atual', () => {
     renderApp('/')
-    expect(screen.getByText(monthName(currentMonth()))).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        monthName(defaultMonth(financeFixture(), currentMonth())!),
+      ),
+    ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Meses/ })).toHaveAttribute(
       'aria-current',
       'page',
@@ -38,7 +44,11 @@ describe('rotas protegidas', () => {
 
   it('mês inválido volta pro mês atual', () => {
     renderApp('/meses/2026-13')
-    expect(screen.getByText(monthName(currentMonth()))).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        monthName(defaultMonth(financeFixture(), currentMonth())!),
+      ),
+    ).toBeInTheDocument()
   })
 })
 
@@ -77,13 +87,16 @@ describe('esqueleto', () => {
     ).toBeInTheDocument()
   })
 
-  it('barra de meses anda pra frente e pra trás, virando o ano', () => {
-    renderApp('/meses/2026-12')
-    fireEvent.click(screen.getByRole('link', { name: 'Próximo mês' }))
-    expect(screen.getByText('Janeiro')).toBeInTheDocument()
-    expect(screen.getByText('2027')).toBeInTheDocument()
+  it('barra de meses anda só entre meses que existem, com + no último', () => {
+    renderApp('/meses/2026-09')
     fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
-    expect(screen.getByText('Dezembro')).toBeInTheDocument()
+    expect(screen.getByText('Agosto')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('link', { name: 'Próximo mês' }))
+    expect(screen.getByText('Setembro')).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Criar próximo mês' }),
+    ).toBeInTheDocument()
   })
 
   it('botão de lançar abre o modal; Esc fecha e devolve o foco', () => {

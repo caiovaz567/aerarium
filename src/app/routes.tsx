@@ -4,11 +4,10 @@ import { CardsPage } from '../features/cartoes/CardsPage'
 import { SettingsPage } from '../features/config/SettingsPage'
 import { LoginPage } from '../features/login/LoginPage'
 import { ResetPasswordPage } from '../features/login/ResetPasswordPage'
-import { MonthsPage } from '../features/meses/MonthsPage'
+import { MonthsIndex, MonthsPage } from '../features/meses/MonthsPage'
 import { SubscriptionsPage } from '../features/assinaturas/SubscriptionsPage'
 import { AppShell } from './AppShell'
 import { useAuth } from './authContext'
-import { currentMonth, monthPath } from './paths'
 
 function RequireAuth() {
   const auth = useAuth()
@@ -26,10 +25,6 @@ function RequireAuth() {
   return <Outlet />
 }
 
-function ToCurrentMonth() {
-  return <Navigate to={monthPath(currentMonth())} replace />
-}
-
 export function AppRoutes() {
   return (
     <Routes>
@@ -37,14 +32,14 @@ export function AppRoutes() {
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route index element={<ToCurrentMonth />} />
-          <Route path="meses" element={<ToCurrentMonth />} />
+          <Route index element={<MonthsIndex />} />
+          <Route path="meses" element={<MonthsIndex />} />
           <Route path="meses/:ym" element={<MonthsPage />} />
           <Route path="cartoes" element={<CardsPage />} />
           <Route path="cartoes/:id" element={<CardPage />} />
           <Route path="assinaturas" element={<SubscriptionsPage />} />
           <Route path="config" element={<SettingsPage />} />
-          <Route path="*" element={<ToCurrentMonth />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Route>
     </Routes>

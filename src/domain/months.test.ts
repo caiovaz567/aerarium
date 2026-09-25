@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  dayMonth,
   addMonths,
   dateInSaoPaulo,
   daysInMonth,
@@ -50,6 +51,7 @@ describe('meses e datas civis', () => {
     expect(monthName(month('2026-03'))).toBe('Março')
     expect(monthShort(month('2026-09'))).toBe('set')
     expect(monthShort(month('2027-01'))).toBe('jan/27')
+    expect(dayMonth(isoDate('2026-09-23'))).toBe('23/09')
   })
   it('usa São Paulo na virada de dia em UTC', () => {
     expect(dateInSaoPaulo(new Date('2027-01-01T02:59:59Z'))).toBe('2026-12-31')

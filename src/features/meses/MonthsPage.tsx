@@ -1,9 +1,42 @@
-import { Link, Navigate, useParams } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Navigate, useNavigate, useParams } from 'react-router'
 import { currentMonth, monthPath } from '../../app/paths'
-import { addMonths, month, monthName, type Month } from '../../domain/months'
-import { ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
+import type { BillRow, Finance, IncomeRow } from '../../data/finance'
+import { monthSnapshot, ops } from '../../data/financeOps'
+import { today, useFinance, useFinanceOp } from '../../data/useFinance'
+import {
+  addMonths,
+  month,
+  monthLabel,
+  monthName,
+  type Month,
+} from '../../domain/months'
 import { EmptyState } from '../../ui/EmptyState'
-import { StickyBar } from '../../ui/StickyBar'
+import { useToast } from '../../ui/toastContext'
+import { BillModal, IncomeModal } from './EditModals'
+import { InvoiceModal } from './InvoiceModal'
+import { IncomesBlock, OutflowsBlock } from './MonthBlocks'
+import { MonthBar } from './MonthBar'
+import { MonthListModal, NewMonthModal } from './MonthModals'
+import { MonthSummary } from './MonthSummary'
+import {
+  buildNewMonth,
+  defaultMonth,
+  monthView,
+  type CardOutflow,
+  type LooseOutflow,
+} from './monthView'
+
+type Dialog =
+  | { readonly kind: 'income'; readonly id: string }
+  | { readonly kind: 'bill'; readonly id: string }
+  | { readonly kind: 'invoice'; readonly id: string }
+  | { readonly kind: 'list' }
+  | {
+      readonly kind: 'new'
+      readonly target: Month
+      readonly previous: Month | null
+    }
 
 function parseMonth(value: string | undefined): Month | null {
   try {
@@ -13,37 +46,295 @@ function parseMonth(value: string | undefined): Month | null {
   }
 }
 
+function Loading() {
+  return (
+    <div aria-busy="true" aria-label="Carregando">
+      <div className="skel" />
+      <div className="skel" />
+    </div>
+  )
+}
+
+/** /meses and /: opens today's month, or the closest one that exists. */
+export function MonthsIndex() {
+  const query = useFinance()
+  if (query.isPending) return <Loading />
+  const target = query.data && defaultMonth(query.data, currentMonth())
+  return <Navigate to={monthPath(target ?? currentMonth())} replace />
+}
+
 export function MonthsPage() {
   const { ym } = useParams()
+  const navigate = useNavigate()
+  const query = useFinance()
+  const run = useFinanceOp()
+  const toast = useToast()
+  const [dialog, setDialog] = useState<Dialog | null>(null)
+  const close = () => setDialog(null)
+  // Like v1: a new month starts from the top.
+  // Braces matter: newer browsers return a promise from scrollTo.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [ym])
+
+  if (query.isPending) return <Loading />
+  // A failed background reload keeps showing what is already loaded.
+  if (!query.data)
+    return (
+      <EmptyState
+        title="Não consegui carregar seus dados"
+        action={
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => query.refetch()}
+          >
+            Tentar de novo
+          </button>
+        }
+      >
+        Confere a internet e tenta de novo.
+      </EmptyState>
+    )
+
+  const finance: Finance = query.data
+  const refs = finance.months.map((item) => item.ref)
   const selected = parseMonth(ym)
-  if (!selected) return <Navigate to={monthPath(currentMonth())} replace />
+  const last = refs[refs.length - 1]
+
+  const createMonth = (
+    target: Month,
+    previous: Month | null,
+    options: { copy: boolean; carryover: boolean },
+  ) => {
+    run(ops.createMonth(buildNewMonth(finance, target, previous, options)))
+    close()
+    navigate(monthPath(target))
+    toast(`${monthLabel(target)} criado`)
+  }
+  const newMonthDialog = dialog?.kind === 'new' && (
+    <NewMonthModal
+      finance={finance}
+      target={dialog.target}
+      previous={dialog.previous}
+      onClose={close}
+      onCreate={(options) =>
+        createMonth(dialog.target, dialog.previous, options)
+      }
+    />
+  )
+
+  if (!last)
+    return (
+      <>
+        <h2 className="visually-hidden">Meses</h2>
+        <EmptyState
+          title="Nenhum mês ainda"
+          action={
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() =>
+                setDialog({
+                  kind: 'new',
+                  target: currentMonth(),
+                  previous: null,
+                })
+              }
+            >
+              Criar {monthLabel(currentMonth())}
+            </button>
+          }
+        >
+          Crie o primeiro mês pra começar.
+        </EmptyState>
+        {newMonthDialog}
+      </>
+    )
+
+  if (!selected || !refs.includes(selected))
+    return (
+      <Navigate
+        to={monthPath(defaultMonth(finance, currentMonth()) ?? last)}
+        replace
+      />
+    )
+
+  const view = monthView(finance, selected)
+  const openNew = () =>
+    setDialog({ kind: 'new', target: addMonths(last, 1), previous: last })
+
+  const deleteIncome = (income: IncomeRow) => {
+    run(ops.removeIncome(income))
+    close()
+    toast(`${income.description} excluído`, {
+      label: 'Desfazer',
+      onClick: () => run(ops.restoreIncome(income)),
+    })
+  }
+  const deleteBill = (bill: BillRow) => {
+    run(ops.removeBill(bill))
+    close()
+    toast(`${bill.description} excluído`, {
+      label: 'Desfazer',
+      onClick: () => run(ops.restoreBill(bill)),
+    })
+  }
+  const deleteInvoice = ({ invoice, card }: CardOutflow) => {
+    const expenses = finance.expenses.filter(
+      (item) => item.invoiceId === invoice.id,
+    )
+    run(ops.removeInvoice(invoice))
+    toast(`Fatura ${card.name} excluída`, {
+      label: 'Desfazer',
+      onClick: () => run(ops.restoreInvoice(invoice, expenses, today())),
+    })
+  }
+  const loosePaid = (item: LooseOutflow, paid: boolean) => {
+    const day = today()
+    run(ops.loosePaid(item.plan, selected, paid, day))
+    const remaining = item.remaining + (paid ? -1 : 1)
+    toast(
+      paid
+        ? `${item.plan.description}: ${remaining ? `faltam ${remaining}` : 'quitado'}`
+        : `${item.plan.description}: pagamento desfeito`,
+      {
+        label: 'Desfazer',
+        onClick: () => run(ops.loosePaid(item.plan, selected, !paid, day)),
+      },
+    )
+  }
+  const deleteMonth = () => {
+    const snapshot = monthSnapshot(finance, selected)
+    const index = refs.indexOf(selected)
+    const neighbor = refs[index - 1] ?? refs[index + 1]!
+    run(ops.removeMonth(snapshot))
+    close()
+    navigate(monthPath(neighbor), { replace: true })
+    toast(`${monthLabel(selected)} excluído`, {
+      label: 'Desfazer',
+      onClick: () => {
+        run(ops.createMonth(snapshot))
+        navigate(monthPath(selected))
+      },
+    })
+  }
+
+  const income =
+    dialog?.kind === 'income'
+      ? view.incomes.find((item) => item.id === dialog.id)
+      : undefined
+  const bill =
+    dialog?.kind === 'bill'
+      ? view.bills.find((item) => item.id === dialog.id)
+      : undefined
+  const invoice =
+    dialog?.kind === 'invoice'
+      ? view.cards.find((item) => item.invoice.id === dialog.id)
+      : undefined
+
   return (
     <>
       <h2 className="visually-hidden">Meses</h2>
-      <StickyBar className="monthbar">
-        <Link
-          className="icon-button"
-          to={monthPath(addMonths(selected, -1))}
-          aria-label="Mês anterior"
-        >
-          <ChevronLeftIcon />
-        </Link>
-        <p className="monthname">
-          {monthName(selected)}
-          <small>{selected.slice(0, 4)}</small>
-        </p>
-        <Link
-          className="icon-button"
-          to={monthPath(addMonths(selected, 1))}
-          aria-label="Próximo mês"
-        >
-          <ChevronRightIcon />
-        </Link>
-      </StickyBar>
-      <EmptyState title="Em construção">
-        Entradas, saídas e faturas de {monthName(selected).toLowerCase()} chegam
-        aqui na próxima etapa.
-      </EmptyState>
+      <MonthBar
+        selected={selected}
+        months={refs}
+        onOpenList={() => setDialog({ kind: 'list' })}
+        onCreateNext={openNew}
+      />
+      <MonthSummary month={selected} balance={view.balance} />
+      <IncomesBlock
+        incomes={view.incomes}
+        total={view.balance.incomes}
+        carryHint={view.carryHint}
+        onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
+        onDelete={deleteIncome}
+        onUseCarry={(hint) => {
+          run(
+            ops.updateIncome(hint.income, {
+              description: hint.income.description,
+              amount: hint.available,
+            }),
+          )
+          toast(`Sobra de ${monthName(hint.previous)} colocada`)
+        }}
+      />
+      <OutflowsBlock
+        view={view}
+        onInvoice={(item) =>
+          setDialog({ kind: 'invoice', id: item.invoice.id })
+        }
+        onInvoicePaid={(item, paid) =>
+          run(ops.invoicePaid(item.invoice, paid, today()))
+        }
+        onInvoiceDelete={deleteInvoice}
+        onLoosePaid={loosePaid}
+        onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
+        onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
+        onBillDelete={deleteBill}
+      />
+
+      {income && (
+        <IncomeModal
+          income={income}
+          onClose={close}
+          onDelete={() => deleteIncome(income)}
+          onSave={(changes) => {
+            run(ops.updateIncome(income, changes))
+            close()
+            toast('Salvo')
+          }}
+        />
+      )}
+      {bill && (
+        <BillModal
+          bill={bill}
+          onClose={close}
+          onDelete={() => deleteBill(bill)}
+          onSave={(changes) => {
+            run(ops.updateBill(bill, changes, today()))
+            close()
+            toast('Salvo')
+          }}
+        />
+      )}
+      {invoice && (
+        <InvoiceModal
+          invoice={invoice.invoice}
+          card={invoice.card}
+          finance={finance}
+          onClose={close}
+          onRemoveExpense={(expense) => {
+            run(ops.removeExpense(expense))
+            toast('Gasto removido', {
+              label: 'Desfazer',
+              onClick: () => run(ops.restoreExpense(expense)),
+            })
+          }}
+          onSave={({ paid, ...changes }) => {
+            run(ops.updateInvoice(invoice.invoice, changes))
+            if (paid !== invoice.invoice.paid)
+              run(ops.invoicePaid(invoice.invoice, paid, today()))
+            close()
+            toast('Salvo')
+          }}
+        />
+      )}
+      {dialog?.kind === 'list' && (
+        <MonthListModal
+          finance={finance}
+          selected={selected}
+          next={addMonths(last, 1)}
+          onClose={close}
+          onPick={(ref) => {
+            close()
+            navigate(monthPath(ref))
+          }}
+          onCreate={openNew}
+          onDelete={deleteMonth}
+        />
+      )}
+      {newMonthDialog}
     </>
   )
 }

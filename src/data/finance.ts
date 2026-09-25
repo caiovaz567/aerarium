@@ -1,0 +1,206 @@
+import { fromDecimal } from '../domain/money'
+import { isoDate, month, type ISODate, type Month } from '../domain/months'
+import type {
+  Bill,
+  Income,
+  InstallmentPayment,
+  InstallmentPlan,
+  Invoice,
+  InvoiceExpense,
+  Subscription,
+} from '../domain/types'
+import { supabase } from './supabase'
+
+// Everything one person has, as the domain sees it plus ids and texts.
+// Small enough to load at once; RLS guarantees it is only theirs.
+export interface Card {
+  readonly id: string
+  readonly name: string
+  readonly color: string | null
+  readonly photoPath: string | null
+  readonly closingDay: number | null
+  readonly sortOrder: number
+}
+export interface MonthEntry {
+  readonly id: string
+  readonly ref: Month
+}
+export type IncomeRow = Income & {
+  readonly id: string
+  readonly monthId: string
+}
+export type BillRow = Bill & { readonly id: string; readonly monthId: string }
+export type InvoiceRow = Invoice & { readonly monthId: string }
+export type ExpenseRow = InvoiceExpense & {
+  readonly id: string
+  readonly description: string
+  readonly spentOn: ISODate
+}
+export type PlanRow = InstallmentPlan & { readonly note: string | null }
+export type PaymentRow = InstallmentPayment & { readonly id: string }
+export type SubscriptionRow = Subscription & {
+  readonly name: string
+  readonly chargeDay: number
+  readonly note: string | null
+}
+
+export interface Finance {
+  readonly cards: readonly Card[]
+  readonly months: readonly MonthEntry[]
+  readonly incomes: readonly IncomeRow[]
+  readonly bills: readonly BillRow[]
+  readonly invoices: readonly InvoiceRow[]
+  readonly expenses: readonly ExpenseRow[]
+  readonly plans: readonly PlanRow[]
+  readonly payments: readonly PaymentRow[]
+  readonly subscriptions: readonly SubscriptionRow[]
+}
+
+export const financeKey = (userId: string) => ['finance', userId] as const
+
+type Row = Record<string, unknown>
+const text = (value: unknown) => String(value)
+const money = (value: unknown) => fromDecimal(String(value))
+const date = (value: unknown) => (value == null ? null : isoDate(String(value)))
+const monthOfDate = (value: unknown) => month(String(value).slice(0, 7))
+
+async function select(table: string, columns: string): Promise<Row[]> {
+  const { data, error } = await supabase().from(table).select(columns)
+  if (error) throw new Error(`Não consegui carregar ${table}: ${error.message}`)
+  return (data ?? []) as unknown as Row[]
+}
+
+// Money comes as text (numeric::text) so no cent is lost in floating point.
+export async function loadFinance(): Promise<Finance> {
+  const [
+    cards,
+    months,
+    incomes,
+    bills,
+    invoices,
+    expenses,
+    plans,
+    payments,
+    subscriptions,
+  ] = await Promise.all([
+    select('cards', 'id,name,color,photo_path,closing_day,sort_order'),
+    select('months', 'id,ref'),
+    select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
+    select(
+      'bills',
+      'id,month_id,description,amount::text,paid,paid_on,sort_order',
+    ),
+    select(
+      'invoices',
+      'id,card_id,month_id,other_amount::text,estimated,note,paid,paid_on,closed_total::text',
+    ),
+    select(
+      'invoice_expenses',
+      'id,invoice_id,description,amount::text,spent_on',
+    ),
+    select(
+      'installment_plans',
+      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note',
+    ),
+    select(
+      'installment_payments',
+      'id,plan_id,month,paid_on,source,invoice_id',
+    ),
+    select(
+      'subscriptions',
+      'id,card_id,name,amount::text,charge_day,note,active',
+    ),
+  ])
+  const monthRows = months
+    .map((row) => ({ id: text(row.id), ref: monthOfDate(row.ref) }))
+    .sort((a, b) => a.ref.localeCompare(b.ref))
+  const refOf = new Map(monthRows.map((row) => [row.id, row.ref]))
+  const ref = (monthId: unknown) => refOf.get(text(monthId))!
+
+  return {
+    cards: cards
+      .map((row) => ({
+        id: text(row.id),
+        name: text(row.name),
+        color: (row.color as string | null) ?? null,
+        photoPath: (row.photo_path as string | null) ?? null,
+        closingDay: (row.closing_day as number | null) ?? null,
+        sortOrder: Number(row.sort_order),
+      }))
+      .sort(
+        (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+      ),
+    months: monthRows,
+    incomes: incomes
+      .map((row) => ({
+        id: text(row.id),
+        monthId: text(row.month_id),
+        month: ref(row.month_id),
+        description: text(row.description),
+        amount: money(row.amount),
+        kind: row.kind as IncomeRow['kind'],
+        sortOrder: Number(row.sort_order),
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder),
+    bills: bills
+      .map((row) => ({
+        id: text(row.id),
+        monthId: text(row.month_id),
+        month: ref(row.month_id),
+        description: text(row.description),
+        amount: money(row.amount),
+        paid: Boolean(row.paid),
+        paidOn: date(row.paid_on),
+        sortOrder: Number(row.sort_order),
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder),
+    invoices: invoices.map((row) => ({
+      id: text(row.id),
+      cardId: text(row.card_id),
+      monthId: text(row.month_id),
+      month: ref(row.month_id),
+      otherAmount: money(row.other_amount),
+      estimated: Boolean(row.estimated),
+      note: (row.note as string | null) ?? null,
+      paid: Boolean(row.paid),
+      paidOn: date(row.paid_on),
+      closedTotal: row.closed_total == null ? null : money(row.closed_total),
+    })),
+    expenses: expenses
+      .map((row) => ({
+        id: text(row.id),
+        invoiceId: text(row.invoice_id),
+        description: text(row.description),
+        amount: money(row.amount),
+        spentOn: isoDate(text(row.spent_on)),
+      }))
+      .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),
+    plans: plans.map((row) => ({
+      id: text(row.id),
+      cardId: (row.card_id as string | null) ?? null,
+      description: text(row.description),
+      installmentAmount: money(row.installment_amount),
+      finalAdjustment: money(row.final_adjustment),
+      totalInstallments: Number(row.total_installments),
+      firstMonth: monthOfDate(row.first_month),
+      note: (row.note as string | null) ?? null,
+    })),
+    payments: payments.map((row) => ({
+      id: text(row.id),
+      planId: text(row.plan_id),
+      month: monthOfDate(row.month),
+      paidOn: isoDate(text(row.paid_on)),
+      source: row.source as PaymentRow['source'],
+      invoiceId: (row.invoice_id as string | null) ?? null,
+    })),
+    subscriptions: subscriptions.map((row) => ({
+      id: text(row.id),
+      cardId: (row.card_id as string | null) ?? null,
+      name: text(row.name),
+      amount: money(row.amount),
+      chargeDay: Number(row.charge_day),
+      note: (row.note as string | null) ?? null,
+      active: Boolean(row.active),
+    })),
+  }
+}

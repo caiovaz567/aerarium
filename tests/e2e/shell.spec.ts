@@ -1,5 +1,9 @@
 import { expect, test, type Page } from '@playwright/test'
-import { currentMonth, signedIn } from './session'
+import { signedIn } from './session'
+
+// The e2e account has August and September 2026 (tests/e2e/fixture.ts).
+const SEPTEMBER = '/meses/2026-09'
+const ANY_MONTH = /\/meses\/\d{4}-\d{2}$/
 
 signedIn()
 
@@ -17,15 +21,15 @@ test('abas navegam, sem rolagem lateral em nenhuma tela', async ({
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/')
-  await expect(page).toHaveURL(new RegExp(`/meses/${currentMonth()}$`))
+  await expect(page).toHaveURL(ANY_MONTH)
   const nav = page.getByRole('navigation', { name: 'Seções' })
   for (const [name, path] of [
-    ['Cartões', '/cartoes'],
-    ['Assinaturas', '/assinaturas'],
-    ['Meses', `/meses/${currentMonth()}`],
+    ['Cartões', /\/cartoes$/],
+    ['Assinaturas', /\/assinaturas$/],
+    ['Meses', ANY_MONTH],
   ] as const) {
     await nav.getByRole('link', { name }).click()
-    await expect(page).toHaveURL(new RegExp(`${path}$`))
+    await expect(page).toHaveURL(path)
     await expect(nav.getByRole('link', { name })).toHaveAttribute(
       'aria-current',
       'page',
@@ -46,7 +50,7 @@ test('celular: barra embaixo com 5 espaços iguais e o + no meio', async ({
   isMobile,
 }) => {
   test.skip(!isMobile, 'Layout de celular.')
-  await page.goto(`/meses/${currentMonth()}`)
+  await page.goto(SEPTEMBER)
   const viewport = page.viewportSize()!
   const nav = (await page
     .getByRole('navigation', { name: 'Seções' })
@@ -76,7 +80,7 @@ test('computador: abas em pílula abaixo do cabeçalho com "Lançar" ao lado', a
   isMobile,
 }) => {
   test.skip(isMobile, 'Layout de computador.')
-  await page.goto(`/meses/${currentMonth()}`)
+  await page.goto(SEPTEMBER)
   const header = await page.getByRole('banner').boundingBox()
   const nav = await page
     .getByRole('navigation', { name: 'Seções' })
@@ -97,7 +101,7 @@ test('modal abre no centro, sem rolagem lateral, e fecha', async ({
   page,
   isMobile,
 }, testInfo) => {
-  await page.goto(`/meses/${currentMonth()}`)
+  await page.goto(SEPTEMBER)
   await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
   const dialog = page.getByRole('dialog', { name: 'Lançar' })
   await expect(dialog).toBeVisible()
@@ -122,7 +126,7 @@ test('modal abre no centro, sem rolagem lateral, e fecha', async ({
 test('barra de meses gruda abaixo do cabeçalho e só ela tem sombra', async ({
   page,
 }, testInfo) => {
-  await page.goto(`/meses/${currentMonth()}`)
+  await page.goto(SEPTEMBER)
   const header = page.getByRole('banner')
   const bar = page.locator('.stick')
   await expect(header).not.toHaveClass(/scrolled/)
@@ -146,7 +150,7 @@ test('barra de meses gruda abaixo do cabeçalho e só ela tem sombra', async ({
 
 test('atalho de teclado leva ao conteúdo', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Navegação por teclado validada no computador.')
-  await page.goto(`/meses/${currentMonth()}`)
+  await page.goto(SEPTEMBER)
   await page.keyboard.press('Tab')
   await expect(
     page.getByRole('link', { name: 'Ir para o conteúdo' }),

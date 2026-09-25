@@ -4,6 +4,9 @@ import { existsSync } from 'node:fs'
 // E2E_EMAIL and E2E_PASSWORD come from .env.local (npm run e2e:user).
 if (existsSync('.env.local')) process.loadEnvFile('.env.local')
 
+/** Tests that change the e2e account's data; they run alone, after the rest. */
+const FLOW = /flow\.spec\.ts$/
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -25,6 +28,7 @@ export default defineConfig({
     {
       name: 'iphone-light',
       dependencies: ['setup'],
+      testIgnore: FLOW,
       use: {
         ...devices['iPhone 13'],
         viewport: { width: 390, height: 844 },
@@ -34,6 +38,7 @@ export default defineConfig({
     {
       name: 'iphone-dark',
       dependencies: ['setup'],
+      testIgnore: FLOW,
       use: {
         ...devices['iPhone 13'],
         viewport: { width: 390, height: 844 },
@@ -43,6 +48,7 @@ export default defineConfig({
     {
       name: 'desktop-light',
       dependencies: ['setup'],
+      testIgnore: FLOW,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
@@ -52,10 +58,27 @@ export default defineConfig({
     {
       name: 'desktop-dark',
       dependencies: ['setup'],
+      testIgnore: FLOW,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
         colorScheme: 'dark',
+      },
+    },
+    {
+      // Changes data, so it runs alone after the layout checks.
+      name: 'fluxo',
+      testMatch: FLOW,
+      dependencies: [
+        'iphone-light',
+        'iphone-dark',
+        'desktop-light',
+        'desktop-dark',
+      ],
+      use: {
+        ...devices['iPhone 13'],
+        viewport: { width: 390, height: 844 },
+        colorScheme: 'light',
       },
     },
   ],

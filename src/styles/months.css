@@ -1,0 +1,659 @@
+/* Meses: month bar, summary, blocks, rows and the invoice summary. Measures from v1. */
+
+.icon-button[disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+.icon-button.plus {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.monthname {
+  flex: 1;
+  min-width: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--ink);
+  font: 800 24px / 1.2 var(--display);
+  letter-spacing: -0.015em;
+  text-align: center;
+}
+.monthname small {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+  color: var(--muted);
+  font: 500 15px / 1 var(--body);
+  letter-spacing: 0;
+}
+.monthname small svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Summary: fixed rows so switching months never changes its height. */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 20px 18px;
+  border-radius: 22px;
+  background: var(--hero);
+  color: var(--hero-ink);
+}
+.hero-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  color: var(--hero-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fff;
+  color: #b3261e;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.hero-num {
+  margin: 0;
+  font: 800 clamp(34px, 10vw, 46px) / 1 var(--display);
+  letter-spacing: -0.02em;
+}
+.bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--hero-track);
+}
+.bar span {
+  display: block;
+  height: 100%;
+  border-radius: 99px;
+  background: #fff;
+}
+.bar.over span {
+  background: #ffb3a6;
+}
+.bar-cap {
+  margin: -4px 0 0;
+  color: var(--hero-muted);
+  font-size: 12.5px;
+}
+.hero-split {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--hero-track);
+}
+.hero-split dt {
+  color: var(--hero-muted);
+  font-size: 12px;
+}
+.hero-split dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Blocks and rows */
+.block {
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.block-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 16px 16px 6px;
+}
+.block-head h2 {
+  flex: 1;
+  margin: 0;
+  font: 800 18px / 1.2 var(--display);
+}
+.block-head .meta {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.sum {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sum.pos {
+  color: var(--pos);
+}
+.sum.neg {
+  color: var(--neg);
+}
+.grp-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px 6px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.grp-h b {
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 6px;
+  border-top: 1px solid var(--line);
+}
+.rows .row:first-child {
+  border-top: 0;
+}
+.row-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 13px 16px 13px 10px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  button.row-main:hover {
+    background: var(--surface-2);
+  }
+}
+.desc {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.desc .sub {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.val {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.val.zero {
+  color: var(--muted);
+  font-weight: 500;
+}
+.row.paid .desc,
+.row.paid .card-name {
+  color: var(--muted);
+}
+.row.paid .val {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.check {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-left: 6px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+}
+.check svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+}
+.check[aria-pressed='true'] {
+  border-color: var(--pos);
+  background: var(--pos);
+  color: #fff;
+}
+.check[aria-pressed='true'] svg {
+  opacity: 1;
+}
+.trash {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-right: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  opacity: 0.55;
+}
+.trash svg {
+  width: 18px;
+  height: 18px;
+}
+.trash:hover,
+.trash:focus-visible {
+  background: var(--neg-soft);
+  color: var(--neg);
+  opacity: 1;
+}
+.trash-space {
+  flex: none;
+  width: 44px;
+}
+.hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+  font-size: 13.5px;
+}
+.hint button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 600;
+}
+.empty-hint {
+  margin: 0;
+  padding: 14px 16px 16px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+/* Card rows: name and total on top, the full width note and composition below.
+   Wraps between items, never inside one (7.4 item 3). */
+.card-row {
+  align-items: center;
+}
+.card-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 10px;
+  min-width: 0;
+}
+.card-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.card-body .val {
+  grid-row: 1;
+  grid-column: 2;
+}
+.card-sub {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.card-sub .part {
+  white-space: nowrap;
+}
+.card-sub .note {
+  color: var(--ink);
+  opacity: 0.72;
+}
+.est {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+/* Card thumbnail: real card ratio, color gradient, gold chip */
+.card-art {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 54px;
+  aspect-ratio: 1.586;
+  overflow: hidden;
+  border-radius: 7px;
+  background: linear-gradient(
+    135deg,
+    var(--cc),
+    color-mix(in srgb, var(--cc) 60%, #000)
+  );
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 25%),
+    inset 0 0 0 1px rgb(255 255 255 / 12%);
+  color: var(--cc-ink);
+}
+.card-art.xs {
+  width: 36px;
+  border-radius: 5px;
+}
+.card-art::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 100% 0%,
+    rgb(255 255 255 / 20%),
+    transparent 55%
+  );
+  pointer-events: none;
+}
+.card-art .chip {
+  position: absolute;
+  top: 30%;
+  left: 13%;
+  width: 19%;
+  height: 27%;
+  border-radius: 2px;
+  background: linear-gradient(135deg, #f4dc95, #c49a45);
+}
+
+/* Modals content */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal-form .modal-actions,
+.modal-actions {
+  align-items: center;
+}
+.spacer {
+  flex: 1;
+}
+.btn.danger {
+  background: var(--neg-soft);
+  color: var(--neg);
+}
+.btn.danger.armed {
+  background: var(--neg);
+  color: #fff;
+}
+.btn.wide {
+  width: 100%;
+  margin-top: 10px;
+}
+.self-start {
+  align-self: flex-start;
+}
+.small {
+  margin: 0;
+  font-size: 13px;
+}
+.check-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+}
+.check-field input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--accent);
+}
+.check-field b {
+  display: block;
+  font-weight: 600;
+}
+.check-field small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.check-field:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.month-list button {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+}
+.month-list button[aria-current='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.month-list span {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Invoice summary */
+.invoice {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.invoice-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.invoice-top .card-art {
+  width: 56px;
+}
+.invoice-top b {
+  display: block;
+  font-size: 16px;
+}
+.invoice-top small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.invoice-sec {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.invoice-sec > small {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.invoice-sec .link {
+  align-self: flex-start;
+  font-size: 13.5px;
+}
+.invoice-list {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--bg);
+  list-style: none;
+}
+.invoice-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.invoice-list li + li {
+  border-top: 1px solid var(--line);
+}
+.invoice-list span {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.invoice-list small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+.invoice-list b {
+  font-size: 14px;
+  white-space: nowrap;
+}
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+}
+.dot.installment {
+  background: var(--accent);
+}
+.dot.subscription {
+  background: var(--warn);
+}
+.dot.other {
+  background: color-mix(in srgb, var(--muted) 45%, transparent);
+}
+.remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+}
+.remove svg {
+  width: 16px;
+  height: 16px;
+}
+.invoice-sum {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+}
+.invoice-sum span {
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.invoice-sum b {
+  font: 800 22px / 1.1 var(--display);
+}
+.invoice-sum b.bad {
+  color: var(--neg);
+}
+
+.skel {
+  height: 120px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+  background: linear-gradient(
+    90deg,
+    var(--surface) 0%,
+    var(--surface-2) 50%,
+    var(--surface) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .row {
+    padding-left: 4px;
+  }
+  .row-main {
+    gap: 8px;
+    padding: 12px 6px 12px 8px;
+  }
+  .check {
+    width: 28px;
+    height: 28px;
+    margin-left: 4px;
+  }
+  .trash {
+    width: 32px;
+    height: 32px;
+    margin-right: 2px;
+  }
+  .trash-space {
+    width: 34px;
+  }
+  .card-art.xs {
+    width: 30px;
+  }
+  .hero {
+    padding: 18px 16px 16px;
+    border-radius: 20px;
+  }
+  .block-head {
+    padding: 14px 14px 6px;
+  }
+}
+@media (max-width: 380px) {
+  .hero-split dd {
+    font-size: 13.5px;
+  }
+}

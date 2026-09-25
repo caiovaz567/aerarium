@@ -10,6 +10,7 @@ globalThis.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 }
+if (typeof window !== 'undefined') window.scrollTo = () => {}
 if (typeof window !== 'undefined')
   window.matchMedia ??= (query: string) =>
     ({

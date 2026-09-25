@@ -83,3 +83,9 @@ export function dateInSaoPaulo(instant: Date): ISODate {
   const part = (type: string) => parts.find((item) => item.type === type)?.value
   return isoDate(`${part('year')}-${part('month')}-${part('day')}`)
 }
+
+/** "23/09", for "paga em 23/09" and launched expense dates. */
+export function dayMonth(value: ISODate): string {
+  const date = isoDate(value)
+  return `${date.slice(8, 10)}/${date.slice(5, 7)}`
+}

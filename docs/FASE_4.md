@@ -77,4 +77,4 @@ Enquanto o Google estiver desligado, o botão "Entrar com Google" mostra "Entrar
 
 ## Próxima fase
 
-A Fase 5 faz a aba Meses com os dados reais (seção 8.2 do plano). Aguardar confirmação antes de iniciá-la, conforme `CLAUDE.md`.
+A Fase 5 faz a aba Meses com os dados reais (seção 8.2 do plano): ver [FASE_5.md](FASE_5.md).
