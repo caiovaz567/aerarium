@@ -25,7 +25,7 @@ export default defineConfig([
     extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
   },
   {
-    files: ['*.{js,ts}', 'tests/**/*.ts', 'scripts/**/*.mjs'],
+    files: ['*.{js,ts}', 'tests/**/*.ts', 'scripts/**/*.{mjs,ts}'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   prettier,

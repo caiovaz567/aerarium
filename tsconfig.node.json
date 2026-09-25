@@ -19,6 +19,7 @@
     "vitest.db.config.ts",
     "playwright.config.ts",
     "tests/e2e",
-    "tests/db"
+    "tests/db",
+    "scripts/**/*.ts"
   ]
 }

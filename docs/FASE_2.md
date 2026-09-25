@@ -37,4 +37,4 @@ Na primeira execução de `db:domain`, as partes zeradas das faturas vinham do b
 
 ## Próxima fase
 
-A Fase 3 importa o backup da v1 (`scripts/import-backup.ts`, seção 6 do plano), usando estas funções para o relatório de conferência. Aguardar confirmação antes de iniciá-la, conforme `CLAUDE.md`.
+A Fase 3 importa o backup da v1 (`scripts/import-backup.ts`, seção 6 do plano), usando estas funções para o relatório de conferência. Concluída: ver [FASE_3.md](FASE_3.md).

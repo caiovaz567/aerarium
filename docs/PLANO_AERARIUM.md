@@ -19,7 +19,7 @@ O nome vem do latim: o *aerarium* era o tesouro público da Roma Antiga, guardad
 ### Quem usa
 
 * Hoje: só eu.
-* Depois da migração: qualquer pessoa com conta Google, cada uma vendo apenas os próprios dados.
+* Depois da migração: qualquer pessoa, entrando com e-mail e senha ou com a conta Google, cada uma vendo apenas os próprios dados. Decisão do usuário na Fase 3.
 * Uso principal: iPhone, instalado na tela inicial como PWA. O computador é secundário, mas precisa funcionar bem.
 
 ---
@@ -343,7 +343,7 @@ A mesma lógica deve existir em `src/domain` (TypeScript, com testes). O banco �
 
 Arquivo: `scripts/data/aerarium-backup-2026-09-24.json` (fora do Git). Formato: `{ months, parcelamentos, assinaturas, cartoes }`, cada um um objeto `id → documento`.
 
-O script `scripts/import-backup.ts` roda **localmente**, com a chave `service_role` lida de `.env.local` (essa chave nunca vai pro front nem pro Git). Recebe o e-mail da conta de destino, busca o `user_id` e grava tudo em nome dela. Precisa ser **idempotente**: rodar duas vezes não duplica nada (usar uma tabela ou arquivo de mapeamento de ids antigos pra novos, ou apagar os dados do usuário antes com confirmação).
+O script `scripts/import-backup.ts` roda **localmente**. **Mudança da Fase 3:** em vez da chave `service_role`, usa o login do Supabase CLI e grava como o próprio usuário, com RLS valendo (detalhes em `docs/FASE_3.md`). Nenhuma chave secreta é lida. Recebe o e-mail da conta de destino, busca o `user_id` e grava tudo em nome dela. Precisa ser **idempotente**: rodar duas vezes não duplica nada (usar uma tabela ou arquivo de mapeamento de ids antigos pra novos, ou apagar os dados do usuário antes com confirmação).
 
 ### 6.1 Como a v1 guardava os dados
 
@@ -592,7 +592,7 @@ Uma planilha por mês (entradas, saídas, totais), mais "Parcelamentos", "Cartõ
 
 ### 8.9 Login
 
-Tela simples: marca, uma frase ("Suas finanças, mês a mês") e o botão "Entrar com Google". Depois do login, vai direto pro mês atual. Em Configurações: sair, baixar meus dados, apagar minha conta.
+Tela simples: marca, uma frase ("Suas finanças, mês a mês"), o botão "Entrar com Google" e a opção de entrar ou criar conta com e-mail e senha (com "Esqueci a senha"). Depois do login, vai direto pro mês atual. Em Configurações: sair, baixar meus dados, apagar minha conta.
 
 ---
 
@@ -641,11 +641,11 @@ Em `src/domain`, funções puras com testes:
 
 ### Fase 4: login e esqueleto
 
-* Supabase Auth com Google. Tela de login (8.9). Rotas protegidas.
+* Supabase Auth com Google e com e-mail e senha. Tela de login (8.9). Rotas protegidas.
 * Layout: cabeçalho com estado de sincronização, abas (8.1), botão flutuante de lançar, toasts com Desfazer, componente de modal central (7.4 item 5), barra fixa ao rolar (7.4 item 6).
 * TanStack Query configurado, com atualização otimista.
 
-**Pronto quando:** entro com o Google no celular e no computador, navego entre abas vazias, e o Playwright valida o layout em 390×844 e 1280×800.
+**Pronto quando:** entro com o Google e com e-mail e senha no celular e no computador, navego entre abas vazias, e o Playwright valida o layout em 390×844 e 1280×800.
 
 ### Fase 5: Meses
 
@@ -766,7 +766,7 @@ Seções 10.2 e 10.3.
 
 ## 14. Checklist final
 
-* [ ] Login com Google funcionando no iPhone e no computador
+* [ ] Login com Google e com e-mail e senha funcionando no iPhone e no computador
 * [ ] Meus dados importados e conferidos mês a mês
 * [ ] Nenhum usuário vê dado de outro (teste de RLS passando)
 * [ ] App instalado na tela inicial do iPhone, abrindo em tela cheia

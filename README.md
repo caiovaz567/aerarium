@@ -44,6 +44,8 @@ npm run db:test
 
 `npm run db:domain` compara as regras de `src/domain` com as views, em leitura com rollback ([docs/FASE_2.md](docs/FASE_2.md)).
 
+`npm run import:backup` importa o backup da v1 para uma conta, com relatório de conferência. Use `-- --simular` para ver o relatório sem banco. Detalhes em [docs/FASE_3.md](docs/FASE_3.md).
+
 Os testes de banco usam dois usuários fictícios e revertem todas as alterações com rollback. Exigem o login administrativo do CLI, sem chave secreta no frontend. `npm run db:seed` carrega o seed de desenvolvimento sem duplicar registros. Ambos conferem o projeto vinculado contra `supabase/development.json`. Totais esperados e reprodução em banco vazio estão em [docs/FASE_1.md](docs/FASE_1.md).
 
 Não execute reset remoto. Os comandos `supabase:start`, `supabase:stop` e `supabase:status` ficam disponíveis apenas como alternativa local com Docker.
