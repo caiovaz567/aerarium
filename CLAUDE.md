@@ -26,6 +26,7 @@ A versão anterior do app (referência de telas e comportamento) está em `docs/
 - `npm run import:backup -- --simular`: relatório do import da v1 sem banco. Com `--email` e `--projeto` ensaia; com `--gravar` grava (ver `docs/FASE_3.md`).
 - `npm run e2e`: Playwright, iPhone (WebKit) e computador (Chromium), nos dois temas.
 - `npm run e2e:install`: instalar os navegadores de teste.
+- `npm run e2e:user`: criar a conta fictícia dos testes de navegador no projeto de desenvolvimento (senha em `.env.local`).
 - `npm run lint`: ESLint. `npm run format:check`: Prettier.
 - `npm run build`: verificar TypeScript e gerar o build.
 - `npm run check`: lint, formatação, testes unitários e build.

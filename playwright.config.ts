@@ -1,4 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
+import { existsSync } from 'node:fs'
+
+// E2E_EMAIL and E2E_PASSWORD come from .env.local (npm run e2e:user).
+if (existsSync('.env.local')) process.loadEnvFile('.env.local')
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -14,7 +18,13 @@ export default defineConfig({
   },
   projects: [
     {
+      name: 'setup',
+      testMatch: /auth\.setup\.ts$/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
       name: 'iphone-light',
+      dependencies: ['setup'],
       use: {
         ...devices['iPhone 13'],
         viewport: { width: 390, height: 844 },
@@ -23,6 +33,7 @@ export default defineConfig({
     },
     {
       name: 'iphone-dark',
+      dependencies: ['setup'],
       use: {
         ...devices['iPhone 13'],
         viewport: { width: 390, height: 844 },
@@ -31,6 +42,7 @@ export default defineConfig({
     },
     {
       name: 'desktop-light',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
@@ -39,6 +51,7 @@ export default defineConfig({
     },
     {
       name: 'desktop-dark',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },

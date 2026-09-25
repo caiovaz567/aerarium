@@ -18,8 +18,11 @@ Abra http://127.0.0.1:5173. A fundação funciona sem credenciais e acompanha o 
 ```sh
 npm run check
 npm run e2e:install
+npm run e2e:user
 npm run e2e
 ```
+
+`e2e:user` cria a conta fictícia dos testes de navegador no projeto de desenvolvimento e guarda a senha em `.env.local`. Login e esqueleto do app: [docs/FASE_4.md](docs/FASE_4.md).
 
 `check` roda lint, formatação, Vitest e build com verificação de tipos. Playwright confere WebKit em 390×844 e Chromium em 1280×800, nos temas claro e escuro. Capturas ficam em `test-results/`, e o relatório em `playwright-report/`.
 

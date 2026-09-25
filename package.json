@@ -27,6 +27,7 @@
     "db:test": "node scripts/database.mjs test",
     "db:domain": "vitest run --config vitest.db.config.ts",
     "db:seed": "node scripts/database.mjs seed",
+    "e2e:user": "node scripts/e2e-user.mjs",
     "import:backup": "tsx scripts/import-backup.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
@@ -36,9 +37,12 @@
   "dependencies": {
     "@fontsource/bricolage-grotesque": "^5.3.0",
     "@fontsource/figtree": "^5.3.0",
+    "@supabase/supabase-js": "^2.117.1",
+    "@tanstack/react-query": "^5.103.2",
     "date-fns": "^4.4.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "react-router": "^8.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

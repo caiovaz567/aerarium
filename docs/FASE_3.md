@@ -64,4 +64,4 @@ Valores não são registrados aqui porque são dados reais.
 
 ## Próxima fase
 
-A Fase 4 faz o login (Google e e-mail com senha) e o esqueleto do app. Aguardar confirmação antes de iniciá-la, conforme `CLAUDE.md`.
+A Fase 4 faz o login (Google e e-mail com senha) e o esqueleto do app: ver [FASE_4.md](FASE_4.md).

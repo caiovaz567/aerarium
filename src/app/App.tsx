@@ -1,25 +1,25 @@
-import { Brand } from '../ui/Brand'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useState } from 'react'
+import { BrowserRouter } from 'react-router'
+import { createQueryClient } from '../data/queryClient'
+import { ToastProvider } from '../ui/ToastProvider'
+import { AuthProvider } from './AuthProvider'
+import { AppRoutes } from './routes'
+import { SyncContext } from './syncContext'
 
 export function App() {
+  const [{ client, sync }] = useState(createQueryClient)
   return (
-    <>
-      <a className="skip-link" href="#conteudo">
-        Ir para o conteúdo
-      </a>
-      <header className="app-header">
-        <div className="app-header-inner">
-          <Brand />
-        </div>
-      </header>
-      <main id="conteudo" className="app-content" tabIndex={-1}>
-        <section className="welcome" aria-labelledby="welcome-title">
-          <h2 id="welcome-title">
-            Suas finanças, <br />
-            mês a mês.
-          </h2>
-          <p>Um lugar para acompanhar o que entra, o que sai e o que sobra.</p>
-        </section>
-      </main>
-    </>
+    <QueryClientProvider client={client}>
+      <SyncContext value={sync}>
+        <AuthProvider>
+          <ToastProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </ToastProvider>
+        </AuthProvider>
+      </SyncContext>
+    </QueryClientProvider>
   )
 }
