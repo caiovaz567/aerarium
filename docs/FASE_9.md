@@ -1,6 +1,6 @@
 # Fase 9: PWA e deploy
 
-**Status: parte do código concluída. Falta o deploy**, que depende de contas do usuário (GitHub, Vercel e o projeto Supabase de produção). Seções 10.2 e 10.3.
+**Status: concluída.** App no ar em https://aerarium-delta.vercel.app, com banco de produção próprio, e instalado no iPhone do usuário. Seções 10.2 e 10.3.
 
 ## Entrega (código)
 
@@ -18,16 +18,25 @@
 - `npm run check`: 273 testes Vitest (novos: aviso de versão nova escondido, aparece e atualiza, e procura versão ao voltar pro app).
 - `npm run e2e`: 101 verificações. Novo projeto `pwa`, que roda no build de produção (`npm run build` + `preview` na porta 4173): manifesto, os quatro ícones, metas do iPhone, service worker com cache só de arquivos do próprio app e abertura sem internet.
 
-## Deploy (pendente)
+## Deploy
 
-Ordem planejada; os passos com (usuário) exigem login nas contas dele:
+- **GitHub:** repositório privado `caiovaz567/aerarium`. Antes do primeiro envio, o histórico foi conferido: sem chaves secretas, backup ou e-mail. A pedido do usuário, as linhas `Co-Authored-By` foram retiradas de todos os commits, e o histórico foi reescrito (conteúdo dos arquivos idêntico).
+- **Produção no Supabase:** projeto `aerarium-prod`, ref `kpzupvajcjhjoarxjcvq`, São Paulo. O usuário aplicou as 5 migrations com `db push` (o Claude Code bloqueia mexer em produção; ensaio com `--dry-run` antes). Sem seed e sem testes lá.
+  - URL Configuration: Site URL e Redirect URLs com `https://aerarium-delta.vercel.app`.
+  - Google ligado com o mesmo cliente OAuth; no Google Cloud entrou o redirect do projeto de produção.
+  - "Allow manual linking" precisa estar ligado para "Conectar conta Google" em Ajustes (vem desligado em projeto novo).
+  - Conta do usuário criada pelo painel (Auto Confirm), porque o e-mail padrão do Supabase é limitado.
+- **Import:** o usuário rodou `import:backup --gravar` na produção. Os 3 meses bateram com a v1, sem diferenças nem avisos.
+- **Vercel:** projeto `aerarium`, preset Vite, variáveis só em Production (`VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` do `aerarium-prod`). Os Previews ficam sem banco. Conferido no ar: rotas, manifesto, ícones, cabeçalhos de cache e segurança, chave pública certa e nenhuma chave secreta no JavaScript.
+- **Correção nos scripts de banco:** o Supabase CLI devolve tabela no terminal de uma pessoa e JSON para agentes de IA. `import-backup.ts`, `database.mjs`, `e2e-user.mjs` e `tests/db/domain.test.ts` agora pedem sempre JSON (`--agent yes`). O import também mostra a etapa e o erro real quando falha.
 
-1. (usuário) Criar o repositório no GitHub, privado. Depois o código é enviado com `git push`.
-2. Produção no Supabase, projeto separado `aerarium-prod`, região São Paulo:
-   - (usuário) criar o projeto;
-   - vincular com `npm run supabase -- link --project-ref REF_PROD`, conferir com `db push --dry-run` e aplicar com `db push`. Nada de seed nem `db:test` em produção (os scripts recusam projeto fora de `supabase/development.json`);
-   - (usuário) Authentication → URL Configuration: Site URL com o endereço da Vercel;
-   - (usuário) Authentication → Providers → Google: mesmo Client ID e Secret, e no Google Cloud acrescentar o redirect `https://REF_PROD.supabase.co/auth/v1/callback`.
-   - Depois de vincular a produção, voltar o vínculo do CLI para o desenvolvimento.
-3. (usuário) Vercel: importar o repositório e cadastrar `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` (produção com as do `aerarium-prod`).
-4. Conferir no iPhone: Safari → Compartilhar → Adicionar à Tela de Início, abre em tela cheia com o templo, e um push atualiza o app.
+## Regras de produção
+
+- O CLI fica vinculado ao desenvolvimento. Para mexer na produção, o usuário vincula `kpzupvajcjhjoarxjcvq`, roda o comando e volta com `npm run supabase -- link --project-ref idvbrfbudoxvubxpqdzs`.
+- Toda migration nova vai primeiro para o desenvolvimento e depois o usuário aplica na produção.
+- Cada push em `main` publica o app. No iPhone, aparece "Nova versão disponível" quando o app muda (push só de documentação não gera versão nova). A primeira conferência disso no iPhone fica para o primeiro push da Fase 10.
+
+## Pendências para a Fase 10 ou depois
+
+- SMTP próprio no Supabase de produção, para "Esqueci a senha" e cadastro por e-mail funcionarem para qualquer pessoa.
+- Tela de consentimento do Google com a marca do app e publicação do app do Google (hoje em modo de teste).

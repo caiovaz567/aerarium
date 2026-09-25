@@ -42,5 +42,7 @@ A versão anterior do app (referência de telas e comportamento) está em `docs/
 
 Desenvolvimento usa Supabase na nuvem, conforme `docs/SUPABASE_NUVEM.md`. Não executar reset remoto nem seed/testes em produção. No front, usar `VITE_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`); nunca `sb_secret_...`, `service_role`, senha do banco ou token pessoal.
 
+Produção: app em https://aerarium-delta.vercel.app (push em `main` publica), banco `aerarium-prod` (`kpzupvajcjhjoarxjcvq`). O Claude Code não mexe na produção: o usuário roda os comandos, e o CLI volta vinculado ao desenvolvimento. Detalhes em `docs/FASE_9.md`.
+
 Estado e pendências da fundação: `docs/FASE_0.md`.
 Banco, decisões consolidadas e verificações da Fase 1: `docs/FASE_1.md`. As regras em TypeScript de `src/domain` são o escopo da Fase 2.
