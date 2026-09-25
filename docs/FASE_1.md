@@ -1,6 +1,6 @@
 # Fase 1: banco
 
-**Status: concluída no projeto Supabase de desenvolvimento.** Banco instalado com dados fictícios, isolamento entre usuários e cálculos verificados. A Fase 2 ainda não começou.
+**Status: concluída no projeto Supabase de desenvolvimento.** Banco instalado com dados fictícios, isolamento entre usuários e cálculos verificados. A continuação está em [FASE_2.md](FASE_2.md).
 
 ## Entrega
 

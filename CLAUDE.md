@@ -21,7 +21,8 @@ A versão anterior do app (referência de telas e comportamento) está em `docs/
 ## Comandos
 
 - `npm run dev`: servidor em http://127.0.0.1:5173.
-- `npm test`: Vitest, uma execução. `npm run test:watch`: modo contínuo.
+- `npm test`: Vitest, uma execução. `npm run test:watch`: modo contínuo. `npm run test:coverage`: cobertura de `src/domain`.
+- `npm run db:domain`: compara `src/domain` com as views do projeto de desenvolvimento (só leitura).
 - `npm run e2e`: Playwright, iPhone (WebKit) e computador (Chromium), nos dois temas.
 - `npm run e2e:install`: instalar os navegadores de teste.
 - `npm run lint`: ESLint. `npm run format:check`: Prettier.

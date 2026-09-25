@@ -1,0 +1,76 @@
+import type { Cents } from './money'
+import type { ISODate, Month } from './months'
+
+// Inputs belong to ONE authenticated user. Ownership and database IDs are mapped
+// at the data boundary; these pure functions do not replace server-side RLS.
+export interface InstallmentPlan {
+  readonly id: string
+  readonly cardId: string | null
+  readonly description: string
+  readonly installmentAmount: Cents
+  readonly finalAdjustment: Cents
+  readonly totalInstallments: number
+  readonly firstMonth: Month
+}
+
+export interface InstallmentPayment {
+  readonly planId: string
+  readonly month: Month
+  readonly paidOn: ISODate
+  readonly source: 'manual' | 'invoice'
+  readonly invoiceId: string | null
+}
+
+export interface Subscription {
+  readonly id: string
+  readonly cardId: string | null
+  readonly amount: Cents
+  readonly active: boolean
+}
+
+export interface Invoice {
+  readonly id: string
+  readonly cardId: string
+  readonly month: Month
+  readonly otherAmount: Cents
+  readonly estimated: boolean
+  readonly paid: boolean
+  readonly paidOn: ISODate | null
+  readonly closedTotal: Cents | null
+  readonly note: string | null
+}
+
+export interface InvoiceExpense {
+  readonly invoiceId: string
+  readonly amount: Cents
+}
+
+export interface Income {
+  readonly month: Month
+  readonly description: string
+  readonly amount: Cents
+  readonly kind: 'normal' | 'carryover'
+  readonly sortOrder: number
+}
+
+export interface Bill {
+  readonly month: Month
+  readonly description: string
+  readonly amount: Cents
+  readonly paid: boolean
+  readonly paidOn: ISODate | null
+  readonly sortOrder: number
+}
+
+export interface InvoiceContext {
+  readonly plans: readonly InstallmentPlan[]
+  readonly payments: readonly InstallmentPayment[]
+  readonly subscriptions: readonly Subscription[]
+  readonly expenses: readonly InvoiceExpense[]
+}
+
+export interface FinancialData extends InvoiceContext {
+  readonly incomes: readonly Income[]
+  readonly bills: readonly Bill[]
+  readonly invoices: readonly Invoice[]
+}

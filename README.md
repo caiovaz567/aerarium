@@ -23,7 +23,7 @@ npm run e2e
 
 `check` roda lint, formatação, Vitest e build com verificação de tipos. Playwright confere WebKit em 390×844 e Chromium em 1280×800, nos temas claro e escuro. Capturas ficam em `test-results/`, e o relatório em `playwright-report/`.
 
-Outros comandos: `npm run test:watch`, `npm run format`, `npm run typecheck` e `npm run preview`.
+Outros comandos: `npm run test:watch`, `npm run test:coverage` (cobertura de `src/domain`), `npm run format`, `npm run typecheck` e `npm run preview`.
 
 ## Supabase na nuvem
 
@@ -41,6 +41,8 @@ O banco da Fase 1 tem migrations, RLS, views, bucket privado de fotos e seed fic
 ```sh
 npm run db:test
 ```
+
+`npm run db:domain` compara as regras de `src/domain` com as views, em leitura com rollback ([docs/FASE_2.md](docs/FASE_2.md)).
 
 Os testes de banco usam dois usuários fictícios e revertem todas as alterações com rollback. Exigem o login administrativo do CLI, sem chave secreta no frontend. `npm run db:seed` carrega o seed de desenvolvimento sem duplicar registros. Ambos conferem o projeto vinculado contra `supabase/development.json`. Totais esperados e reprodução em banco vazio estão em [docs/FASE_1.md](docs/FASE_1.md).
 
