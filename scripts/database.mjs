@@ -64,6 +64,9 @@ try {
       '--linked',
       '--file',
       filename,
+      // Force the CLI's JSON reply: without it, a person's terminal gets a table.
+      '--agent',
+      'yes',
     ],
     {
       encoding: 'utf8',

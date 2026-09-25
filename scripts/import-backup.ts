@@ -38,7 +38,7 @@ const { values: args } = parseArgs({
   },
 })
 
-function runSql(sql: string): Record<string, unknown>[] {
+function runSql(sql: string, step: string): Record<string, unknown>[] {
   mkdirSync('.artifacts/db', { recursive: true })
   const file = resolve('.artifacts/db', `${randomUUID()}.sql`)
   try {
@@ -52,6 +52,9 @@ function runSql(sql: string): Record<string, unknown>[] {
         '--linked',
         '--file',
         file,
+        // Force the CLI's JSON reply: without it, a person's terminal gets a table.
+        '--agent',
+        'yes',
       ],
       { encoding: 'utf8', timeout: 120_000, maxBuffer: 8 * 1024 * 1024 },
     )
@@ -59,21 +62,33 @@ function runSql(sql: string): Record<string, unknown>[] {
       throw new Error('Não consegui executar o Supabase CLI.', {
         cause: result.error,
       })
-    let output: {
-      rows?: Record<string, unknown>[]
-      error?: { message?: string }
-      _tag?: string
-    }
+    // The CLI's own notices are noise; show what is left.
+    const stderr = result.stderr
+      .split('\n')
+      .filter(
+        (line) =>
+          !/Initialising login role|new version of Supabase CLI|recommend updating|rerunning the command with --debug/.test(
+            line,
+          ),
+      )
+      .join('\n')
+      .trim()
+    if (result.status !== 0)
+      throw new Error(
+        `Falha no SQL (${step}): ${stderr.slice(0, 600) || `código ${result.status ?? result.signal}`}`,
+      )
+    let output: unknown
     try {
       output = JSON.parse(result.stdout)
     } catch {
       throw new Error(
-        `O CLI não devolveu JSON: ${result.stderr || result.stdout}`,
+        `O CLI não devolveu JSON (${step}).\n` +
+          `Saída: ${result.stdout.trim().slice(0, 400) || '(vazia)'}\n` +
+          `Erro: ${stderr.slice(0, 400) || '(vazio)'}`,
       )
     }
-    if (result.status !== 0 || output.error || output._tag === 'Error')
-      throw new Error(output.error?.message || result.stderr || 'Falha no SQL.')
-    return output.rows ?? []
+    if (Array.isArray(output)) return output as Record<string, unknown>[]
+    return (output as { rows?: Record<string, unknown>[] }).rows ?? []
   } finally {
     // The file holds real financial data; never leave it behind.
     try {
@@ -97,7 +112,10 @@ interface Snapshot {
 }
 
 function runImport(data: ImportData, userId: string, commit: boolean) {
-  const rows = runSql(importSql(data, userId, commit))
+  const rows = runSql(
+    importSql(data, userId, commit),
+    commit ? 'gravação' : 'ensaio',
+  )
   const snapshot = rows.find((row) => row.snapshot)?.snapshot as
     Snapshot | undefined
   if (!snapshot) throw new Error('O banco não devolveu a conferência.')
@@ -180,8 +198,9 @@ function main() {
       `O projeto vinculado é ${linked}, não ${args.projeto}. Nada foi feito.`,
     )
 
-  const lookup = runSql(lookupUserSql(args.email)).find((row) => row.lookup)
-    ?.lookup as { users: { id: string }[] } | undefined
+  const lookup = runSql(lookupUserSql(args.email), 'procurando a conta').find(
+    (row) => row.lookup,
+  )?.lookup as { users: { id: string }[] } | undefined
   const users = lookup?.users ?? []
   if (users.length !== 1)
     throw new Error(
