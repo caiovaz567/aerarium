@@ -95,7 +95,9 @@ export function LoginPage() {
     <main id="conteudo" className="login" tabIndex={-1}>
       <div className="login-card">
         <Brand />
-        <h2 className="login-title">Suas finanças, mês a mês.</h2>
+        <h2 className="login-title">
+          Suas finanças, <span className="nowrap">mês a mês.</span>
+        </h2>
 
         {mode !== 'esqueci' && (
           <>

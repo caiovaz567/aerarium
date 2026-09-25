@@ -538,8 +538,13 @@ body.has-stuck .app-header.scrolled {
   background: var(--surface);
   box-shadow: var(--shadow);
 }
+/* Keeps short phrases like "mês a mês" on one line. */
+.nowrap {
+  white-space: nowrap;
+}
 .login-title {
   margin: 0 0 4px;
+  text-wrap: balance;
   font: 800 clamp(28px, 7vw, 34px) / 1.12 var(--display);
   letter-spacing: -0.03em;
 }
