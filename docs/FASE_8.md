@@ -2,7 +2,7 @@
 
 **Status: concluída no projeto de desenvolvimento.** Seções 8.6, 8.7, 8.8 e o hover do item 12 da seção 7.4.
 
-**Depois da entrega, a pedido do usuário, a foto de cartão foi removida** (seção 5.5). Nenhuma conta tinha foto guardada, então não houve limpeza a fazer. O bucket `card-photos` e a coluna `cards.photo_path` ficam no banco sem uso. As menções a fotos abaixo descrevem o que existiu e saiu.
+**Depois da entrega, a pedido do usuário, a foto de cartão foi removida** (seção 5.5). Nenhuma conta tinha foto guardada, então não houve limpeza a fazer. Depois, também a pedido dele, a migration `20260925000100_remove_card_photos.sql` apagou do banco o bucket `card-photos` (vazio), suas policies e a coluna `cards.photo_path`; `npm run db:test` passou a conferir essa remoção no lugar dos testes de Storage (97 verificações). As menções a fotos abaixo descrevem o que existiu e saiu.
 
 ## Entrega
 

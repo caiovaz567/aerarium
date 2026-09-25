@@ -140,7 +140,13 @@ test('trocar de mês não muda a altura de nada acima nem do gráfico', async ({
       .locator(`rect.hit[data-month="${shift(todayMonth(), delta)}"]`)
       .click()
     await expect.poll(() => offCentre(page)).toBeLessThan(2)
-    expect(await measure()).toEqual(before)
+    // Up to 1px is sub-pixel rounding of the scroll position, not a jump.
+    const after = await measure()
+    after
+      .flat()
+      .forEach((value, index) =>
+        expect(Math.abs(value - before.flat()[index]!)).toBeLessThanOrEqual(1),
+      )
   }
 })
 

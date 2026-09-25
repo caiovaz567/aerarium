@@ -1,5 +1,7 @@
 # Fase 1: banco
 
+> Depois da Fase 8, a foto de cartão foi removida: a migration `20260925000100_remove_card_photos.sql` apagou o bucket `card-photos`, suas policies e a coluna `cards.photo_path`, e os testes de Storage saíram de `phase1.sql`. O texto abaixo retrata a Fase 1.
+
 **Status: concluída no projeto Supabase de desenvolvimento.** Banco instalado com dados fictícios, isolamento entre usuários e cálculos verificados. A continuação está em [FASE_2.md](FASE_2.md).
 
 ## Entrega

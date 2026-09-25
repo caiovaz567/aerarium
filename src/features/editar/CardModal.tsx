@@ -48,7 +48,6 @@ export function CardModal({
       id: card?.id ?? crypto.randomUUID(),
       name: trimmed,
       color,
-      photoPath: null,
       closingDay: day,
       sortOrder:
         card?.sortOrder ??

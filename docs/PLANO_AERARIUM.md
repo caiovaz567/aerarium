@@ -186,7 +186,7 @@ Escolhas consolidadas com a autonomia delegada pelo usuário. Estas regras preva
 
 ### 5.2 Tabelas
 
-O SQL abaixo descreve o modelo inicial. A definição executável completa está nas migrations de `supabase/migrations/`, incluindo `final_adjustment`, `installment_payments.invoice_id`, constraints e triggers das decisões da seção 4.9. Não executar este bloco isoladamente para criar o banco.
+O SQL abaixo descreve o modelo inicial (a coluna `photo_path` de `cards` foi removida depois da Fase 8). A definição executável completa está nas migrations de `supabase/migrations/`, incluindo `final_adjustment`, `installment_payments.invoice_id`, constraints e triggers das decisões da seção 4.9. Não executar este bloco isoladamente para criar o banco.
 
 ```sql
 create table cards (
@@ -326,7 +326,7 @@ A mesma lógica deve existir em `src/domain` (TypeScript, com testes). O banco �
 
 ### 5.5 Fotos dos cartões (Storage)
 
-**Removido a pedido do usuário depois da Fase 8:** o app não tem mais foto de cartão. O bucket `card-photos` e a coluna `cards.photo_path` continuam no banco, sem uso, porque apagar exigiria uma migration destrutiva sem ganho. O texto abaixo fica só como histórico.
+**Removido a pedido do usuário depois da Fase 8:** o app não tem mais foto de cartão. A migration `20260925000100_remove_card_photos.sql` apagou o bucket `card-photos` (estava vazio), suas policies e a coluna `cards.photo_path`. O texto abaixo fica só como histórico.
 
 * Bucket privado `card-photos`.
 * Caminho: `{user_id}/{card_id}.jpg`.
@@ -335,7 +335,7 @@ A mesma lógica deve existir em `src/domain` (TypeScript, com testes). O banco �
 
 ### 5.6 Exclusão de conta (LGPD)
 
-* Uma Edge Function `delete-account` apaga as fotos do usuário, depois o usuário em `auth.users` (o `on delete cascade` apaga o resto).
+* Uma Edge Function `delete-account` apaga o usuário em `auth.users` (o `on delete cascade` apaga o resto). Sem fotos de cartão, não há arquivos no Storage pra apagar.
 * Botão em Configurações: "Apagar minha conta e meus dados", com confirmação digitando APAGAR.
 * Botão "Baixar meus dados" (JSON com tudo).
 

@@ -34,7 +34,6 @@ const cardRecord = (card: Card) => ({
   id: card.id,
   name: card.name,
   color: card.color,
-  photo_path: card.photoPath,
   closing_day: card.closingDay,
   sort_order: card.sortOrder,
 })

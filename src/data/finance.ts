@@ -17,7 +17,6 @@ export interface Card {
   readonly id: string
   readonly name: string
   readonly color: string | null
-  readonly photoPath: string | null
   readonly closingDay: number | null
   readonly sortOrder: number
 }
@@ -83,7 +82,7 @@ export async function loadFinance(): Promise<Finance> {
     payments,
     subscriptions,
   ] = await Promise.all([
-    select('cards', 'id,name,color,photo_path,closing_day,sort_order'),
+    select('cards', 'id,name,color,closing_day,sort_order'),
     select('months', 'id,ref'),
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
     select(
@@ -123,7 +122,6 @@ export async function loadFinance(): Promise<Finance> {
         id: text(row.id),
         name: text(row.name),
         color: (row.color as string | null) ?? null,
-        photoPath: (row.photo_path as string | null) ?? null,
         closingDay: (row.closing_day as number | null) ?? null,
         sortOrder: Number(row.sort_order),
       }))

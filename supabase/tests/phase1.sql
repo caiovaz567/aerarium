@@ -34,7 +34,7 @@ select pg_temp.assert_true((select count(*) = 0 from pg_proc p join pg_namespace
 select pg_temp.assert_true(not exists(select 1 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname in ('public', 'private') and p.prosecdef
     and (has_function_privilege('anon', p.oid, 'EXECUTE') or has_function_privilege('authenticated', p.oid, 'EXECUTE'))), 'Clientes nao executam funcoes security definer do app ou auxiliares da plataforma');
-select pg_temp.assert_true((select not public and allowed_mime_types = array['image/jpeg'] from storage.buckets where id = 'card-photos'), 'Bucket privado JPEG');
+select pg_temp.assert_true(not exists(select 1 from storage.buckets where id = 'card-photos') and not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'cards' and column_name = 'photo_path'), 'Fotos de cartao removidas do banco');
 
 -- Only a temporary test user; no credentials, identity or email is sent.
 insert into auth.users (id, aud, role, email, created_at, updated_at)
@@ -111,8 +111,6 @@ select pg_temp.expect_error($q$insert into public.invoice_expenses (invoice_id, 
 select pg_temp.expect_error($q$insert into public.cards (name, closing_day) values ('Dia invalido',32)$q$, '23514', 'Dia do fechamento limitado a 1..31');
 
 -- Transactional metadata-only Storage fixtures; no physical object is uploaded.
-insert into storage.objects (bucket_id, name) values ('card-photos', '10000000-0000-4000-8000-000000000001/fixture.jpg');
-select pg_temp.assert_true(exists(select 1 from storage.objects where bucket_id = 'card-photos'), 'A acessa metadados de sua foto');
 
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
@@ -144,12 +142,6 @@ select pg_temp.expect_error($q$insert into public.invoice_expenses (invoice_id, 
 select pg_temp.expect_error($q$insert into public.installment_plans (card_id, description, installment_amount,total_installments,first_month) values ('20000000-0000-4000-8000-000000000001','FK A',1,1,'2026-09-01')$q$, '23503', 'FK impede plano de B em cartao de A');
 select pg_temp.expect_error($q$insert into public.installment_payments (plan_id, month) values ('40000000-0000-4000-8000-000000000001','2026-09-01')$q$, '23503', 'B nao paga plano de A');
 select pg_temp.expect_error($q$insert into public.subscriptions (card_id,name,amount,charge_day) values ('20000000-0000-4000-8000-000000000001','FK A',1,1)$q$, '23503', 'FK impede assinatura de B em cartao de A');
-select pg_temp.assert_true(not exists(select 1 from storage.objects where bucket_id = 'card-photos'), 'B nao le foto de A');
-select pg_temp.expect_error($q$insert into storage.objects (bucket_id,name) values ('card-photos','10000000-0000-4000-8000-000000000001/forjada.jpg')$q$, '42501', 'B nao escreve na pasta de A');
-insert into storage.objects (bucket_id,name) values ('card-photos','10000000-0000-4000-8000-000000000002/fixture.jpg');
-select pg_temp.expect_error($q$update storage.objects set name = '10000000-0000-4000-8000-000000000001/movida.jpg' where bucket_id = 'card-photos'$q$, '42501', 'B nao move foto para pasta de A');
--- Hosted Storage also blocks direct SQL deletes; deletion must use its HTTP API.
-select pg_temp.expect_error($q$delete from storage.objects where bucket_id = 'card-photos' and name like '10000000-0000-4000-8000-000000000001/%'$q$, '42501', 'Storage recusa exclusao SQL direta por B');
 
 -- Unauthenticated access is denied even if someone guesses an identifier.
 set local role anon;
