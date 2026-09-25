@@ -5,13 +5,14 @@ import { useFinance } from '../../data/useFinance'
 import { cents, formatMoney, type Cents } from '../../domain/money'
 import { dateBR, monthName, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
-import { TrashButton } from '../../ui/controls'
+import { AddButton, TrashButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
-import { ChevronDownIcon } from '../../ui/icons'
+import { ChevronDownIcon, PlusIcon } from '../../ui/icons'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { cardsView, type CardBlock } from '../cartao/cardView'
 import { usePlanActions } from '../cartao/planActions'
 import { PlanRow } from '../cartao/PlanRow'
+import { useEditor } from '../editar/editorContext'
 import { MonthNav } from '../meses/MonthNav'
 import { defaultMonth } from '../meses/monthView'
 
@@ -53,10 +54,12 @@ function StackBar({
 function CardSection({
   block,
   month,
+  onEdit,
   children,
 }: {
   readonly block: CardBlock
   readonly month: Month
+  readonly onEdit: () => void
   readonly children: ReactNode
 }) {
   const { card, invoice } = block
@@ -83,6 +86,14 @@ function CardSection({
           <small className={invoice?.paid ? 'ok' : ''}>{status}</small>
         </Link>
         {invoice && <span className="sum">{formatMoney(block.total)}</span>}
+        <button
+          type="button"
+          className="pill-button"
+          onClick={onEdit}
+          aria-label={`Editar ${card.name}`}
+        >
+          Editar
+        </button>
       </div>
       {showBar && (
         <div className="card-bar">
@@ -131,6 +142,7 @@ export function CardsPage() {
   const [params] = useSearchParams()
   const query = useFinance()
   const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
+  const editor = useEditor()
   const actions = usePlanActions(
     query.data ?? {
       cards: [],
@@ -225,7 +237,12 @@ export function CardsPage() {
       )}
 
       {view.blocks.map((block) => (
-        <CardSection key={block.card.id} block={block} month={selected}>
+        <CardSection
+          key={block.card.id}
+          block={block}
+          month={selected}
+          onEdit={() => editor.card(block.card.id)}
+        >
           {(block.plans.length > 0 || block.subscriptionNames.length > 0) && (
             <ul className="rows">
               {block.plans.map((line) => (
@@ -233,6 +250,7 @@ export function CardsPage() {
                   key={line.plan.id}
                   line={line}
                   onToggle={() => actions.toggle(line, selected)}
+                  onOpen={() => editor.plan(line.plan.id)}
                   onDelete={() => actions.remove(line.plan)}
                 />
               ))}
@@ -257,6 +275,11 @@ export function CardsPage() {
               )}
             </ul>
           )}
+          <AddButton
+            onClick={() => editor.plan(null, { cardId: block.card.id })}
+          >
+            Parcela neste cartão
+          </AddButton>
         </CardSection>
       ))}
 
@@ -279,12 +302,25 @@ export function CardsPage() {
                 key={line.plan.id}
                 line={line}
                 onToggle={() => actions.toggle(line, selected)}
+                onOpen={() => editor.plan(line.plan.id)}
                 onDelete={() => actions.remove(line.plan)}
               />
             ))}
           </ul>
+          <AddButton onClick={() => editor.plan(null, { cardId: null })}>
+            Parcela fora de cartão
+          </AddButton>
         </section>
       )}
+
+      <button
+        type="button"
+        className="new-card"
+        onClick={() => editor.card(null)}
+      >
+        <PlusIcon />
+        Novo cartão
+      </button>
 
       <section className="block">
         <button
@@ -311,7 +347,11 @@ export function CardsPage() {
           <ul className="rows bordered">
             {view.archived.map(({ plan, settledOn, paidCount, card }) => (
               <li className="row" key={plan.id}>
-                <div className="row-main static">
+                <button
+                  type="button"
+                  className="row-main"
+                  onClick={() => editor.plan(plan.id)}
+                >
                   {card ? (
                     <CardArt card={card} size="xs" />
                   ) : (
@@ -334,7 +374,7 @@ export function CardsPage() {
                   <span className="val">
                     {formatMoney(plan.installmentAmount)}
                   </span>
-                </div>
+                </button>
                 <TrashButton
                   label={plan.description}
                   onClick={() => actions.remove(plan)}

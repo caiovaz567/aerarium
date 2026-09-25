@@ -34,7 +34,7 @@ O nome vem do latim: o *aerarium* era o tesouro público da Roma Antiga, guardad
 | Dados no front | TanStack Query | Cache, recarregamento e atualização otimista |
 | Banco e login | Supabase (Postgres + Auth + Storage) | Dados relacionais, RLS por usuário, SQL pra relatórios, sem ficar preso |
 | Datas | date-fns com locale pt-BR | Aritmética de meses sem dor |
-| Excel | SheetJS (`xlsx`), importado só quando usado | Mesma exportação da v1 |
+| Excel | `write-excel-file`, importado só quando usado (troca da Fase 8: o SheetJS do npm está desatualizado, ver `docs/FASE_8.md`) | Mesma exportação da v1 |
 | Gráfico | Componente SVG próprio | O comportamento é muito específico (seção 8.4), biblioteca atrapalharia |
 | Testes | Vitest (domínio) + Playwright (telas no tamanho do iPhone) | |
 | PWA | `vite-plugin-pwa` | Manifesto, ícones e service worker |

@@ -37,4 +37,4 @@ Achados pelos testes e corrigidos: tocar no + enquanto os dados carregavam não 
 
 ## Próxima fase
 
-A Fase 8 faz Assinaturas, Arquivados, edições (cartão, parcelamento, entrada e conta), fotos dos cartões e o Excel (seções 8.6, 8.7, 8.8, 5.5 e o hover do item 12 da seção 7.4). Aguardar confirmação antes de iniciá-la, conforme `CLAUDE.md`.
+A Fase 8 faz Assinaturas, Arquivados, edições (cartão, parcelamento, entrada e conta), fotos dos cartões e o Excel (seções 8.6, 8.7, 8.8, 5.5 e o hover do item 12 da seção 7.4): ver [FASE_8.md](FASE_8.md).

@@ -23,21 +23,21 @@ export interface FinanceOp {
 }
 
 type Result = PromiseLike<{ error: { message: string } | null }>
-async function ok(request: Result) {
+export async function ok(request: Result) {
   const { error } = await request
   if (error) throw new Error(error.message)
 }
-const table = (name: string) => supabase().from(name)
-const monthDate = (value: Month) => `${value}-01`
+export const table = (name: string) => supabase().from(name)
+export const monthDate = (value: Month) => `${value}-01`
 
-function patch<T extends { readonly id: string }>(
+export function patch<T extends { readonly id: string }>(
   list: readonly T[],
   id: string,
   changes: Partial<T>,
 ): T[] {
   return list.map((item) => (item.id === id ? { ...item, ...changes } : item))
 }
-const without = <T extends { readonly id: string }>(
+export const without = <T extends { readonly id: string }>(
   list: readonly T[],
   id: string,
 ) => list.filter((item) => item.id !== id)
@@ -76,7 +76,7 @@ const expenseRecord = (row: ExpenseRow) => ({
 })
 
 /** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
-async function insertInvoices(
+export async function insertInvoices(
   invoices: readonly InvoiceRow[],
   expenses: readonly ExpenseRow[],
 ) {
@@ -93,7 +93,7 @@ async function insertInvoices(
 }
 
 /** Mirror of the database trigger: paying an invoice pays its card installments. */
-function withInvoicePaid(
+export function withInvoicePaid(
   finance: Finance,
   invoiceId: string,
   paid: boolean,

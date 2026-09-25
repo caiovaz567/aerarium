@@ -8,6 +8,7 @@ import { monthLabel, monthName, type Month } from '../../domain/months'
 import { EmptyState } from '../../ui/EmptyState'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
+import { useEditor } from '../editar/editorContext'
 import { BillModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
 import { IncomesBlock, OutflowsBlock } from './MonthBlocks'
@@ -46,6 +47,7 @@ export function MonthsPage() {
   const query = useFinance()
   const run = useFinanceOp()
   const toast = useToast()
+  const editor = useEditor()
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
   // Like v1: a new month starts from the top.
@@ -208,6 +210,7 @@ export function MonthsPage() {
         }
         onInvoiceDelete={deleteInvoice}
         onLoosePaid={loosePaid}
+        onLooseOpen={(item) => editor.plan(item.plan.id)}
         onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
         onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
         onBillDelete={deleteBill}
@@ -243,6 +246,14 @@ export function MonthsPage() {
           card={invoice.card}
           finance={finance}
           onClose={close}
+          onOpenPlan={(id) => {
+            close()
+            editor.plan(id)
+          }}
+          onOpenSubscription={(id) => {
+            close()
+            editor.subscription(id)
+          }}
           onRemoveExpense={(expense) => {
             run(ops.removeExpense(expense))
             toast('Gasto removido', {

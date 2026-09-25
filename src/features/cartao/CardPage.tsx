@@ -16,10 +16,12 @@ import {
   type Month,
 } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
+import { AddButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
 import { ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { StickyBar } from '../../ui/StickyBar'
+import { useEditor } from '../editar/editorContext'
 import { CardChart } from './CardChart'
 import { cardStats, monthDetail, planLine, pointStatus } from './cardView'
 import { usePlanActions } from './planActions'
@@ -79,6 +81,7 @@ export function CardPage() {
     return () => document.removeEventListener('keydown', onKey)
   }, [navigate, points, index])
 
+  const editor = useEditor()
   const actions = usePlanActions(finance ?? emptyFinance)
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -126,6 +129,14 @@ export function CardPage() {
           <ChevronLeftIcon />
         </Link>
         <h2 className="page-title">{card.name}</h2>
+        <button
+          type="button"
+          className="pill-button"
+          onClick={() => editor.card(card.id)}
+          aria-label={`Editar ${card.name}`}
+        >
+          Editar
+        </button>
       </StickyBar>
 
       <div className="card-hero">
@@ -260,24 +271,32 @@ export function CardPage() {
                   key={plan.id}
                   line={line}
                   onToggle={() => actions.toggle(line, selected)}
+                  onOpen={() => editor.plan(plan.id)}
                 />
               ) : (
                 <li className="row" key={plan.id}>
                   <span className="check-space" />
-                  <div className="row-main static">
+                  <button
+                    type="button"
+                    className="row-main"
+                    onClick={() => editor.plan(plan.id)}
+                  >
                     <span className="desc">
                       {plan.description}
                       <span className="sub">
                         nenhuma parcela em {monthShort(selected)}
                       </span>
                     </span>
-                  </div>
+                  </button>
                   <span className="trash-space" />
                 </li>
               )
             })}
           </ul>
         )}
+        <AddButton onClick={() => editor.plan(null, { cardId: card.id })}>
+          Parcela neste cartão
+        </AddButton>
       </section>
 
       {subscriptions.length > 0 && (
@@ -289,7 +308,11 @@ export function CardPage() {
           <ul className="rows">
             {subscriptions.map((item) => (
               <li className="row" key={item.id}>
-                <Link className="row-main" to="/assinaturas">
+                <button
+                  type="button"
+                  className="row-main"
+                  onClick={() => editor.subscription(item.id)}
+                >
                   <span className="day">
                     <small>dia</small>
                     <b>{item.chargeDay}</b>
@@ -299,7 +322,7 @@ export function CardPage() {
                     {item.note && <span className="sub">{item.note}</span>}
                   </span>
                   <span className="val">{formatMoney(item.amount)}</span>
-                </Link>
+                </button>
               </li>
             ))}
           </ul>

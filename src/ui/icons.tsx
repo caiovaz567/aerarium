@@ -99,3 +99,8 @@ export const ChevronDownIcon = () => (
     <path d="M6 9l6 6 6-6" />
   </Stroke>
 )
+export const DownloadIcon = () => (
+  <Stroke>
+    <path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14" />
+  </Stroke>
+)

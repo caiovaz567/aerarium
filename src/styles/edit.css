@@ -1,0 +1,347 @@
+/* Phase 8: edit dialogs, subscriptions, photos, Excel and hover. Measures from v1. */
+
+.pill-button,
+.excel-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.excel-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.excel-button svg {
+  width: 16px;
+  height: 16px;
+}
+.excel-button[disabled] {
+  opacity: 0.6;
+  cursor: progress;
+}
+.add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 0;
+  border-top: 1px dashed var(--line);
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-align: left;
+}
+.add svg {
+  width: 16px;
+  height: 16px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .add:hover {
+    background: var(--accent-soft);
+  }
+}
+.new-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 64px;
+  padding: 18px;
+  border: 2px dashed var(--line);
+  border-radius: 18px;
+  background: none;
+  color: var(--accent);
+  font-weight: 700;
+}
+.new-card svg {
+  width: 18px;
+  height: 18px;
+}
+.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.center {
+  text-align: center;
+}
+
+/* Card editor */
+.card-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.card-edit .card-art.lg {
+  max-width: 240px;
+}
+.card-edit-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.card-edit-buttons .btn {
+  padding: 9px 14px;
+  font-size: 14px;
+}
+.file-button {
+  position: relative;
+  cursor: pointer;
+}
+.file-button.busy {
+  opacity: 0.7;
+  cursor: progress;
+}
+.file-button:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.swatch {
+  position: relative;
+  cursor: pointer;
+}
+.swatch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.swatch i {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+}
+.swatch input:checked + i {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+.swatch input:focus-visible + i {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.card-art.photo {
+  background: var(--surface-2);
+}
+.card-art.photo::after {
+  display: none;
+}
+.card-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Plan editor: payment history and registering a payment */
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.history > small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.history ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  font-size: 13.5px;
+}
+.history li span {
+  flex: 1;
+  color: var(--muted);
+}
+.history li button {
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--neg-soft);
+  color: var(--neg);
+  font-size: 12px;
+  font-weight: 600;
+}
+.register {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  align-items: end;
+  margin-top: 6px;
+}
+.register .btn {
+  grid-column: 1 / -1;
+}
+/* Side by side only when "Setembro 2026" fits whole. */
+@media (min-width: 560px) {
+  .register {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.field input[type='date'] {
+  min-height: 48px;
+}
+
+/* Invoice summary items that open the plan or subscription */
+.invoice-list li.clickable {
+  padding: 0;
+}
+.invoice-list li.clickable > button {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  .invoice-list li.clickable > button:hover {
+    background: var(--surface-2);
+  }
+}
+
+/* Assinaturas */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 2px;
+}
+.summary small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+.summary .big {
+  margin: 0;
+  color: var(--ink);
+  font: 800 clamp(30px, 9vw, 40px) / 1.05 var(--display);
+  letter-spacing: -0.02em;
+}
+.summary p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.next-charge {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 13.5px;
+}
+.next-charge b {
+  color: var(--accent);
+}
+
+/* Hover, only with a mouse (7.4 item 12): the thumbnail lifts and tilts with a
+   passing shine; the big card tilts in 3D following the pointer. */
+.card-art:not(.photo)::after {
+  background:
+    radial-gradient(
+      120% 90% at 100% 0%,
+      rgb(255 255 255 / 20%),
+      transparent 55%
+    ),
+    linear-gradient(
+      105deg,
+      transparent 38%,
+      rgb(255 255 255 / 34%) 49%,
+      transparent 60%
+    );
+  background-position:
+    0 0,
+    100% 0;
+  background-repeat: no-repeat;
+  background-size:
+    100% 100%,
+    250% 100%;
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-art-link .card-art {
+    transition:
+      transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.28s;
+  }
+  .card-art-link .card-art::after {
+    transition: background-position 0.7s ease;
+  }
+  .card-head:has(.card-art-link:hover, .card-title:hover) .card-art {
+    box-shadow:
+      0 8px 18px rgb(0 0 0 / 35%),
+      inset 0 0 0 1px rgb(255 255 255 / 18%);
+    transform: translateY(-3px) rotate(-5deg) scale(1.1);
+  }
+  .card-head:has(.card-art-link:hover, .card-title:hover) .card-art::after {
+    background-position:
+      0 0,
+      0% 0;
+  }
+  .card-title:hover b {
+    color: var(--accent);
+  }
+  .card-art.lg {
+    transform: perspective(800px) rotateX(var(--rx, 0deg))
+      rotateY(var(--ry, 0deg));
+    transition:
+      transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.45s;
+    will-change: transform;
+  }
+  .card-art.lg.tilt {
+    box-shadow:
+      0 18px 40px rgb(0 0 0 / 40%),
+      inset 0 0 0 1px rgb(255 255 255 / 20%);
+    transition:
+      transform 0.08s linear,
+      box-shadow 0.3s;
+  }
+  .card-art.lg.tilt::after {
+    background: radial-gradient(
+      circle at var(--gx, 50%) var(--gy, 50%),
+      rgb(255 255 255 / 34%),
+      transparent 48%
+    );
+  }
+}
+
+@media (max-width: 480px) {
+  .add {
+    padding: 13px 14px;
+  }
+}

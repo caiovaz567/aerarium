@@ -81,6 +81,7 @@ export function OutflowsBlock({
   onInvoicePaid,
   onInvoiceDelete,
   onLoosePaid,
+  onLooseOpen,
   onBill,
   onBillPaid,
   onBillDelete,
@@ -98,6 +99,7 @@ export function OutflowsBlock({
   readonly onInvoicePaid: (item: CardOutflow, paid: boolean) => void
   readonly onInvoiceDelete: (item: CardOutflow) => void
   readonly onLoosePaid: (item: LooseOutflow, paid: boolean) => void
+  readonly onLooseOpen: (item: LooseOutflow) => void
   readonly onBill: (bill: BillRow) => void
   readonly onBillPaid: (bill: BillRow, paid: boolean) => void
   readonly onBillDelete: (bill: BillRow) => void
@@ -181,7 +183,11 @@ export function OutflowsBlock({
                   label={item.plan.description}
                   onChange={(paid) => onLoosePaid(item, paid)}
                 />
-                <div className="row-main static">
+                <button
+                  type="button"
+                  className="row-main"
+                  onClick={() => onLooseOpen(item)}
+                >
                   <span className="desc">
                     {item.plan.description}
                     <span className="sub">
@@ -195,7 +201,7 @@ export function OutflowsBlock({
                     </span>
                   </span>
                   <span className="val">{formatMoney(item.amount)}</span>
-                </div>
+                </button>
                 <span className="trash-space" />
               </li>
             ))}

@@ -1,5 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
-import { CheckIcon, TrashIcon } from './icons'
+import { CheckIcon, PlusIcon, TrashIcon } from './icons'
 
 /** Round "paid" toggle used on every outflow row. */
 export function CheckButton({
@@ -150,6 +150,22 @@ export function ArmedButton({
       onClick={() => (armed ? onConfirm() : setArmed(true))}
     >
       {armed ? 'Toca de novo pra confirmar' : children}
+    </button>
+  )
+}
+
+/** "+ Something" at the bottom of a block, with an SVG plus (7.4 item 4). */
+export function AddButton({
+  children,
+  onClick,
+}: {
+  readonly children: string
+  readonly onClick: () => void
+}) {
+  return (
+    <button type="button" className="add" onClick={onClick}>
+      <PlusIcon />
+      {children}
     </button>
   )
 }

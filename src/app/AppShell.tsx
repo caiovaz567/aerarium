@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useMatch } from 'react-router'
 import { useFinance } from '../data/useFinance'
+import { EditorProvider } from '../features/editar/EditorProvider'
+import { ExcelButton } from '../features/exportar/ExcelButton'
 import { LaunchModal } from '../features/lancar/LaunchModal'
 import { useToast } from '../ui/toastContext'
 import { parseMonth } from './paths'
@@ -54,6 +56,7 @@ function Header() {
       <div className="app-header-inner">
         <Brand />
         <SyncStatus />
+        <ExcelButton />
         {/* On phones, Ajustes lives in the bottom bar instead. */}
         <Link
           className="icon-button header-config"
@@ -80,7 +83,7 @@ export function AppShell() {
     setLaunching(true)
   }
   return (
-    <>
+    <EditorProvider>
       <a className="skip-link" href="#conteudo">
         Ir para o conteúdo
       </a>
@@ -122,6 +125,6 @@ export function AppShell() {
           onClose={() => setLaunching(false)}
         />
       )}
-    </>
+    </EditorProvider>
   )
 }

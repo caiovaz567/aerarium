@@ -33,6 +33,8 @@ export function InvoiceModal({
   onClose,
   onSave,
   onRemoveExpense,
+  onOpenPlan,
+  onOpenSubscription,
 }: {
   readonly invoice: InvoiceRow
   readonly card: Card
@@ -40,6 +42,9 @@ export function InvoiceModal({
   readonly onClose: () => void
   readonly onSave: (changes: InvoiceChanges) => void
   readonly onRemoveExpense: (expense: ExpenseRow) => void
+  /** Tapping an item opens it (seção 8.2). */
+  readonly onOpenPlan: (id: string) => void
+  readonly onOpenSubscription: (id: string) => void
 }) {
   const parts = invoiceTotals(invoice, finance)
   const fixed = sumMoney([
@@ -143,27 +148,34 @@ export function InvoiceModal({
             <small>Já entram sozinhas</small>
             <ul className="invoice-list">
               {installments.map(({ plan, item }) => (
-                <li key={plan.id}>
-                  <i className="dot installment" />
-                  <span>
-                    {plan.description}
-                    <small>
-                      {item.paidOn
-                        ? `paga em ${dayMonth(item.paidOn)}`
-                        : `parcela ${item.number}/${item.totalInstallments}`}
-                    </small>
-                  </span>
-                  <b>{formatMoney(item.amount)}</b>
+                <li key={plan.id} className="clickable">
+                  <button type="button" onClick={() => onOpenPlan(plan.id)}>
+                    <i className="dot installment" />
+                    <span>
+                      {plan.description}
+                      <small>
+                        {item.paidOn
+                          ? `paga em ${dayMonth(item.paidOn)}`
+                          : `parcela ${item.number}/${item.totalInstallments}`}
+                      </small>
+                    </span>
+                    <b>{formatMoney(item.amount)}</b>
+                  </button>
                 </li>
               ))}
               {subscriptions.map((item) => (
-                <li key={item.id}>
-                  <i className="dot subscription" />
-                  <span>
-                    {item.name}
-                    <small>assinatura · dia {item.chargeDay}</small>
-                  </span>
-                  <b>{formatMoney(item.amount)}</b>
+                <li key={item.id} className="clickable">
+                  <button
+                    type="button"
+                    onClick={() => onOpenSubscription(item.id)}
+                  >
+                    <i className="dot subscription" />
+                    <span>
+                      {item.name}
+                      <small>assinatura · dia {item.chargeDay}</small>
+                    </span>
+                    <b>{formatMoney(item.amount)}</b>
+                  </button>
                 </li>
               ))}
             </ul>

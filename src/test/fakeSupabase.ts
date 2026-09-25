@@ -29,6 +29,10 @@ export function fakeSupabase() {
       select() {
         return chain
       },
+      in(column: string, value: unknown) {
+        call.filters.push([column, value])
+        return chain
+      },
       eq(column: string, value: unknown) {
         call.filters.push([column, value])
         return chain

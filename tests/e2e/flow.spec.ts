@@ -135,3 +135,102 @@ test('lançar um Uber de R$ 12 no cartão em menos de 5 segundos e desfazer', as
   await page.reload()
   await expect(nubank).toContainText('2 gastos R$ 24')
 })
+
+test('cartão: dia de fechamento, cor e foto ficam gravados', async ({
+  page,
+}) => {
+  await page.goto('/cartoes?mes=2026-09')
+  await page.getByRole('button', { name: 'Editar Nubank Teste' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Editar cartão' })
+  await dialog.getByLabel('Dia de fechamento (opcional)').fill('5')
+  await dialog.getByRole('radio', { name: 'Cor #11C76F' }).check()
+
+  // A real photo goes to the private bucket, through the same input a person uses.
+  await dialog.locator('input[type=file]').evaluate(async (input) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1200
+    canvas.height = 760
+    const context = canvas.getContext('2d')!
+    context.fillStyle = '#2b39b3'
+    context.fillRect(0, 0, 1200, 760)
+    const blob = await new Promise<Blob>((resolve) =>
+      canvas.toBlob((value) => resolve(value!), 'image/png'),
+    )
+    const files = new DataTransfer()
+    files.items.add(new File([blob], 'cartao.png', { type: 'image/png' }))
+    ;(input as HTMLInputElement).files = files.files
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+  })
+  await expect(dialog.getByRole('button', { name: 'Tirar foto' })).toBeVisible()
+  await expect(dialog.locator('.card-art img')).toBeVisible()
+  await dialog.getByRole('button', { name: 'Salvar' }).click()
+  await saved(page)
+
+  await page.reload()
+  const thumbnail = page
+    .getByRole('region', { name: 'Nubank Teste' })
+    .locator('.card-art img')
+  await expect(thumbnail).toBeVisible()
+  expect(
+    await thumbnail.evaluate(
+      (image) => (image as HTMLImageElement).naturalWidth,
+    ),
+  ).toBe(900)
+  await page.getByRole('button', { name: 'Editar Nubank Teste' }).click()
+  await expect(dialog.getByLabel('Dia de fechamento (opcional)')).toHaveValue(
+    '5',
+  )
+  await dialog.getByRole('button', { name: 'Tirar foto' }).click()
+  await expect(
+    dialog.getByRole('button', { name: 'Colocar foto' }),
+  ).toBeVisible()
+  await dialog.getByRole('button', { name: 'Cancelar' }).click()
+  await saved(page)
+  await page.reload()
+  await expect(
+    page.getByRole('region', { name: 'Nubank Teste' }).locator('.card-art img'),
+  ).toHaveCount(0)
+
+  // With closing day 5, Lançar suggests the month after this one when today is later.
+  await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
+  const launch = page.getByRole('dialog', { name: 'Lançar' })
+  await launch.getByText('Nubank Teste').click()
+  const day = Number(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Sao_Paulo',
+      day: '2-digit',
+    }).format(new Date()),
+  )
+  if (day > 5)
+    await expect(launch.getByLabel('Entra em')).not.toHaveValue('2026-09')
+  await launch.getByRole('button', { name: 'Cancelar' }).click()
+})
+
+test('assinatura nova e parcelamento editado ficam gravados', async ({
+  page,
+}) => {
+  await page.goto('/assinaturas')
+  await page.getByRole('button', { name: 'Adicionar assinatura' }).click()
+  const sub = page.getByRole('dialog', { name: 'Nova assinatura' })
+  await sub.getByLabel('Assinatura').fill('Música')
+  await sub.getByLabel('Dia da cobrança').fill('20')
+  await sub.getByLabel('Valor').fill('21,90')
+  await sub.getByLabel('Cartão').selectOption({ label: 'Nubank Teste' })
+  await sub.getByRole('button', { name: 'Salvar' }).click()
+  await saved(page)
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: /^dia 20 Música/ }),
+  ).toBeVisible()
+
+  await page.goto('/cartoes?mes=2026-09')
+  await page.getByRole('button', { name: /^Notebook/ }).click()
+  const plan = page.getByRole('dialog', { name: 'Editar parcelamento' })
+  await plan.getByLabel('O que é').fill('Notebook novo')
+  await plan.getByRole('button', { name: 'Salvar' }).click()
+  await saved(page)
+  await page.reload()
+  await expect(
+    page.getByRole('button', { name: /^Notebook novo/ }),
+  ).toBeVisible()
+})

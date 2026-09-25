@@ -7,10 +7,13 @@ import type { PlanLine } from './cardView'
 export function PlanRow({
   line,
   onToggle,
+  onOpen,
   onDelete,
 }: {
   readonly line: PlanLine
   readonly onToggle: () => void
+  /** Opens the plan editor. */
+  readonly onOpen: () => void
   readonly onDelete?: () => void
 }) {
   const info = [
@@ -29,7 +32,7 @@ export function PlanRow({
         label={line.plan.description}
         onChange={onToggle}
       />
-      <div className="row-main static">
+      <button type="button" className="row-main" onClick={onOpen}>
         <span className="desc">
           {line.plan.description}
           <span className="sub">
@@ -42,7 +45,7 @@ export function PlanRow({
           </span>
         </span>
         <span className="val">{formatMoney(line.amount)}</span>
-      </div>
+      </button>
       {onDelete ? (
         <TrashButton label={line.plan.description} onClick={onDelete} />
       ) : (
