@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import type { Finance } from '../../data/finance'
 import { today as todayDate, useFinanceOp } from '../../data/useFinance'
-import { monthLabel, type Month } from '../../domain/months'
+import { monthLabel, monthOf, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
 import { CheckField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
@@ -114,8 +114,7 @@ export function LaunchModal({
       )
     )
       return setError('Em quantas vezes? Coloca um número de 2 a 120.')
-    if (kind !== 'parcelado' && !target)
-      return setError('Crie um mês primeiro, na aba Meses.')
+    if (!target) return setError('Crie um mês primeiro, na aba Meses.')
     let launch
     try {
       launch = buildLaunch(finance, {
@@ -125,7 +124,7 @@ export function LaunchModal({
         description,
         where: usesCard ? where : NO_CARD,
         paid,
-        month: target ?? months[0]!,
+        month: target,
         today: day,
       })
     } catch (reason) {
@@ -193,7 +192,8 @@ export function LaunchModal({
               }
             />
             <small className="launch-preview" aria-live="polite">
-              {installmentPreview(typed, Number(count))}
+              {target &&
+                installmentPreview(typed, Number(count), target, monthOf(day))}
             </small>
           </div>
         )}
@@ -256,9 +256,11 @@ export function LaunchModal({
           />
         )}
 
-        {kind !== 'parcelado' && target && (
+        {target && (
           <div className="field">
-            <label htmlFor={ids.month}>Entra em</label>
+            <label htmlFor={ids.month}>
+              {kind === 'parcelado' ? 'Primeira parcela em' : 'Entra em'}
+            </label>
             <select
               id={ids.month}
               value={target}
@@ -267,7 +269,7 @@ export function LaunchModal({
               {months.map((ref) => (
                 <option key={ref} value={ref}>
                   {monthLabel(ref)}
-                  {existing.has(ref) ? '' : ' (novo)'}
+                  {kind === 'parcelado' || existing.has(ref) ? '' : ' (novo)'}
                 </option>
               ))}
             </select>

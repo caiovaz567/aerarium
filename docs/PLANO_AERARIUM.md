@@ -563,7 +563,7 @@ Cada item abaixo veio de algo que eu reclamei na v1. Valem como critério de ace
 
 * Três tipos no topo: **Gasto**, **Parcelado**, **Entrada**.
 * **Valor** em fonte grande, com teclado numérico aberto automaticamente.
-* **Parcelado:** "Valor total da compra" e "Em quantas vezes", com a prévia "10x de R$ 120,00, começando este mês". A última parcela absorve o arredondamento, pra soma bater com o total.
+* **Parcelado:** "Valor total da compra" e "Em quantas vezes", com a prévia "10x de R$ 120,00, começando este mês". A última parcela absorve o arredondamento, pra soma bater com o total. **Decisão do usuário depois da Fase 7:** o campo "Primeira parcela em" deixa escolher o mês da primeira parcela; a sugestão segue a mesma regra do "Entra em" (incluindo o dia de fechamento) e a prévia diz quando começa ("começando em outubro").
 * **Descrição**, com exemplo que muda conforme o tipo (Uber, Notebook, Freela).
 * **Onde** (Gasto e Parcelado): grade de duas colunas com todos os cartões (miniatura e nome inteiro) e a opção **Pix, boleto ou dinheiro** (ícone de carteira). Lembra a última escolha.
 * **Já paguei:** só aparece com Pix, boleto ou dinheiro. Vem marcado, e desmarcar serve pra contas a pagar.
@@ -571,7 +571,7 @@ Cada item abaixo veio de algo que eu reclamei na v1. Valem como critério de ace
 * Resultado:
   * Gasto no cartão: vira um gasto lançado na fatura daquele mês (cria a fatura se não existir).
   * Gasto fora do cartão: vira uma conta, paga ou não.
-  * Parcelado: vira um parcelamento a partir do mês atual.
+  * Parcelado: vira um parcelamento a partir do mês escolhido em "Primeira parcela em".
   * Entrada: vira uma entrada.
 * Aviso com **Desfazer**: "R$ 12,00 na fatura Santander Unique".
 

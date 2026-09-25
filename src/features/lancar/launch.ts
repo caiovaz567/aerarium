@@ -52,8 +52,16 @@ export function suggestMonth(
   return target < allowed[0]! ? allowed[0]! : allowed[allowed.length - 1]!
 }
 
-/** "10x de R$ 120,00, começando este mês"; the last one absorbs the rounding. */
-export function installmentPreview(total: Cents | null, count: number) {
+/**
+ * "10x de R$ 120,00, começando este mês" (or "começando em outubro"); the last
+ * one absorbs the rounding.
+ */
+export function installmentPreview(
+  total: Cents | null,
+  count: number,
+  start: Month,
+  current: Month,
+) {
   if (!total || !Number.isInteger(count) || count < 2 || count > 120) return ''
   try {
     const { installmentAmount, finalAdjustment } = splitInstallments(
@@ -63,7 +71,11 @@ export function installmentPreview(total: Cents | null, count: number) {
     const last = finalAdjustment
       ? ` (a última de ${formatMoney(sumMoney([installmentAmount, finalAdjustment]))})`
       : ''
-    return `${count}x de ${formatMoney(installmentAmount)}${last}, começando este mês`
+    const when =
+      start === current
+        ? 'este mês'
+        : `em ${monthName(start).toLowerCase()}${start.slice(0, 4) === current.slice(0, 4) ? '' : ` de ${start.slice(0, 4)}`}`
+    return `${count}x de ${formatMoney(installmentAmount)}${last}, começando ${when}`
   } catch {
     return ''
   }
@@ -110,7 +122,8 @@ export function buildLaunch(
       installmentAmount: split.installmentAmount,
       finalAdjustment: split.finalAdjustment,
       totalInstallments: input.installments,
-      firstMonth: monthOf(input.today),
+      // The person picks the first month (decision after phase 7).
+      firstMonth: input.month,
       note: null,
     }
     return {

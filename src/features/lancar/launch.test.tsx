@@ -120,15 +120,25 @@ describe('mês sugerido', () => {
 })
 
 describe('prévia do parcelado', () => {
+  const sep = month('2026-09')
   it('mostra as parcelas e a última absorve o arredondamento', () => {
-    expect(spaced(installmentPreview(cents(120000), 10))).toBe(
+    expect(spaced(installmentPreview(cents(120000), 10, sep, sep))).toBe(
       '10x de R$ 120,00, começando este mês',
     )
-    expect(spaced(installmentPreview(cents(10000), 3))).toBe(
+    expect(spaced(installmentPreview(cents(10000), 3, sep, sep))).toBe(
       '3x de R$ 33,33 (a última de R$ 33,34), começando este mês',
     )
-    expect(installmentPreview(cents(10000), 1)).toBe('')
-    expect(installmentPreview(null, 10)).toBe('')
+    expect(installmentPreview(cents(10000), 1, sep, sep)).toBe('')
+    expect(installmentPreview(null, 10, sep, sep)).toBe('')
+  })
+
+  it('diz quando começa, se não for este mês', () => {
+    expect(
+      spaced(installmentPreview(cents(120000), 10, month('2026-10'), sep)),
+    ).toBe('10x de R$ 120,00, começando em outubro')
+    expect(
+      spaced(installmentPreview(cents(120000), 10, month('2027-01'), sep)),
+    ).toBe('10x de R$ 120,00, começando em janeiro de 2027')
   })
 })
 
@@ -221,6 +231,23 @@ describe('o que cada lançamento grava', () => {
     })
   })
 
+  it('parcelado pode começar no mês que vem, sem criar mês', () => {
+    const launch = buildLaunch(
+      finance,
+      {
+        ...base,
+        kind: 'parcelado',
+        amount: cents(120000),
+        installments: 10,
+        month: month('2026-10'),
+      },
+      ids,
+    )
+    const after = launch.op.apply(finance)
+    expect(after.plans.at(-1)).toMatchObject({ firstMonth: '2026-10' })
+    expect(after.months).toEqual(finance.months)
+  })
+
   it('mês seguinte ainda não criado: cria o mês com o gasto dentro', () => {
     const launch = buildLaunch(
       finance,
@@ -311,7 +338,16 @@ describe('modal Lançar', () => {
     expect(spaced(dialog.querySelector('.launch-preview')!.textContent)).toBe(
       '10x de R$ 120,00, começando este mês',
     )
-    expect(within(dialog).queryByLabelText('Entra em')).not.toBeInTheDocument()
+    // The person picks the first month; the preview follows.
+    const first = within(dialog).getByLabelText('Primeira parcela em')
+    expect(first).toHaveValue('2026-09')
+    expect(
+      within(first).getByRole('option', { name: 'Outubro 2026' }),
+    ).toBeInTheDocument()
+    fireEvent.change(first, { target: { value: '2026-10' } })
+    expect(spaced(dialog.querySelector('.launch-preview')!.textContent)).toBe(
+      '10x de R$ 120,00, começando em outubro',
+    )
     fireEvent.change(within(dialog).getByLabelText('Em quantas vezes'), {
       target: { value: '1' },
     })
