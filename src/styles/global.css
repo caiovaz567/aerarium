@@ -507,6 +507,8 @@ body.has-stuck .app-header.scrolled {
   display: flex;
   align-items: center;
   gap: 12px;
+  /* Without it, left: 50% squeezes the toast into half the screen. */
+  width: max-content;
   max-width: calc(100% - 32px);
   padding: 10px 12px 10px 16px;
   border-radius: 14px;
@@ -525,9 +527,17 @@ body.has-stuck .app-header.scrolled {
   color: var(--accent-soft);
   font-weight: 700;
 }
+/* Sits above the undo toast, so both fit at once. */
+.toast.update-toast {
+  z-index: 59;
+  bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+}
 @media (min-width: 760px) {
   .toast {
     bottom: 24px;
+  }
+  .toast.update-toast {
+    bottom: 80px;
   }
 }
 

@@ -6,6 +6,9 @@ if (existsSync('.env.local')) process.loadEnvFile('.env.local')
 
 /** Tests that change the e2e account's data; they run alone, after the rest. */
 const FLOW = /flow\.spec\.ts$/
+/** PWA checks run on the production build, where the service worker exists. */
+const PWA = /pwa\.spec\.ts$/
+const PREVIEW = 'http://127.0.0.1:4173'
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -28,7 +31,7 @@ export default defineConfig({
     {
       name: 'iphone-light',
       dependencies: ['setup'],
-      testIgnore: FLOW,
+      testIgnore: [FLOW, PWA],
       use: {
         ...devices['iPhone 13'],
         viewport: { width: 390, height: 844 },
@@ -38,7 +41,7 @@ export default defineConfig({
     {
       name: 'iphone-dark',
       dependencies: ['setup'],
-      testIgnore: FLOW,
+      testIgnore: [FLOW, PWA],
       use: {
         ...devices['iPhone 13'],
         viewport: { width: 390, height: 844 },
@@ -48,7 +51,7 @@ export default defineConfig({
     {
       name: 'desktop-light',
       dependencies: ['setup'],
-      testIgnore: FLOW,
+      testIgnore: [FLOW, PWA],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
@@ -58,7 +61,7 @@ export default defineConfig({
     {
       name: 'desktop-dark',
       dependencies: ['setup'],
-      testIgnore: FLOW,
+      testIgnore: [FLOW, PWA],
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1280, height: 800 },
@@ -81,10 +84,27 @@ export default defineConfig({
         colorScheme: 'light',
       },
     },
+    {
+      name: 'pwa',
+      testMatch: PWA,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: PREVIEW,
+        serviceWorkers: 'allow',
+      },
+    },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'npm run build && npm run preview -- --port 4173 --strictPort',
+      url: PREVIEW,
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+  ],
 })

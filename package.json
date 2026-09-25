@@ -28,6 +28,7 @@
     "db:domain": "vitest run --config vitest.db.config.ts",
     "db:seed": "node scripts/database.mjs seed",
     "e2e:user": "node scripts/e2e-user.mjs",
+    "icons": "node scripts/make-icons.mjs",
     "import:backup": "tsx scripts/import-backup.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
@@ -67,6 +68,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
     "vite": "^8.3.1",
-    "vitest": "^5.0.1"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.0.1",
+    "workbox-window": "^7.4.1"
   }
 }

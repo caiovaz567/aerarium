@@ -28,6 +28,8 @@ npm run e2e
 
 Outros comandos: `npm run test:watch`, `npm run test:coverage` (cobertura de `src/domain`), `npm run format`, `npm run typecheck` e `npm run preview`.
 
+O projeto de teste `pwa` do Playwright roda no build de produção (porta 4173), onde existe o service worker. `npm run icons` redesenha os ícones do app em `public/icons/`. PWA e deploy: [docs/FASE_9.md](docs/FASE_9.md).
+
 ## Supabase na nuvem
 
 O desenvolvimento usa um projeto Supabase hospedado, separado da produção. Docker e WSL não são necessários. O passo a passo está em [docs/SUPABASE_NUVEM.md](docs/SUPABASE_NUVEM.md).
