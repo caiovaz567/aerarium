@@ -213,6 +213,7 @@ export const ops = {
     }
   },
 
+  /** Also used by Lançar to add a new income. */
   restoreIncome(income: IncomeRow): FinanceOp {
     return {
       run: () => ok(table('incomes').insert(incomeRecord(income))),
@@ -252,6 +253,7 @@ export const ops = {
     }
   },
 
+  /** Also used by Lançar to add a new bill. */
   restoreBill(bill: BillRow): FinanceOp {
     return {
       run: () => ok(table('bills').insert(billRecord(bill))),
@@ -289,6 +291,7 @@ export const ops = {
     }
   },
 
+  /** Also used by Lançar to add a new expense (same insert). */
   restoreExpense(expense: ExpenseRow): FinanceOp {
     return {
       run: () => ok(table('invoice_expenses').insert(expenseRecord(expense))),
@@ -341,6 +344,7 @@ export const ops = {
     }
   },
 
+  /** Also used by Lançar to add a new plan (no payments). */
   restorePlan(plan: PlanRow, payments: readonly PaymentRow[]): FinanceOp {
     return {
       run: async () => {

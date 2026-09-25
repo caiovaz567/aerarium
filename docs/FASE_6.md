@@ -47,4 +47,4 @@ Achados pelos testes e corrigidos: ao girar o celular, o encaixe usava as medida
 
 ## Próxima fase
 
-A Fase 7 faz o Lançar (botão +, seção 8.5), incluindo o dia de fechamento. Aguardar confirmação antes de iniciá-la, conforme `CLAUDE.md`.
+A Fase 7 faz o Lançar (botão +, seção 8.5), incluindo o dia de fechamento: ver [FASE_7.md](FASE_7.md).

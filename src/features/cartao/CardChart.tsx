@@ -58,16 +58,20 @@ export function CardChart({
     if (slot) strip.current!.scrollLeft = selectedIndex.current * slot
   }, [slot, width])
 
-  // A new selection glides to the centre.
+  // A new selection glides to the centre. While gliding, the drag snap waits,
+  // or a slow first frame would snap back to where the glide started.
+  const glide = useRef<{ target: number; until: number } | null>(null)
   useEffect(() => {
     if (!slot) return
     const node = strip.current!
     const target = index * slot
-    if (Math.abs(node.scrollLeft - target) > 1)
+    if (Math.abs(node.scrollLeft - target) > 1) {
+      glide.current = { target, until: performance.now() + 1500 }
       node.scrollTo({
         left: target,
         behavior: reducedMotion() ? 'auto' : 'smooth',
       })
+    }
   }, [index, slot])
 
   // The line draws itself from left to right once, unless motion is reduced.
@@ -99,6 +103,12 @@ export function CardChart({
       const node = strip.current
       const now = live.current
       if (!node || !now.slot) return
+      const gliding = glide.current
+      if (gliding) {
+        const arrived = Math.abs(node.scrollLeft - gliding.target) <= 1
+        if (!arrived && performance.now() < gliding.until) return onScroll()
+        glide.current = null
+      }
       const nearest = nearestIndex(node.scrollLeft, now.slot, now.points.length)
       if (nearest !== now.index) now.onSelect(now.points[nearest]!.month)
       else if (Math.abs(node.scrollLeft - nearest * now.slot) > 1)

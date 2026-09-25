@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, useMatch } from 'react-router'
+import { useFinance } from '../data/useFinance'
+import { LaunchModal } from '../features/lancar/LaunchModal'
+import { useToast } from '../ui/toastContext'
+import { parseMonth } from './paths'
 import { Brand } from '../ui/Brand'
 import {
   CalendarIcon,
@@ -8,7 +12,6 @@ import {
   PlusIcon,
   RepeatIcon,
 } from '../ui/icons'
-import { Modal } from '../ui/Modal'
 import { useSyncState } from './syncContext'
 
 const SYNC_TEXT = { ok: 'Salvo', saving: 'Salvando…', error: 'Não salvou' }
@@ -66,6 +69,16 @@ function Header() {
 
 export function AppShell() {
   const [launching, setLaunching] = useState(false)
+  const finance = useFinance()
+  const toast = useToast()
+  const inMonths = useMatch('/meses/:ym')
+  const openLaunch = () => {
+    // Like v1: nothing to put things in yet.
+    if (finance.data && !finance.data.months.length)
+      return toast('Crie um mês primeiro, na aba Meses.')
+    // Opens right away; the form shows up as soon as the data arrives.
+    setLaunching(true)
+  }
   return (
     <>
       <a className="skip-link" href="#conteudo">
@@ -85,7 +98,7 @@ export function AppShell() {
           type="button"
           className="tab-add"
           aria-label="Lançar gasto ou entrada"
-          onClick={() => setLaunching(true)}
+          onClick={openLaunch}
         >
           <PlusIcon />
           <span>Lançar</span>
@@ -102,25 +115,12 @@ export function AppShell() {
       <main id="conteudo" className="app-content" tabIndex={-1}>
         <Outlet />
       </main>
-      {launching && (
-        <Modal
-          title="Lançar"
+      {launching && finance.data && (
+        <LaunchModal
+          finance={finance.data}
+          openMonth={parseMonth(inMonths?.params.ym)}
           onClose={() => setLaunching(false)}
-          actions={
-            <button
-              type="button"
-              className="btn ghost"
-              onClick={() => setLaunching(false)}
-            >
-              Fechar
-            </button>
-          }
-        >
-          <p className="muted">
-            O lançamento rápido de gastos, parcelas e entradas chega numa das
-            próximas etapas.
-          </p>
-        </Modal>
+        />
       )}
     </>
   )

@@ -98,3 +98,40 @@ test('criar outubro, recarregar, excluir e desfazer', async ({ page }) => {
   await page.reload()
   await expect(page.getByText('Sobrou do mês passado')).toBeVisible()
 })
+
+test('lançar um Uber de R$ 12 no cartão em menos de 5 segundos e desfazer', async ({
+  page,
+}) => {
+  await page.goto('/meses/2026-09')
+  const nubank = page.getByRole('button', { name: /^Nubank Teste/ })
+  await expect(nubank).toContainText('Uber R$ 12')
+
+  const start = Date.now()
+  await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Lançar' })
+  await expect(dialog.getByLabel('Valor')).toBeFocused()
+  await page.keyboard.type('12')
+  await dialog.getByLabel('Descrição').fill('Uber')
+  await dialog.getByText('Nubank Teste').click()
+  await dialog.getByRole('button', { name: 'Lançar' }).click()
+  const toast = page.locator('.toast')
+  await expect(toast).toContainText('na fatura Nubank Teste')
+  expect(Date.now() - start).toBeLessThan(5000)
+  // Two Ubers now, shown together in the composition.
+  await expect(nubank).toContainText('2 gastos R$ 24')
+
+  await toast.getByRole('button', { name: 'Desfazer' }).click()
+  await expect(nubank).toContainText('Uber R$ 12')
+  await saved(page)
+  await page.reload()
+  await expect(nubank).toContainText('Uber R$ 12')
+  await expect(nubank).not.toContainText('2 gastos')
+
+  // Launch again and keep it: it survives a reload.
+  await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
+  await page.keyboard.type('12')
+  await dialog.getByRole('button', { name: 'Lançar' }).click()
+  await saved(page)
+  await page.reload()
+  await expect(nubank).toContainText('2 gastos R$ 24')
+})

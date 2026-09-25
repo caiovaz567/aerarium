@@ -1,0 +1,146 @@
+/* Lançar (botão +). Measures from v1. */
+
+.launch {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.segmented {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.segmented button {
+  flex: 1;
+  padding: 9px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+}
+/* The amount is the main thing: big digits. */
+.launch-value input {
+  min-height: 60px;
+  font: 800 30px / 1.1 var(--display);
+  letter-spacing: -0.01em;
+}
+.field .launch-preview {
+  min-height: 1.2em;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2362697e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 16px center;
+  background-repeat: no-repeat;
+  background-size: 16px 16px;
+  cursor: pointer;
+  width: 100%;
+  min-height: 48px;
+  padding-block: 12px;
+  padding-left: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background-color: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+}
+.field select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+fieldset.field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+fieldset.field legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.where-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.where-option {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+.where-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.where-option > span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  height: 100%;
+  padding: 9px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.where-option .card-art.xs {
+  width: 34px;
+}
+.where-option b {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.where-option input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.where-option input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.wallet {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  aspect-ratio: 1.586;
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.wallet svg {
+  width: 15px;
+  height: 15px;
+}
+.where-option input:checked + span .wallet {
+  background: var(--accent);
+  color: var(--accent-ink);
+}

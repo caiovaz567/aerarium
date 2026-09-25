@@ -10,6 +10,8 @@ interface ModalProps {
   readonly children: ReactNode
   /** Buttons at the bottom, e.g. Cancelar and the main action. */
   readonly actions?: ReactNode
+  /** Selector focused on open even on touch screens, to bring up the keyboard. */
+  readonly initialFocus?: string
 }
 
 /**
@@ -17,10 +19,18 @@ interface ModalProps {
  * Esc and backdrop close, focus kept inside and returned on close.
  * Mount it only while open.
  */
-export function Modal({ title, onClose, children, actions }: ModalProps) {
+export function Modal({
+  title,
+  onClose,
+  children,
+  actions,
+  initialFocus,
+}: ModalProps) {
   const titleId = useId()
   const dialog = useRef<HTMLDivElement>(null)
   const close = useRef(onClose)
+  // Only the first render matters: focus is placed once, when the dialog opens.
+  const focusTarget = useRef(initialFocus)
 
   useEffect(() => {
     close.current = onClose
@@ -31,9 +41,11 @@ export function Modal({ title, onClose, children, actions }: ModalProps) {
     document.body.classList.add('locked')
     const node = dialog.current!
     // On touch screens, focusing an input would pop the keyboard; focus the dialog instead.
-    const first = window.matchMedia('(pointer: fine)').matches
-      ? node.querySelector<HTMLElement>(FOCUSABLE)
-      : null
+    const first = focusTarget.current
+      ? node.querySelector<HTMLElement>(focusTarget.current)
+      : window.matchMedia('(pointer: fine)').matches
+        ? node.querySelector<HTMLElement>(FOCUSABLE)
+        : null
     ;(first ?? node).focus()
 
     const onKey = (event: KeyboardEvent) => {
