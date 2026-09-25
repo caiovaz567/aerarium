@@ -1,11 +1,9 @@
 import type { CSSProperties, PointerEvent } from 'react'
-import { useCardPhotoUrl } from '../data/photos'
 import { cardColor, inkFor } from '../domain/cardColor'
 
 interface CardLook {
   readonly name: string
   readonly color: string | null
-  readonly photoPath?: string | null
 }
 
 /** On a mouse, the big card tilts in 3D following the pointer (7.4 item 12). */
@@ -30,8 +28,7 @@ function untilt(event: PointerEvent<HTMLSpanElement>) {
 
 /**
  * Card picture: color gradient and a gold chip; the large one also shows the
- * name and the contactless symbol. A photo replaces the drawing. Never a bank
- * logo (7.3).
+ * name and the contactless symbol. Never a bank logo (7.3).
  */
 export function CardArt({
   card,
@@ -41,27 +38,20 @@ export function CardArt({
   readonly size?: 'xs' | 'sm' | 'lg'
 }) {
   const color = cardColor(card)
-  const photo = useCardPhotoUrl(card.photoPath ?? null)
   const big = size === 'lg'
   return (
     <span
-      className={`card-art ${size}${photo ? ' photo' : ''}`}
+      className={`card-art ${size}`}
       style={{ '--cc': color, '--cc-ink': inkFor(color) } as CSSProperties}
       aria-hidden="true"
       onPointerMove={big ? tilt : undefined}
       onPointerLeave={big ? untilt : undefined}
     >
-      {photo ? (
-        <img src={photo} alt="" loading="lazy" />
-      ) : (
+      <i className="chip" />
+      {big && (
         <>
-          <i className="chip" />
-          {big && (
-            <>
-              <i className="waves" />
-              <b>{card.name}</b>
-            </>
-          )}
+          <i className="waves" />
+          <b>{card.name}</b>
         </>
       )}
     </span>

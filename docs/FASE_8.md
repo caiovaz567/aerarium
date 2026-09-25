@@ -1,12 +1,14 @@
 # Fase 8: Assinaturas, arquivados, edições, fotos e Excel
 
-**Status: concluída no projeto de desenvolvimento.** Seções 8.6, 8.7, 8.8, 5.5 e o hover do item 12 da seção 7.4.
+**Status: concluída no projeto de desenvolvimento.** Seções 8.6, 8.7, 8.8 e o hover do item 12 da seção 7.4.
+
+**Depois da entrega, a pedido do usuário, a foto de cartão foi removida** (seção 5.5). Nenhuma conta tinha foto guardada, então não houve limpeza a fazer. O bucket `card-photos` e a coluna `cards.photo_path` ficam no banco sem uso. As menções a fotos abaixo descrevem o que existiu e saiu.
 
 ## Entrega
 
 - **Aba Assinaturas** (`src/features/assinaturas`): total por mês e por ano, "Próxima cobrança", lista por dia com cartão e observação, lixeira com Desfazer e "Adicionar assinatura".
 - **Modais de edição** (`src/features/editar`), abertos de qualquer tela por um editor central (`EditorProvider`, `useEditor`):
-  - **Cartão:** prévia grande que muda enquanto edita, "Colocar foto" / "Trocar foto" / "Tirar foto" com a dica de não mostrar o número, nome, bolinhas de cor (a primeira é a cor do banco), dia de fechamento opcional, Excluir com Desfazer. Novo cartão entra no fim da lista.
+  - **Cartão:** prévia grande que muda enquanto edita, nome, bolinhas de cor (a primeira é a cor do banco), dia de fechamento opcional, Excluir com Desfazer. Novo cartão entra no fim da lista.
   - **Parcelamento:** o que é, cobrado em, observação, valor da parcela, total de parcelas, mês da primeira, histórico de pagamentos com Remover e "Registrar pagamento" com data e mês (seção 4.4). Excluir com Desfazer.
   - **Assinatura:** nome, dia, valor, cartão ou nenhum, observação. Excluir com Desfazer.
   - Entrada e conta já existiam desde a Fase 5.

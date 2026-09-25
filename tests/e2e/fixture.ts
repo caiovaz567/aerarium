@@ -44,13 +44,6 @@ export async function resetFixture(db: SupabaseClient) {
   const { data } = await db.auth.getUser()
   if (data.user?.email !== process.env.E2E_EMAIL)
     throw new Error('Recusado: só a conta de teste pode ser reiniciada.')
-  // Photos of the test account (Storage is not cleared by deleting cards).
-  const folder = data.user!.id
-  const { data: photos } = await db.storage.from('card-photos').list(folder)
-  if (photos?.length)
-    await db.storage
-      .from('card-photos')
-      .remove(photos.map((file) => `${folder}/${file.name}`))
   for (const table of ['months', 'cards', 'installment_plans', 'subscriptions'])
     await ok(db.from(table).delete().not('id', 'is', null))
 

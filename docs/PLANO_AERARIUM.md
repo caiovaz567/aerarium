@@ -326,6 +326,8 @@ A mesma lógica deve existir em `src/domain` (TypeScript, com testes). O banco �
 
 ### 5.5 Fotos dos cartões (Storage)
 
+**Removido a pedido do usuário depois da Fase 8:** o app não tem mais foto de cartão. O bucket `card-photos` e a coluna `cards.photo_path` continuam no banco, sem uso, porque apagar exigiria uma migration destrutiva sem ganho. O texto abaixo fica só como histórico.
+
 * Bucket privado `card-photos`.
 * Caminho: `{user_id}/{card_id}.jpg`.
 * Policy em `storage.objects`: só permite ler e escrever quando `(storage.foldername(name))[1] = auth.uid()::text`.
@@ -437,7 +439,7 @@ Fontes (Google Fonts): **Bricolage Grotesque** 600 e 800 pra títulos e números
 
 ### 7.3 Cor e miniatura dos cartões
 
-Cada cartão tem uma miniatura (proporção de cartão real, 1,586) com degradê da cor, um chip dourado e, na versão grande, o nome e o símbolo de aproximação. Se tiver foto, a foto substitui o desenho. **Nunca desenhar logotipo de banco nem bandeira**, só a cor.
+Cada cartão tem uma miniatura (proporção de cartão real, 1,586) com degradê da cor, um chip dourado e, na versão grande, o nome e o símbolo de aproximação. (Foto de cartão foi removida depois da Fase 8, a pedido do usuário.) **Nunca desenhar logotipo de banco nem bandeira**, só a cor.
 
 Cor automática pelo nome (a primeira bolinha de cor no Editar é sempre essa):
 
@@ -582,7 +584,7 @@ Cada item abaixo veio de algo que eu reclamei na v1. Valem como critério de ace
 
 ### 8.7 Modais de edição
 
-* **Cartão:** cartão grande de prévia no topo (atualiza enquanto edita), "Colocar foto" / "Trocar foto" / "Tirar foto" (com a dica pra não mostrar o número do cartão), nome, bolinhas de cor (a primeira é a cor do banco), dia de fechamento (opcional), Excluir com Desfazer.
+* **Cartão:** cartão grande de prévia no topo (atualiza enquanto edita), nome, bolinhas de cor (a primeira é a cor do banco), dia de fechamento (opcional), Excluir com Desfazer.
 * **Parcelamento:** descrição, cobrado em (cartão ou nenhum), observação, valor da parcela, total de parcelas, mês da primeira, e o histórico de pagamentos com opção de remover um pagamento.
 * **Entrada e conta:** descrição, valor, "Já paguei" (contas).
 
@@ -667,7 +669,7 @@ Seção 8.5, incluindo o dia de fechamento.
 
 ### Fase 8: Assinaturas, arquivados, edições, fotos e Excel
 
-Seções 8.6, 8.7, 8.8, 5.5 e o hover da 7.4 item 12.
+Seções 8.6, 8.7, 8.8, 5.5 e o hover da 7.4 item 12. (As fotos da 5.5 foram feitas e depois removidas a pedido do usuário.)
 
 ### Fase 9: PWA e deploy
 

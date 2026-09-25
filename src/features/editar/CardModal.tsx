@@ -1,9 +1,6 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { useId, useState, type ChangeEvent, type FormEvent } from 'react'
-import { useAuth } from '../../app/authContext'
+import { useId, useState, type FormEvent } from 'react'
 import { cardSnapshot, editOps } from '../../data/editOps'
 import type { Card, Finance } from '../../data/finance'
-import { photoPath, removeCardPhoto, uploadCardPhoto } from '../../data/photos'
 import { today, useFinanceOp } from '../../data/useFinance'
 import { autoColor, CARD_PALETTE } from '../../domain/cardColor'
 import { CardArt } from '../../ui/CardArt'
@@ -11,7 +8,10 @@ import { ArmedButton, TextField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 
-/** New or edit card (seção 8.7): preview, photo, name, color and closing day. */
+/**
+ * New or edit card (seção 8.7): preview, name, color and closing day.
+ * Card photos were removed at the user's request after phase 8.
+ */
 export function CardModal({
   finance,
   card,
@@ -21,19 +21,12 @@ export function CardModal({
   readonly card: Card | null
   readonly onClose: () => void
 }) {
-  const auth = useAuth()
-  const userId = auth.status === 'signed-in' ? auth.session.user.id : ''
   const run = useFinanceOp()
   const toast = useToast()
-  const client = useQueryClient()
   const closingId = useId()
-  // A new card already has its id, so a photo can be uploaded before saving.
-  const [id] = useState(() => card?.id ?? crypto.randomUUID())
   const [name, setName] = useState(card?.name ?? '')
   const [color, setColor] = useState<string | null>(card?.color ?? null)
   const [closing, setClosing] = useState(String(card?.closingDay ?? ''))
-  const [photo, setPhoto] = useState<string | null>(card?.photoPath ?? null)
-  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
   const bank = autoColor(name)
@@ -43,62 +36,19 @@ export function CardModal({
   ]
   const selected = color ?? bank
 
-  // An existing card saves photo changes right away, like v1.
-  const keepPhoto = (path: string | null) => {
-    setPhoto(path)
-    if (card) run(editOps.updateCard({ ...card, photoPath: path }))
-  }
-  const pick = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    setBusy(true)
-    setError('')
-    const path = photoPath(userId, id)
-    try {
-      await uploadCardPhoto(path, file)
-      await client.invalidateQueries({ queryKey: ['card-photo', path] })
-      keepPhoto(path)
-      toast('Foto salva')
-    } catch (reason) {
-      setError((reason as Error).message)
-    } finally {
-      setBusy(false)
-    }
-  }
-  const dropPhoto = async () => {
-    if (!photo) return
-    setBusy(true)
-    try {
-      await removeCardPhoto(photo)
-      keepPhoto(null)
-      toast('Foto removida')
-    } catch (reason) {
-      setError((reason as Error).message)
-    } finally {
-      setBusy(false)
-    }
-  }
-  // A photo uploaded for a card that was never saved is thrown away.
-  const cancel = () => {
-    if (!card && photo) void removeCardPhoto(photo).catch(() => {})
-    onClose()
-  }
-
   const submit = (event: FormEvent) => {
     event.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) return setError('Escreve o nome do cartão.')
     if (trimmed.length > 60) return setError('O nome pode ter até 60 letras.')
-    if (busy) return setError('Espera a foto terminar de enviar.')
     const day = closing ? Number(closing) : null
     if (day !== null && !(Number.isInteger(day) && day >= 1 && day <= 31))
       return setError('O dia de fechamento precisa ser de 1 a 31.')
     const next: Card = {
-      id,
+      id: card?.id ?? crypto.randomUUID(),
       name: trimmed,
       color,
-      photoPath: photo,
+      photoPath: null,
       closingDay: day,
       sortOrder:
         card?.sortOrder ??
@@ -120,33 +70,10 @@ export function CardModal({
   }
 
   return (
-    <Modal title={card ? 'Editar cartão' : 'Novo cartão'} onClose={cancel}>
+    <Modal title={card ? 'Editar cartão' : 'Novo cartão'} onClose={onClose}>
       <form className="modal-form" onSubmit={submit} noValidate>
         <div className="card-edit">
-          <CardArt
-            card={{ name: name || 'Seu cartão', color, photoPath: photo }}
-            size="lg"
-          />
-          <div className="card-edit-buttons">
-            <label className={`btn ghost file-button${busy ? ' busy' : ''}`}>
-              {busy ? 'Enviando…' : photo ? 'Trocar foto' : 'Colocar foto'}
-              <input
-                type="file"
-                accept="image/*"
-                className="visually-hidden"
-                disabled={busy}
-                onChange={pick}
-              />
-            </label>
-            {photo && !busy && (
-              <button type="button" className="btn ghost" onClick={dropPhoto}>
-                Tirar foto
-              </button>
-            )}
-          </div>
-          <small className="muted center">
-            Use uma foto sem o número do cartão aparecendo.
-          </small>
+          <CardArt card={{ name: name || 'Seu cartão', color }} size="lg" />
         </div>
         <TextField
           label="Nome do cartão"
@@ -155,9 +82,7 @@ export function CardModal({
           placeholder="Ex.: NuBank"
         />
         <fieldset className="field">
-          <legend>
-            Cor{photo ? ' (aparece quando estiver sem foto)' : ''}
-          </legend>
+          <legend>Cor</legend>
           <div className="swatches">
             {swatches.map((item, index) => (
               <label
@@ -199,7 +124,7 @@ export function CardModal({
         <div className="modal-actions">
           {card && <ArmedButton onConfirm={remove}>Excluir</ArmedButton>}
           <span className="spacer" />
-          <button type="button" className="btn ghost" onClick={cancel}>
+          <button type="button" className="btn ghost" onClick={onClose}>
             Cancelar
           </button>
           <button type="submit" className="btn primary">
