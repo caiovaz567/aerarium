@@ -1,6 +1,6 @@
 # Fase 10: acabamento
 
-**Status: concluída no desenvolvimento.** Falta o usuário publicar a Edge Function na produção (comando no fim). Seção 9, Fase 10, e seção 5.6.
+**Status: concluída.** No ar na produção, com a Edge Function `delete-account` publicada pelo usuário em 25/09/2026. Seção 9, Fase 10, e seção 5.6.
 
 ## Entrega
 
@@ -30,7 +30,7 @@
 - **Apagar conta de verdade, no desenvolvimento:** `npm run e2e:user` cria também a conta descartável `aerarium.e2e.apagar@example.test`; o teste `delete-flow.spec.ts` recria essa conta, entra, apaga pelo app e confere que ela não entra mais. Também conferido à mão: sem login a função recusa (401), sem APAGAR recusa (400), e depois de apagar não sobra nenhum cartão nem a conta.
 - Capturas conferidas em 390×844: Ajustes, modal de apagar e privacidade, nos dois temas.
 
-## Para publicar na produção (usuário)
+## Publicar a função na produção (usuário, já feito)
 
 O app novo chega sozinho com o push. A Edge Function precisa de um comando, uma vez:
 
