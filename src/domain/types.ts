@@ -11,6 +11,8 @@ export interface InstallmentPlan {
   readonly finalAdjustment: Cents
   readonly totalInstallments: number
   readonly firstMonth: Month
+  /** Fase 11: optional spending category. */
+  readonly categoryId?: string | null
 }
 
 export interface InstallmentPayment {
@@ -26,6 +28,7 @@ export interface Subscription {
   readonly cardId: string | null
   readonly amount: Cents
   readonly active: boolean
+  readonly categoryId?: string | null
 }
 
 export interface Invoice {
@@ -43,6 +46,7 @@ export interface Invoice {
 export interface InvoiceExpense {
   readonly invoiceId: string
   readonly amount: Cents
+  readonly categoryId?: string | null
 }
 
 export interface Income {
@@ -60,6 +64,7 @@ export interface Bill {
   readonly paid: boolean
   readonly paidOn: ISODate | null
   readonly sortOrder: number
+  readonly categoryId?: string | null
 }
 
 export interface InvoiceContext {

@@ -350,6 +350,7 @@ describe('Criar e excluir mês', () => {
   it('conta sem meses oferece criar o mês atual', () => {
     renderApp('/meses', undefined, {
       cards: [],
+      categories: [],
       months: [],
       incomes: [],
       bills: [],

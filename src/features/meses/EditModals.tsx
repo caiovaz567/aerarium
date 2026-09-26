@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
-import type { BillRow, IncomeRow } from '../../data/finance'
+import type { BillRow, ExpenseRow, IncomeRow } from '../../data/finance'
+import type { Category } from '../../domain/categories'
 import { formatMoneyInput, type Cents } from '../../domain/money'
 import {
   ArmedButton,
@@ -7,6 +8,7 @@ import {
   MoneyField,
   TextField,
 } from '../../ui/controls'
+import { CategoryPicker } from '../../ui/CategoryPicker'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
 
@@ -101,22 +103,26 @@ export function IncomeModal({
 
 export function BillModal({
   bill,
+  categories,
   onClose,
   onSave,
   onDelete,
 }: {
   readonly bill: BillRow
+  readonly categories: readonly Category[]
   readonly onClose: () => void
   readonly onSave: (changes: {
     description: string
     amount: Cents
     paid: boolean
+    categoryId: string | null
   }) => void
   readonly onDelete: () => void
 }) {
   const [description, setDescription] = useState(bill.description)
   const [value, setValue] = useState(formatMoneyInput(bill.amount))
   const [paid, setPaid] = useState(bill.paid)
+  const [categoryId, setCategoryId] = useState(bill.categoryId ?? null)
   const [error, setError] = useState('')
   return (
     <FormModal
@@ -128,7 +134,12 @@ export function BillModal({
         if (!description.trim()) return setError('Escreve uma descrição.')
         const read = readMoney(value)
         if ('error' in read) return setError(read.error)
-        onSave({ description: description.trim(), amount: read.amount, paid })
+        onSave({
+          description: description.trim(),
+          amount: read.amount,
+          paid,
+          categoryId,
+        })
       }}
     >
       <TextField
@@ -139,6 +150,68 @@ export function BillModal({
       />
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />
       <CheckField label="Já paguei" checked={paid} onChange={setPaid} />
+      <CategoryPicker
+        categories={categories}
+        value={categoryId}
+        onChange={setCategoryId}
+      />
+    </FormModal>
+  )
+}
+
+/** A launched card expense (Fase 11): description, value and category. */
+export function ExpenseModal({
+  expense,
+  categories,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  readonly expense: ExpenseRow
+  readonly categories: readonly Category[]
+  readonly onClose: () => void
+  readonly onSave: (changes: {
+    description: string
+    amount: Cents
+    categoryId: string | null
+  }) => void
+  readonly onDelete: () => void
+}) {
+  const [description, setDescription] = useState(expense.description)
+  const [value, setValue] = useState(formatMoneyInput(expense.amount))
+  const [categoryId, setCategoryId] = useState(expense.categoryId ?? null)
+  const [error, setError] = useState('')
+  return (
+    <FormModal
+      title="Editar gasto"
+      error={error}
+      onClose={onClose}
+      onDelete={onDelete}
+      onSubmit={() => {
+        if (!description.trim()) return setError('Escreve uma descrição.')
+        const read = readMoney(value)
+        if ('error' in read) return setError(read.error)
+        if (read.amount <= 0)
+          return setError('O valor precisa ser maior que zero.')
+        onSave({
+          description: description.trim(),
+          amount: read.amount,
+          categoryId,
+        })
+      }}
+    >
+      <TextField
+        label="Descrição"
+        value={description}
+        onChange={setDescription}
+        placeholder="Ex.: Uber"
+      />
+      <MoneyField label="Valor (R$)" value={value} onChange={setValue} />
+      <CategoryPicker
+        categories={categories}
+        value={categoryId}
+        onChange={setCategoryId}
+      />
     </FormModal>
   )
 }

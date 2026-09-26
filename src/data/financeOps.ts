@@ -58,6 +58,7 @@ const billRecord = (row: BillRow) => ({
   paid: row.paid,
   paid_on: row.paidOn,
   sort_order: row.sortOrder,
+  category_id: row.categoryId ?? null,
 })
 const invoiceRecord = (row: InvoiceRow) => ({
   id: row.id,
@@ -73,6 +74,7 @@ const expenseRecord = (row: ExpenseRow) => ({
   description: row.description,
   amount: toDecimal(row.amount),
   spent_on: row.spentOn,
+  category_id: row.categoryId ?? null,
 })
 
 /** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
@@ -223,7 +225,12 @@ export const ops = {
 
   updateBill(
     bill: BillRow,
-    changes: { description: string; amount: Cents; paid: boolean },
+    changes: {
+      description: string
+      amount: Cents
+      paid: boolean
+      categoryId?: string | null
+    },
     today: ISODate,
   ): FinanceOp {
     const paidOn = changes.paid ? (bill.paidOn ?? today) : null
@@ -236,6 +243,9 @@ export const ops = {
               amount: toDecimal(changes.amount),
               paid: changes.paid,
               paid_on: paidOn,
+              ...(changes.categoryId !== undefined && {
+                category_id: changes.categoryId,
+              }),
             })
             .eq('id', bill.id),
         ),
@@ -280,6 +290,28 @@ export const ops = {
       apply: (f) => ({
         ...f,
         invoices: patch(f.invoices, invoice.id, changes),
+      }),
+    }
+  },
+
+  updateExpense(
+    expense: ExpenseRow,
+    changes: { description: string; amount: Cents; categoryId: string | null },
+  ): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('invoice_expenses')
+            .update({
+              description: changes.description,
+              amount: toDecimal(changes.amount),
+              category_id: changes.categoryId,
+            })
+            .eq('id', expense.id),
+        ),
+      apply: (f) => ({
+        ...f,
+        expenses: patch(f.expenses, expense.id, changes),
       }),
     }
   },
@@ -358,6 +390,7 @@ export const ops = {
             total_installments: plan.totalInstallments,
             first_month: monthDate(plan.firstMonth),
             note: plan.note,
+            category_id: plan.categoryId ?? null,
           }),
         )
         if (payments.length)

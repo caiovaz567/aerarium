@@ -2,7 +2,9 @@ import { useId, useState, type FormEvent } from 'react'
 import { editOps } from '../../data/editOps'
 import type { Finance, SubscriptionRow } from '../../data/finance'
 import { useFinanceOp } from '../../data/useFinance'
+import { normalizeText } from '../../domain/categories'
 import { formatMoneyInput } from '../../domain/money'
+import { CategoryPicker } from '../../ui/CategoryPicker'
 import { ArmedButton, MoneyField, TextField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
@@ -28,6 +30,14 @@ export function SubscriptionModal({
   )
   const [cardId, setCardId] = useState(subscription?.cardId ?? '')
   const [note, setNote] = useState(subscription?.note ?? '')
+  // A new one starts in "Assinaturas" when the person has that category.
+  const [categoryId, setCategoryId] = useState(
+    subscription
+      ? (subscription.categoryId ?? null)
+      : (finance.categories.find(
+          (item) => normalizeText(item.name) === 'assinaturas',
+        )?.id ?? null),
+  )
   const [error, setError] = useState('')
 
   const submit = (event: FormEvent) => {
@@ -47,6 +57,7 @@ export function SubscriptionModal({
       chargeDay,
       note: note.trim() || null,
       active: subscription?.active ?? true,
+      categoryId,
     }
     run(
       subscription
@@ -111,6 +122,11 @@ export function SubscriptionModal({
           </select>
           <small>A assinatura entra na conta da fatura desse cartão.</small>
         </div>
+        <CategoryPicker
+          categories={finance.categories}
+          value={categoryId}
+          onChange={setCategoryId}
+        />
         <TextField
           label="Observação (opcional)"
           value={note}

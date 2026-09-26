@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { currentMonth, monthPath, parseMonth } from '../../app/paths'
-import type { BillRow, Finance, IncomeRow } from '../../data/finance'
+import type {
+  BillRow,
+  ExpenseRow,
+  Finance,
+  IncomeRow,
+} from '../../data/finance'
+import type { OutflowItem } from '../../domain/categories'
 import { ops } from '../../data/financeOps'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
 import { monthLabel, monthName, type Month } from '../../domain/months'
@@ -9,9 +15,10 @@ import { EmptyState } from '../../ui/EmptyState'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
-import { BillModal, IncomeModal } from './EditModals'
+import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
 import { IncomesBlock, OutflowsBlock } from './MonthBlocks'
+import { SpendingBlock } from './SpendingBlock'
 import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
 import { MonthSummary } from './MonthSummary'
@@ -27,6 +34,7 @@ type Dialog =
   | { readonly kind: 'income'; readonly id: string }
   | { readonly kind: 'bill'; readonly id: string }
   | { readonly kind: 'invoice'; readonly id: string }
+  | { readonly kind: 'expense'; readonly id: string }
   | {
       readonly kind: 'new'
       readonly target: Month
@@ -178,6 +186,26 @@ export function MonthsPage() {
     dialog?.kind === 'invoice'
       ? view.cards.find((item) => item.invoice.id === dialog.id)
       : undefined
+  const expense =
+    dialog?.kind === 'expense'
+      ? finance.expenses.find((item) => item.id === dialog.id)
+      : undefined
+  const removeExpense = (row: ExpenseRow) => {
+    run(ops.removeExpense(row))
+    toast('Gasto removido', {
+      label: 'Desfazer',
+      onClick: () => run(ops.restoreExpense(row)),
+    })
+  }
+  const openOutflow = (item: OutflowItem) => {
+    if (item.source === 'bill') setDialog({ kind: 'bill', id: item.id })
+    else if (item.source === 'expense')
+      setDialog({ kind: 'expense', id: item.id })
+    else if (item.source === 'other')
+      setDialog({ kind: 'invoice', id: item.id })
+    else if (item.source === 'installment') editor.plan(item.id)
+    else editor.subscription(item.id)
+  }
 
   return (
     <>
@@ -215,6 +243,7 @@ export function MonthsPage() {
         onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
         onBillDelete={deleteBill}
       />
+      <SpendingBlock finance={finance} month={selected} onOpen={openOutflow} />
 
       {income && (
         <IncomeModal
@@ -231,10 +260,27 @@ export function MonthsPage() {
       {bill && (
         <BillModal
           bill={bill}
+          categories={finance.categories}
           onClose={close}
           onDelete={() => deleteBill(bill)}
           onSave={(changes) => {
             run(ops.updateBill(bill, changes, today()))
+            close()
+            toast('Salvo')
+          }}
+        />
+      )}
+      {expense && (
+        <ExpenseModal
+          expense={expense}
+          categories={finance.categories}
+          onClose={close}
+          onDelete={() => {
+            close()
+            removeExpense(expense)
+          }}
+          onSave={(changes) => {
+            run(ops.updateExpense(expense, changes))
             close()
             toast('Salvo')
           }}
@@ -254,13 +300,8 @@ export function MonthsPage() {
             close()
             editor.subscription(id)
           }}
-          onRemoveExpense={(expense) => {
-            run(ops.removeExpense(expense))
-            toast('Gasto removido', {
-              label: 'Desfazer',
-              onClick: () => run(ops.restoreExpense(expense)),
-            })
-          }}
+          onRemoveExpense={removeExpense}
+          onOpenExpense={(row) => setDialog({ kind: 'expense', id: row.id })}
           onSave={({ paid, ...changes }) => {
             run(ops.updateInvoice(invoice.invoice, changes))
             if (paid !== invoice.invoice.paid)

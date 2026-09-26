@@ -175,7 +175,7 @@ test('assinatura nova e parcelamento editado ficam gravados', async ({
   await page.goto('/assinaturas')
   await page.getByRole('button', { name: 'Adicionar assinatura' }).click()
   const sub = page.getByRole('dialog', { name: 'Nova assinatura' })
-  await sub.getByLabel('Assinatura').fill('Música')
+  await sub.getByLabel('Assinatura', { exact: true }).fill('Música')
   await sub.getByLabel('Dia da cobrança').fill('20')
   await sub.getByLabel('Valor').fill('21,90')
   await sub.getByLabel('Cartão').selectOption({ label: 'Nubank Teste' })
@@ -196,4 +196,36 @@ test('assinatura nova e parcelamento editado ficam gravados', async ({
   await expect(
     page.getByRole('button', { name: /^Notebook novo/ }),
   ).toBeVisible()
+})
+
+test('categoria: lançar com sugestão, renomear, e tudo fica gravado', async ({
+  page,
+}) => {
+  await page.goto('/meses/2026-09')
+  await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Lançar' })
+  await dialog.getByLabel('Valor').fill('30')
+  await dialog.getByLabel('Descrição').fill('Farmácia')
+  await dialog.getByText('Pix, boleto ou dinheiro').click()
+  await expect(dialog.getByLabel('Saúde')).toBeChecked()
+  await dialog.getByRole('button', { name: 'Lançar' }).click()
+  await saved(page)
+  await page.reload()
+  const block = page.getByRole('region', { name: 'Para onde foi o dinheiro' })
+  await expect(block.getByRole('button', { name: /^Saúde/ })).toContainText(
+    'R$ 30,00',
+  )
+
+  await page.goto('/config')
+  await page.getByRole('button', { name: 'Editar categorias' }).click()
+  const form = page.getByRole('dialog', { name: 'Categorias' })
+  const name = form.getByLabel('Nome da categoria Saúde')
+  await name.fill('Remédios')
+  await name.press('Enter')
+  await form.getByRole('button', { name: 'Pronto' }).click()
+  await saved(page)
+  await page.goto('/meses/2026-09')
+  await expect(block.getByRole('button', { name: /^Remédios/ })).toContainText(
+    'R$ 30,00',
+  )
 })

@@ -146,6 +146,7 @@ export function CardsPage() {
   const actions = usePlanActions(
     query.data ?? {
       cards: [],
+      categories: [],
       months: [],
       incomes: [],
       bills: [],

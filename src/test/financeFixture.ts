@@ -1,4 +1,5 @@
 import type { Finance } from '../data/finance'
+import { DEFAULT_CATEGORIES } from '../domain/categories'
 import { cents } from '../domain/money'
 import { isoDate, month } from '../domain/months'
 
@@ -9,7 +10,12 @@ import { isoDate, month } from '../domain/months'
  * long-name card: 0 (estimated) · Dentista (no card) 150 · Luz 180,35 · Internet 99,90 paid
  * outflows 873,17 · available 4.226,83 · unpaid 773,27
  * August: 5.000 − (Nubank paid 359,90 + Dentista paid 150 + Aluguel paid 1.500) = 2.990,10
+ * Categories (default list, ids cat-alimentacao…): Luz Moradia, Uber Transporte,
+ * Notebook Compras, Streaming Assinaturas; Internet and Dentista have none.
  */
+export const categoryId = (name: string) =>
+  `cat-${name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()}`
+
 export function financeFixture(): Finance {
   const aug = month('2026-08')
   const sep = month('2026-09')
@@ -30,6 +36,12 @@ export function financeFixture(): Finance {
         sortOrder: 2,
       },
     ],
+    categories: DEFAULT_CATEGORIES.map((item, index) => ({
+      id: categoryId(item.name),
+      name: item.name,
+      color: item.color,
+      sortOrder: index,
+    })),
     months: [
       { id: 'm8', ref: aug },
       { id: 'm9', ref: sep },
@@ -83,6 +95,7 @@ export function financeFixture(): Finance {
         paid: false,
         paidOn: null,
         sortOrder: 0,
+        categoryId: categoryId('Moradia'),
       },
       {
         id: 'b9b',
@@ -152,6 +165,7 @@ export function financeFixture(): Finance {
         description: 'Uber',
         amount: cents(1200),
         spentOn: isoDate('2026-09-03'),
+        categoryId: categoryId('Transporte'),
       },
     ],
     plans: [
@@ -164,6 +178,7 @@ export function financeFixture(): Finance {
         totalInstallments: 10,
         firstMonth: aug,
         note: null,
+        categoryId: categoryId('Compras'),
       },
       {
         id: 'p2',
@@ -203,6 +218,7 @@ export function financeFixture(): Finance {
         chargeDay: 10,
         note: null,
         active: true,
+        categoryId: categoryId('Assinaturas'),
       },
     ],
   }

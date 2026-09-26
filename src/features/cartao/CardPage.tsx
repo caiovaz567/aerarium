@@ -334,6 +334,7 @@ export function CardPage() {
 
 const emptyFinance = {
   cards: [],
+  categories: [],
   months: [],
   incomes: [],
   bills: [],

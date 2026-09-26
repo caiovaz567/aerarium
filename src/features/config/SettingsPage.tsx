@@ -5,6 +5,8 @@ import { downloadMyData } from '../../data/account'
 import { authErrorFromUrl, linkGoogle, signOut } from '../../data/auth'
 import { DownloadIcon, GoogleIcon } from '../../ui/icons'
 import { useToast } from '../../ui/toastContext'
+import { useFinance } from '../../data/useFinance'
+import { CategoriesModal } from './CategoriesModal'
 import { DeleteAccountModal } from './DeleteAccountModal'
 
 export function SettingsPage() {
@@ -16,6 +18,8 @@ export function SettingsPage() {
   )
   const [busy, setBusy] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [editingCategories, setEditingCategories] = useState(false)
+  const finance = useFinance().data
   const user = auth.status === 'signed-in' ? auth.session.user : null
   const identities = user?.identities ?? []
   const google = identities.find((item) => item.provider === 'google')
@@ -74,6 +78,25 @@ export function SettingsPage() {
           <GoogleIcon />
           Conectar conta Google
         </button>
+      )}
+
+      <h3>Categorias</h3>
+      <p className="muted">
+        Mostram pra onde foi o dinheiro de cada mês, na aba Meses.
+      </p>
+      <button
+        type="button"
+        className="btn ghost"
+        disabled={!finance}
+        onClick={() => setEditingCategories(true)}
+      >
+        Editar categorias
+      </button>
+      {editingCategories && finance && (
+        <CategoriesModal
+          finance={finance}
+          onClose={() => setEditingCategories(false)}
+        />
       )}
 
       <h3>Seus dados</h3>

@@ -25,8 +25,8 @@ begin
   perform pg_temp.assert_true(actual = expected, label || ' [SQLSTATE ' || coalesce(actual, 'none') || ']');
 end $$;
 
-select pg_temp.assert_true((select count(*) = 9 from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 9 tabelas');
+select pg_temp.assert_true((select count(*) = 10 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 10 tabelas');
 select pg_temp.assert_true((select count(*) = 3 from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind = 'v' and c.reloptions @> array['security_invoker=true']), '3 views usam security_invoker');
 select pg_temp.assert_true((select count(*) = 0 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -112,11 +112,22 @@ select pg_temp.expect_error($q$insert into public.cards (name, closing_day) valu
 
 -- Transactional metadata-only Storage fixtures; no physical object is uploaded.
 
+-- Categories (Fase 11): owned like everything else; deleting one keeps its items.
+insert into public.categories (id, name, color) values
+  ('c0000000-0000-4000-8000-000000000001', 'Moradia', '#7048E8'),
+  ('c0000000-0000-4000-8000-000000000002', 'Lazer', '#D6336C');
+update public.bills set category_id = 'c0000000-0000-4000-8000-000000000001';
+update public.installment_plans set category_id = 'c0000000-0000-4000-8000-000000000002' where id = '40000000-0000-4000-8000-000000000001';
+select pg_temp.expect_error($q$insert into public.categories (name, color) values ('Moradia', '#000000')$q$, '23505', 'Categoria nao repete nome');
+select pg_temp.expect_error($q$insert into public.categories (name, color) values ('Cor ruim', 'azul')$q$, '23514', 'Categoria exige cor #RRGGBB');
+delete from public.categories where id = 'c0000000-0000-4000-8000-000000000002';
+select pg_temp.assert_true((select category_id is null from public.installment_plans where id = '40000000-0000-4000-8000-000000000001'), 'Apagar categoria deixa o parcelamento sem categoria');
+select pg_temp.assert_true((select count(*) > 0 and bool_and(category_id is not null) from public.bills), 'Contas guardam a categoria');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 do $$ declare t text; n bigint; begin
-  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions'] loop
+  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories'] loop
     execute format('select count(*) from public.%I', t) into n;
     perform pg_temp.assert_true(n = 0, 'B nao le A: ' || t);
     execute format('with changed as (update public.%I set user_id = user_id returning id) select count(*) from changed', t) into n;
@@ -142,6 +153,9 @@ select pg_temp.expect_error($q$insert into public.invoice_expenses (invoice_id, 
 select pg_temp.expect_error($q$insert into public.installment_plans (card_id, description, installment_amount,total_installments,first_month) values ('20000000-0000-4000-8000-000000000001','FK A',1,1,'2026-09-01')$q$, '23503', 'FK impede plano de B em cartao de A');
 select pg_temp.expect_error($q$insert into public.installment_payments (plan_id, month) values ('40000000-0000-4000-8000-000000000001','2026-09-01')$q$, '23503', 'B nao paga plano de A');
 select pg_temp.expect_error($q$insert into public.subscriptions (card_id,name,amount,charge_day) values ('20000000-0000-4000-8000-000000000001','FK A',1,1)$q$, '23503', 'FK impede assinatura de B em cartao de A');
+select pg_temp.expect_error($q$insert into public.bills (month_id, description, amount, category_id) values ('30000000-0000-4000-8000-000000000099','FK A',1,'c0000000-0000-4000-8000-000000000001')$q$, '23503', 'FK impede conta de B em categoria de A');
+insert into public.categories (name, color) values ('Moradia', '#7048E8');
+select pg_temp.assert_true((select count(*) = 1 from public.categories), 'B tem categoria com o mesmo nome da de A');
 
 -- Unauthenticated access is denied even if someone guesses an identifier.
 set local role anon;
@@ -166,7 +180,7 @@ update public.invoices set paid = true where id = '50000000-0000-4000-8000-00000
 reset role;
 delete from auth.users where id = '10000000-0000-4000-8000-000000000001';
 do $$ declare t text; remaining bigint; begin
-  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions'] loop
+  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories'] loop
     execute format('select count(*) from public.%I where user_id = %L', t, '10000000-0000-4000-8000-000000000001') into remaining;
     perform pg_temp.assert_true(remaining = 0, 'Excluir conta remove ' || t);
   end loop;

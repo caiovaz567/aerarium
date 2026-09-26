@@ -1,3 +1,4 @@
+import type { Category } from '../domain/categories'
 import { fromDecimal } from '../domain/money'
 import { isoDate, month, type ISODate, type Month } from '../domain/months'
 import type {
@@ -43,8 +44,11 @@ export type SubscriptionRow = Subscription & {
   readonly note: string | null
 }
 
+export type { Category }
+
 export interface Finance {
   readonly cards: readonly Card[]
+  readonly categories: readonly Category[]
   readonly months: readonly MonthEntry[]
   readonly incomes: readonly IncomeRow[]
   readonly bills: readonly BillRow[]
@@ -62,6 +66,7 @@ const text = (value: unknown) => String(value)
 const money = (value: unknown) => fromDecimal(String(value))
 const date = (value: unknown) => (value == null ? null : isoDate(String(value)))
 const monthOfDate = (value: unknown) => month(String(value).slice(0, 7))
+const category = (value: unknown) => (value as string | null) ?? null
 
 async function select(table: string, columns: string): Promise<Row[]> {
   // TanStack Query already retries the whole load (queryClient.ts); a second
@@ -78,6 +83,7 @@ async function select(table: string, columns: string): Promise<Row[]> {
 export async function loadFinance(): Promise<Finance> {
   const [
     cards,
+    categories,
     months,
     incomes,
     bills,
@@ -88,11 +94,12 @@ export async function loadFinance(): Promise<Finance> {
     subscriptions,
   ] = await Promise.all([
     select('cards', 'id,name,color,closing_day,sort_order'),
+    select('categories', 'id,name,color,sort_order'),
     select('months', 'id,ref'),
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
     select(
       'bills',
-      'id,month_id,description,amount::text,paid,paid_on,sort_order',
+      'id,month_id,description,amount::text,paid,paid_on,sort_order,category_id',
     ),
     select(
       'invoices',
@@ -100,11 +107,11 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoice_expenses',
-      'id,invoice_id,description,amount::text,spent_on',
+      'id,invoice_id,description,amount::text,spent_on,category_id',
     ),
     select(
       'installment_plans',
-      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note',
+      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id',
     ),
     select(
       'installment_payments',
@@ -112,7 +119,7 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'subscriptions',
-      'id,card_id,name,amount::text,charge_day,note,active',
+      'id,card_id,name,amount::text,charge_day,note,active,category_id',
     ),
   ])
   const monthRows = months
@@ -128,6 +135,16 @@ export async function loadFinance(): Promise<Finance> {
         name: text(row.name),
         color: (row.color as string | null) ?? null,
         closingDay: (row.closing_day as number | null) ?? null,
+        sortOrder: Number(row.sort_order),
+      }))
+      .sort(
+        (a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name),
+      ),
+    categories: categories
+      .map((row) => ({
+        id: text(row.id),
+        name: text(row.name),
+        color: text(row.color),
         sortOrder: Number(row.sort_order),
       }))
       .sort(
@@ -155,6 +172,7 @@ export async function loadFinance(): Promise<Finance> {
         paid: Boolean(row.paid),
         paidOn: date(row.paid_on),
         sortOrder: Number(row.sort_order),
+        categoryId: category(row.category_id),
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder),
     invoices: invoices.map((row) => ({
@@ -176,6 +194,7 @@ export async function loadFinance(): Promise<Finance> {
         description: text(row.description),
         amount: money(row.amount),
         spentOn: isoDate(text(row.spent_on)),
+        categoryId: category(row.category_id),
       }))
       .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),
     plans: plans.map((row) => ({
@@ -187,6 +206,7 @@ export async function loadFinance(): Promise<Finance> {
       totalInstallments: Number(row.total_installments),
       firstMonth: monthOfDate(row.first_month),
       note: (row.note as string | null) ?? null,
+      categoryId: category(row.category_id),
     })),
     payments: payments.map((row) => ({
       id: text(row.id),
@@ -204,6 +224,7 @@ export async function loadFinance(): Promise<Finance> {
       chargeDay: Number(row.charge_day),
       note: (row.note as string | null) ?? null,
       active: Boolean(row.active),
+      categoryId: category(row.category_id),
     })),
   }
 }

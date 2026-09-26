@@ -65,6 +65,7 @@ export function newMonthDraft(options: NewMonthOptions, data: FinancialData) {
             sortOrder: item.sortOrder,
             paid: false,
             paidOn: null,
+            categoryId: item.categoryId ?? null,
           }))
       : []
   const invoices: Omit<Invoice, 'id'>[] = cardIds.map((cardId) => {

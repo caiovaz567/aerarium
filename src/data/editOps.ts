@@ -28,6 +28,7 @@ const subscriptionRecord = (row: SubscriptionRow) => ({
   charge_day: row.chargeDay,
   note: row.note,
   active: row.active,
+  category_id: row.categoryId ?? null,
 })
 
 const cardRecord = (card: Card) => ({
@@ -190,6 +191,7 @@ export const editOps = {
               total_installments: plan.totalInstallments,
               first_month: monthDate(plan.firstMonth),
               note: plan.note,
+              category_id: plan.categoryId ?? null,
             })
             .eq('id', plan.id),
         ),

@@ -23,7 +23,9 @@ test('aba Assinaturas e o modal de assinatura', async ({ page }, testInfo) => {
   await page.screenshot({ path: testInfo.outputPath('assinaturas.png') })
   await page.getByRole('button', { name: /^dia 10 Streaming/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Editar assinatura' })
-  await expect(dialog.getByLabel('Assinatura')).toHaveValue('Streaming')
+  await expect(dialog.getByLabel('Assinatura', { exact: true })).toHaveValue(
+    'Streaming',
+  )
   await noSideScroll(page, dialog)
   await dialog.getByRole('button', { name: 'Cancelar' }).click()
 })

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useMatch } from 'react-router'
-import { useFinance } from '../data/useFinance'
+import { categoryOps } from '../data/categoryOps'
+import type { Finance } from '../data/finance'
+import { useFinance, useFinanceOp } from '../data/useFinance'
 import { EditorProvider } from '../features/editar/EditorProvider'
 import { ExcelButton } from '../features/exportar/ExcelButton'
 import { LaunchModal } from '../features/lancar/LaunchModal'
@@ -74,9 +76,24 @@ function Header() {
   )
 }
 
+/**
+ * Fase 11: the first time there are no categories, create the default list and
+ * apply the name suggestion once to what already exists. Once per session.
+ */
+function useCategorySetup(finance: Finance | undefined) {
+  const run = useFinanceOp()
+  const started = useRef(false)
+  useEffect(() => {
+    if (!finance || finance.categories.length || started.current) return
+    started.current = true
+    run(categoryOps.setup(finance))
+  }, [finance, run])
+}
+
 export function AppShell() {
   const [launching, setLaunching] = useState(false)
   const finance = useFinance()
+  useCategorySetup(finance.data)
   const toast = useToast()
   const inMonths = useMatch('/meses/:ym')
   const openLaunch = () => {

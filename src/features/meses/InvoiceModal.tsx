@@ -33,6 +33,7 @@ export function InvoiceModal({
   onClose,
   onSave,
   onRemoveExpense,
+  onOpenExpense,
   onOpenPlan,
   onOpenSubscription,
 }: {
@@ -42,6 +43,8 @@ export function InvoiceModal({
   readonly onClose: () => void
   readonly onSave: (changes: InvoiceChanges) => void
   readonly onRemoveExpense: (expense: ExpenseRow) => void
+  /** Fase 11: edit a launched expense (description, value, category). */
+  readonly onOpenExpense: (expense: ExpenseRow) => void
   /** Tapping an item opens it (seção 8.2). */
   readonly onOpenPlan: (id: string) => void
   readonly onOpenSubscription: (id: string) => void
@@ -191,13 +194,15 @@ export function InvoiceModal({
             <small>Gastos lançados</small>
             <ul className="invoice-list">
               {expenses.map((expense) => (
-                <li key={expense.id}>
-                  <i className="dot other" />
-                  <span>
-                    {expense.description}
-                    <small>{dayMonth(expense.spentOn)}</small>
-                  </span>
-                  <b>{formatMoney(expense.amount)}</b>
+                <li key={expense.id} className="clickable">
+                  <button type="button" onClick={() => onOpenExpense(expense)}>
+                    <i className="dot other" />
+                    <span>
+                      {expense.description}
+                      <small>{dayMonth(expense.spentOn)}</small>
+                    </span>
+                    <b>{formatMoney(expense.amount)}</b>
+                  </button>
                   <button
                     type="button"
                     className="remove"

@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent } from 'react'
+import { CategoryPicker } from '../../ui/CategoryPicker'
 import { editOps, manualPayment } from '../../data/editOps'
 import type { Finance, PaymentRow, PlanRow } from '../../data/finance'
 import { ops } from '../../data/financeOps'
@@ -47,6 +48,7 @@ export function PlanModal({
     plan ? (plan.cardId ?? '') : (presetCardId ?? ''),
   )
   const [note, setNote] = useState(plan?.note ?? '')
+  const [categoryId, setCategoryId] = useState(plan?.categoryId ?? null)
   const [value, setValue] = useState(
     plan ? formatMoneyInput(plan.installmentAmount) : '',
   )
@@ -88,6 +90,7 @@ export function PlanModal({
       totalInstallments,
       firstMonth: first,
       note: note.trim() || null,
+      categoryId,
     }
     const next: PlanRow = {
       ...draft,
@@ -172,6 +175,11 @@ export function PlanModal({
             paga nos Meses.
           </small>
         </div>
+        <CategoryPicker
+          categories={finance.categories}
+          value={categoryId}
+          onChange={setCategoryId}
+        />
         <TextField
           label="Observação (opcional)"
           value={note}

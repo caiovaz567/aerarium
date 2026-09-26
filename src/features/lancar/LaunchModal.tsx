@@ -7,6 +7,9 @@ import { CheckField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
+import { categoryHistory } from '../../data/categoryOps'
+import { suggestCategory } from '../../domain/categories'
+import { CategoryPicker } from '../../ui/CategoryPicker'
 import {
   buildLaunch,
   installmentPreview,
@@ -81,6 +84,10 @@ export function LaunchModal({
   const [paid, setPaid] = useState(true)
   // Follows the card's closing day until the person picks a month themselves.
   const [pickedMonth, setPickedMonth] = useState<Month | null>(null)
+  // Follows the suggestion from the description until the person picks one.
+  const [pickedCategory, setPickedCategory] = useState<{
+    readonly id: string | null
+  } | null>(null)
   const [error, setError] = useState('')
   const ids = { count: useId(), text: useId(), month: useId() }
 
@@ -92,6 +99,9 @@ export function LaunchModal({
     today: day,
   })
   const target = pickedMonth ?? suggested
+  const categoryId = pickedCategory
+    ? pickedCategory.id
+    : suggestCategory(description, finance.categories, categoryHistory(finance))
   const months = launchMonths(finance)
   const existing = new Set(finance.months.map((item) => item.ref))
   const typed = (() => {
@@ -126,6 +136,7 @@ export function LaunchModal({
         paid,
         month: target,
         today: day,
+        categoryId: usesCard ? categoryId : null,
       })
     } catch (reason) {
       return setError((reason as Error).message)
@@ -245,6 +256,15 @@ export function LaunchModal({
               </label>
             </div>
           </fieldset>
+        )}
+
+        {usesCard && finance.categories.length > 0 && (
+          <CategoryPicker
+            categories={finance.categories}
+            value={categoryId}
+            onChange={(id) => setPickedCategory({ id })}
+            name="lancar-categoria"
+          />
         )}
 
         {kind === 'gasto' && where === NO_CARD && (

@@ -37,6 +37,10 @@ export function fakeSupabase() {
         call.filters.push([column, value])
         return chain
       },
+      is(column: string, value: unknown) {
+        call.filters.push([column, value])
+        return chain
+      },
       then<T>(
         resolve: (value: {
           data: unknown[]

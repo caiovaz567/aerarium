@@ -90,6 +90,8 @@ export interface LaunchInput {
   readonly paid: boolean
   readonly month: Month
   readonly today: ISODate
+  /** Fase 11: spending category (not for Entrada). */
+  readonly categoryId?: string | null
 }
 
 export interface Launch {
@@ -125,6 +127,7 @@ export function buildLaunch(
       // The person picks the first month (decision after phase 7).
       firstMonth: input.month,
       note: null,
+      categoryId: input.categoryId ?? null,
     }
     return {
       op: ops.restorePlan(plan, []),
@@ -204,6 +207,7 @@ export function buildLaunch(
       paid: input.paid,
       paidOn: input.paid ? input.today : null,
       sortOrder: inMonth([...finance.bills, ...(created?.bills ?? [])]),
+      categoryId: input.categoryId ?? null,
     }
     return finish(
       (snapshot) => ({ ...snapshot, bills: [...snapshot.bills, bill] }),
@@ -235,6 +239,7 @@ export function buildLaunch(
     description,
     amount: input.amount,
     spentOn: input.today,
+    categoryId: input.categoryId ?? null,
   }
   const message = `${formatMoney(input.amount)} na fatura ${card.name}${invoice.paid ? ' (ela já estava paga)' : ''}`
   if (created)

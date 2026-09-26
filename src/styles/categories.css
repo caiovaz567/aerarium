@@ -1,0 +1,211 @@
+/* Fase 11: categories. */
+
+/* Picker chips (Lançar and edit modals). */
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.category-chip {
+  position: relative;
+  cursor: pointer;
+}
+.category-chip input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.category-chip > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  font-size: 14px;
+  font-weight: 600;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.category-chip input:checked + span {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.category-chip input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.category-dot,
+.category-chip i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.category-chip i.none,
+.category-dot.none {
+  box-sizing: border-box;
+  border: 2px solid var(--muted);
+  background: none;
+}
+
+/* "Para onde foi o dinheiro" block in Meses. */
+.spending-list {
+  margin: 0;
+  padding: 0 16px 4px;
+  list-style: none;
+}
+.spending-list > li + li {
+  border-top: 1px solid var(--line);
+}
+.spending-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px 10px;
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.spending-row .name {
+  min-width: 0;
+  font-weight: 600;
+}
+.spending-row .amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.spending-row .share {
+  grid-column: 2 / 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.spending-row .bar {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--surface-2);
+}
+.spending-row .bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.spending-row .chevron {
+  display: inline-grid;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+.spending-row .chevron svg {
+  width: 100%;
+  height: 100%;
+}
+.spending-row[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+.spending-items {
+  margin: 0 0 12px;
+  padding: 0 0 0 20px;
+  list-style: none;
+}
+.spending-items li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+}
+.spending-items button {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.spending-items small {
+  display: block;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.spending-items .value {
+  white-space: nowrap;
+}
+.spending-hint {
+  margin: 0 0 12px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Managing the list (Ajustes). */
+.category-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.category-edit li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.category-edit input,
+.category-new input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 16px;
+}
+.category-edit input:focus,
+.category-new input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.category-color {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+}
+.category-color i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.category-new {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* Launched expenses in the invoice summary: the row opens it, × removes it. */
+.invoice-list li.clickable > button.remove {
+  flex: none;
+  width: 30px;
+  margin-right: 8px;
+  padding: 0;
+}

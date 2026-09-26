@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import { DEFAULT_CATEGORIES } from '../../src/domain/categories'
 
 // Fictitious data for the Playwright account only (same numbers as
 // src/test/financeFixture.ts). September 2026: available R$ 4.226,83.
@@ -17,6 +18,9 @@ export const E2E = {
   invoiceSep1: id(32),
   invoiceSep2: id(33),
 }
+/** Default categories of the e2e account: id(40) is Alimentação, id(48) Outros. */
+export const categoryE2E = (name: string) =>
+  id(40 + DEFAULT_CATEGORIES.findIndex((item) => item.name === name))
 export const LONG_CARD = 'Cartão com um nome bem comprido pra quebrar a linha'
 
 async function ok(request: PromiseLike<{ error: { message: string } | null }>) {
@@ -44,7 +48,13 @@ export async function resetFixture(db: SupabaseClient) {
   const { data } = await db.auth.getUser()
   if (data.user?.email !== process.env.E2E_EMAIL)
     throw new Error('Recusado: só a conta de teste pode ser reiniciada.')
-  for (const table of ['months', 'cards', 'installment_plans', 'subscriptions'])
+  for (const table of [
+    'months',
+    'cards',
+    'installment_plans',
+    'subscriptions',
+    'categories',
+  ])
     await ok(db.from(table).delete().not('id', 'is', null))
 
   await ok(
@@ -54,6 +64,17 @@ export async function resetFixture(db: SupabaseClient) {
         { id: E2E.card2, name: LONG_CARD, color: '#3140C2', sort_order: 2 },
       ],
       { defaultToNull: false },
+    ),
+  )
+  // With categories already there, the app does not create its own list.
+  await ok(
+    db.from('categories').insert(
+      DEFAULT_CATEGORIES.map((item, index) => ({
+        id: id(40 + index),
+        name: item.name,
+        color: item.color,
+        sort_order: index,
+      })),
     ),
   )
   await ok(
@@ -66,6 +87,7 @@ export async function resetFixture(db: SupabaseClient) {
           installment_amount: '120.00',
           total_installments: 10,
           first_month: '2026-08-01',
+          category_id: categoryE2E('Compras'),
         },
         {
           id: E2E.plan2,
@@ -74,6 +96,7 @@ export async function resetFixture(db: SupabaseClient) {
           total_installments: 4,
           first_month: '2026-08-01',
           note: 'aparelho',
+          category_id: null,
         },
       ],
       { defaultToNull: false },
@@ -85,6 +108,7 @@ export async function resetFixture(db: SupabaseClient) {
       name: 'Streaming',
       amount: '39.90',
       charge_day: 10,
+      category_id: categoryE2E('Assinaturas'),
     }),
   )
   await ok(
@@ -122,7 +146,12 @@ export async function resetFixture(db: SupabaseClient) {
           paid: true,
           paid_on: '2026-08-05',
         },
-        { month_id: E2E.sep, description: 'Conta de luz', amount: '180.35' },
+        {
+          month_id: E2E.sep,
+          description: 'Conta de luz',
+          amount: '180.35',
+          category_id: categoryE2E('Moradia'),
+        },
         {
           month_id: E2E.sep,
           description: 'Internet',
@@ -170,6 +199,7 @@ export async function resetFixture(db: SupabaseClient) {
       description: 'Uber',
       amount: '12.00',
       spent_on: '2026-09-03',
+      category_id: categoryE2E('Transporte'),
     }),
   )
   await ok(

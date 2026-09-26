@@ -690,6 +690,12 @@ Entrega e decisões em `docs/FASE_10.md`.
 
 ---
 
+### Fase 11: categorias (pedida depois do plano)
+
+Categorias nas saídas, com lista pronta e editável, sugestão pelo nome e o bloco "Para onde foi o dinheiro" em Meses. Decisões e entrega em `docs/FASE_11.md`.
+
+---
+
 ## 10. Infra
 
 ### 10.1 Supabase
