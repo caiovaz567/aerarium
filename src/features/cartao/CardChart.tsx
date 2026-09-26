@@ -121,7 +121,16 @@ export function CardChart({
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
   return (
-    <div className="chart-strip" ref={strip} onScroll={onScroll}>
+    // Focusable so the strip can be scrolled from the keyboard; the arrows
+    // themselves are handled by CardPage.
+    <div
+      className="chart-strip"
+      ref={strip}
+      onScroll={onScroll}
+      tabIndex={0}
+      role="group"
+      aria-label="Meses do gráfico. As setas trocam de mês."
+    >
       {layout && (
         <svg
           width={layout.svgWidth}

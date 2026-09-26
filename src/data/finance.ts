@@ -64,7 +64,12 @@ const date = (value: unknown) => (value == null ? null : isoDate(String(value)))
 const monthOfDate = (value: unknown) => month(String(value).slice(0, 7))
 
 async function select(table: string, columns: string): Promise<Row[]> {
-  const { data, error } = await supabase().from(table).select(columns)
+  // TanStack Query already retries the whole load (queryClient.ts); a second
+  // layer of retries here made an unreachable server take 15 s to show the error.
+  const { data, error } = await supabase()
+    .from(table)
+    .select(columns)
+    .retry(false)
   if (error) throw new Error(`Não consegui carregar ${table}: ${error.message}`)
   return (data ?? []) as unknown as Row[]
 }

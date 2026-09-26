@@ -40,9 +40,11 @@ export function createQueryClient(sync = new SyncTracker()) {
       onSuccess: () => sync.finished(true),
       onError: () => sync.finished(false),
     }),
+    // Without internet, fail at once (error screen, or the change goes back with
+    // a toast) instead of waiting paused with a skeleton or "Salvando…" forever.
     defaultOptions: {
-      queries: { staleTime: 30_000, retry: 1 },
-      mutations: { retry: 0 },
+      queries: { staleTime: 30_000, retry: 2, networkMode: 'always' },
+      mutations: { retry: 0, networkMode: 'always' },
     },
   })
   return { client, sync }

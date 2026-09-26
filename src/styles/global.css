@@ -113,6 +113,12 @@ body.has-stuck .app-header.scrolled {
 .sync[data-state='error']::before {
   background: var(--neg);
 }
+.sync[data-state='offline'] {
+  color: var(--warn);
+}
+.sync[data-state='offline']::before {
+  background: var(--warn);
+}
 .icon-button {
   display: grid;
   flex: none;
@@ -384,7 +390,8 @@ body.has-stuck .app-header.scrolled {
   background: var(--surface);
   color: var(--ink);
 }
-.btn.google svg {
+.btn svg {
+  flex: none;
   width: 18px;
   height: 18px;
 }
@@ -602,8 +609,57 @@ body.has-stuck .app-header.scrolled {
   justify-content: space-between;
   gap: 8px;
 }
+.login-privacy {
+  align-self: center;
+  color: var(--muted);
+  font-size: 13px;
+}
 .splash {
   min-height: 100dvh;
+}
+
+/* Privacy policy: open to anyone, same card as the login. */
+.privacy {
+  display: flex;
+  justify-content: center;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 16px
+    calc(24px + env(safe-area-inset-bottom, 0px));
+}
+.privacy-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  max-width: 640px;
+  padding: 28px 22px 22px;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  line-height: 1.5;
+}
+.privacy-card h2 {
+  margin: 8px 0 0;
+  font: 800 clamp(26px, 7vw, 32px) / 1.12 var(--display);
+  letter-spacing: -0.03em;
+}
+.privacy-card h3 {
+  margin: 10px 0 0;
+  font-size: 16px;
+}
+.privacy-card p,
+.privacy-card ul {
+  margin: 0;
+}
+.privacy-card ul {
+  padding-left: 20px;
+}
+.privacy-card li + li {
+  margin-top: 6px;
+}
+
+.settings h3 {
+  margin-top: 14px;
 }
 
 .skip-link {

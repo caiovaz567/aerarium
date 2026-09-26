@@ -15,14 +15,18 @@ import {
   RepeatIcon,
 } from '../ui/icons'
 import { useSyncState } from './syncContext'
+import { useOnline } from './useOnline'
 
 const SYNC_TEXT = { ok: 'Salvo', saving: 'Salvando…', error: 'Não salvou' }
 
 function SyncStatus() {
   const state = useSyncState()
+  const online = useOnline()
+  // Offline, nothing can be saved: say that instead of a stale "Salvo".
+  const shown = online ? state : 'offline'
   return (
-    <span className="sync" data-state={state} role="status">
-      {SYNC_TEXT[state]}
+    <span className="sync" data-state={shown} role="status">
+      {online ? SYNC_TEXT[state] : 'Sem internet'}
     </span>
   )
 }

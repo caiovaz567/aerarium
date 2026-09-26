@@ -6,6 +6,7 @@ import { LoginPage } from '../features/login/LoginPage'
 import { ResetPasswordPage } from '../features/login/ResetPasswordPage'
 import { MonthsIndex, MonthsPage } from '../features/meses/MonthsPage'
 import { SubscriptionsPage } from '../features/assinaturas/SubscriptionsPage'
+import { PrivacyPage } from '../features/privacidade/PrivacyPage'
 import { AppShell } from './AppShell'
 import { useAuth } from './authContext'
 
@@ -30,6 +31,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
+      `n <Route path="/privacidade" element={<PrivacyPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<MonthsIndex />} />

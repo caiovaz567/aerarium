@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router'
 import { createQueryClient } from '../data/queryClient'
 import { ToastProvider } from '../ui/ToastProvider'
 import { AuthProvider } from './AuthProvider'
+import { ErrorBoundary } from './ErrorBoundary'
 import { AppRoutes } from './routes'
 import { SyncContext } from './syncContext'
 import { UpdatePrompt } from './UpdatePrompt'
@@ -15,9 +16,11 @@ export function App() {
       <SyncContext value={sync}>
         <AuthProvider>
           <ToastProvider>
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
+            <ErrorBoundary>
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </ErrorBoundary>
             <UpdatePrompt />
           </ToastProvider>
         </AuthProvider>

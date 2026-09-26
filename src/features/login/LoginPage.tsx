@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { Navigate, useLocation } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
 import { useAuth } from '../../app/authContext'
 import { currentMonth, monthPath } from '../../app/paths'
 import {
@@ -189,6 +189,9 @@ export function LoginPage() {
             </button>
           )}
         </div>
+        <Link className="login-privacy" to="/privacidade">
+          Privacidade
+        </Link>
       </div>
     </main>
   )

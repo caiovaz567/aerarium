@@ -416,8 +416,10 @@ Tema claro:
 --bg:#F1F2F6; --surface:#FFFFFF; --surface-2:#E7E9F1; --ink:#161A26; --muted:#62697E; --line:#E0E3EC;
 --accent:#3140C2; --accent-ink:#FFFFFF; --accent-soft:#E3E6FA;
 --hero:#2B39B3; --hero-ink:#FFFFFF; --hero-muted:rgba(255,255,255,.74); --hero-track:rgba(255,255,255,.22);
---pos:#18794A; --pos-soft:#DCF1E4; --neg:#BE3A2B; --neg-soft:#F8E1DD; --warn:#9A6300; --warn-soft:#FBEFD6;
+--pos:#18794A; --pos-soft:#DCF1E4; --neg:#B23526; --neg-soft:#F8E1DD; --warn:#8F5C00; --warn-soft:#FBEFD6;
 ```
+
+Na Fase 10, `--neg` (era `#BE3A2B`) e `--warn` (era `#9A6300`) do tema claro escureceram um pouco para passar no contraste AA sobre os fundos suaves (etiqueta ESTIMADA, botão de excluir, comparação do gráfico).
 
 Tema escuro (automático por `prefers-color-scheme`, e forçável com `data-theme`):
 
@@ -678,6 +680,8 @@ Seções 10.2 e 10.3.
 **Pronto quando:** instalo pelo Safari → Compartilhar → Adicionar à Tela de Início, o app abre em tela cheia com o ícone do templo, e um push no GitHub atualiza o app no celular.
 
 ### Fase 10: acabamento
+
+Entrega e decisões em `docs/FASE_10.md`.
 
 * Configurações: sair, baixar meus dados (JSON), apagar conta (5.6).
 * Política de privacidade curta (quais dados, onde ficam, como apagar).

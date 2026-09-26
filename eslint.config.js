@@ -28,5 +28,10 @@ export default defineConfig([
     files: ['*.{js,ts}', 'tests/**/*.ts', 'scripts/**/*.{mjs,ts}'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
+  {
+    // Edge Functions run on Deno, on Supabase's servers.
+    files: ['supabase/functions/**/*.ts'],
+    languageOptions: { globals: { ...globals.browser, Deno: 'readonly' } },
+  },
   prettier,
 ])

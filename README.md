@@ -22,13 +22,13 @@ npm run e2e:user
 npm run e2e
 ```
 
-`e2e:user` cria a conta fictícia dos testes de navegador no projeto de desenvolvimento e guarda a senha em `.env.local`. Login e esqueleto do app: [docs/FASE_4.md](docs/FASE_4.md).
+`e2e:user` cria as contas fictícias dos testes de navegador (a principal e uma descartável, que o teste de apagar conta apaga) no projeto de desenvolvimento e guarda a senha em `.env.local`. Login e esqueleto do app: [docs/FASE_4.md](docs/FASE_4.md).
 
 `check` roda lint, formatação, Vitest e build com verificação de tipos. Playwright confere WebKit em 390×844 e Chromium em 1280×800, nos temas claro e escuro. Capturas ficam em `test-results/`, e o relatório em `playwright-report/`.
 
 Outros comandos: `npm run test:watch`, `npm run test:coverage` (cobertura de `src/domain`), `npm run format`, `npm run typecheck` e `npm run preview`.
 
-O projeto de teste `pwa` do Playwright roda no build de produção (porta 4173), onde existe o service worker. `npm run icons` redesenha os ícones do app em `public/icons/`. PWA e deploy: [docs/FASE_9.md](docs/FASE_9.md).
+O projeto de teste `pwa` do Playwright roda no build de produção (porta 4173), onde existe o service worker. `npm run icons` redesenha os ícones do app em `public/icons/`. PWA e deploy: [docs/FASE_9.md](docs/FASE_9.md). Acabamento, apagar conta e acessibilidade: [docs/FASE_10.md](docs/FASE_10.md).
 
 ## Supabase na nuvem
 

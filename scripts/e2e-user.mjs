@@ -1,4 +1,5 @@
-// Creates (or resets) the fictitious account the Playwright tests sign in with.
+// Creates (or resets) the fictitious accounts the Playwright tests sign in with:
+// the main one and a disposable one that the "Apagar minha conta" test deletes.
 // Development project only. The password lives in .env.local, never in Git.
 import { spawnSync } from 'node:child_process'
 import { randomBytes, randomUUID } from 'node:crypto'
@@ -14,6 +15,8 @@ import { resolve } from 'node:path'
 
 const USER_ID = '10000000-0000-4000-8000-000000000e2e'
 const EMAIL = 'aerarium.e2e@example.test'
+const DISPOSABLE_ID = '10000000-0000-4000-8000-000000000de1'
+const DISPOSABLE_EMAIL = 'aerarium.e2e.apagar@example.test'
 
 const development = JSON.parse(
   readFileSync('supabase/development.json', 'utf8'),
@@ -40,9 +43,8 @@ if (!password) {
 if (!/^[A-Za-z0-9_-]+$/.test(password))
   throw new Error('E2E_PASSWORD deve ter só letras, números, _ ou -.')
 
-const sql = `begin;
-do $$ begin
-  if exists (select 1 from auth.users where id = '${USER_ID}' and email is distinct from '${EMAIL}') then
+const account = (id, email) => `do $$ begin
+  if exists (select 1 from auth.users where id = '${id}' and email is distinct from '${email}') then
     raise exception 'Reserved e2e user belongs to another account';
   end if;
 end $$;
@@ -50,16 +52,19 @@ insert into auth.users (instance_id, id, aud, role, email, encrypted_password, e
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token,
   email_change, email_change_token_new, email_change_token_current, phone_change, phone_change_token,
   reauthentication_token)
-values ('00000000-0000-0000-0000-000000000000', '${USER_ID}', 'authenticated', 'authenticated', '${EMAIL}',
+values ('00000000-0000-0000-0000-000000000000', '${id}', 'authenticated', 'authenticated', '${email}',
   extensions.crypt('${password}', extensions.gen_salt('bf')), now(),
   '{"provider":"email","providers":["email"]}', '{"fixture":"aerarium-e2e"}', now(), now(), '', '', '', '', '', '', '', '')
 on conflict (id) do update set encrypted_password = excluded.encrypted_password,
   email_confirmed_at = coalesce(auth.users.email_confirmed_at, now()), updated_at = now();
 insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
-values ('${USER_ID}', '${USER_ID}', '{"sub":"${USER_ID}","email":"${EMAIL}","email_verified":true}', 'email', now(), now(), now())
+values ('${id}', '${id}', '{"sub":"${id}","email":"${email}","email_verified":true}', 'email', now(), now(), now())
 on conflict (provider_id, provider) do nothing;
-select email, email_confirmed_at is not null as confirmed from auth.users where id = '${USER_ID}';
-commit;`
+select email, email_confirmed_at is not null as confirmed from auth.users where id = '${id}';
+`
+
+const sql = `begin;
+${account(USER_ID, EMAIL)}${account(DISPOSABLE_ID, DISPOSABLE_EMAIL)}commit;`
 
 mkdirSync('.artifacts/db', { recursive: true })
 const file = resolve('.artifacts/db', `${randomUUID()}.sql`)
@@ -83,7 +88,9 @@ try {
   const output = JSON.parse(result.stdout || '{}')
   if (result.status !== 0 || output.error)
     throw new Error(output.error?.message || result.stderr || 'Falha no SQL.')
-  console.log(`Conta de teste pronta: ${EMAIL}. Senha em ${envFile}.`)
+  console.log(
+    `Contas de teste prontas: ${EMAIL} e ${DISPOSABLE_EMAIL}. Senha em ${envFile}.`,
+  )
 } finally {
   unlinkSync(file)
 }

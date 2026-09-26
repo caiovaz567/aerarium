@@ -358,8 +358,9 @@ a.row-main {
   height: 9px;
 }
 .change small {
+  /* Same color as the pill: the muted gray fails contrast on it. */
+  color: inherit;
   font-weight: 500;
-  opacity: 0.8;
 }
 .change.down {
   background: var(--pos-soft);
