@@ -3,6 +3,10 @@
 }
 
 html {
+  /* Installed on the iPhone (black-translucent status bar), 100vh leaves out
+     the status bar; on short pages the fixed bottom bar then floated that much
+     above the bottom edge. The page is always at least the whole screen. */
+  min-height: calc(100vh + env(safe-area-inset-top, 0px));
   min-width: 320px;
   background: var(--bg);
   color: var(--ink);
