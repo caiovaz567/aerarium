@@ -772,14 +772,14 @@ Entrega e decisões em `docs/FASE_10.md`.
 
 ## 14. Checklist final
 
-* [ ] Login com Google e com e-mail e senha funcionando no iPhone e no computador
-* [ ] Meus dados importados e conferidos mês a mês
-* [ ] Nenhum usuário vê dado de outro (teste de RLS passando)
-* [ ] App instalado na tela inicial do iPhone, abrindo em tela cheia
-* [ ] Lançar um gasto em menos de 5 segundos
-* [ ] Nenhuma tela ou modal com rolagem lateral em 390px
-* [ ] Nada muda de altura ao trocar de mês
-* [ ] Exportar Excel e baixar meus dados funcionando
-* [ ] Apagar conta funcionando
-* [ ] Política de privacidade publicada
-* [ ] `service_role` fora do front e do Git, `scripts/data/` fora do Git
+* [x] Login com Google e com e-mail e senha funcionando no iPhone e no computador
+* [x] Meus dados importados e conferidos mês a mês
+* [x] Nenhum usuário vê dado de outro (teste de RLS passando)
+* [x] App instalado na tela inicial do iPhone, abrindo em tela cheia
+* [x] Lançar um gasto em menos de 5 segundos
+* [x] Nenhuma tela ou modal com rolagem lateral em 390px
+* [x] Nada muda de altura ao trocar de mês
+* [x] Exportar Excel e baixar meus dados funcionando
+* [x] Apagar conta funcionando
+* [x] Política de privacidade publicada
+* [x] `service_role` fora do front e do Git, `scripts/data/` fora do Git
