@@ -104,3 +104,31 @@ export const DownloadIcon = () => (
     <path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14" />
   </Stroke>
 )
+export const EyeIcon = () => (
+  <Stroke>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+    <circle cx="12" cy="12" r="3" />
+  </Stroke>
+)
+export const EyeOffIcon = () => (
+  <Stroke>
+    <path d="M3 3l18 18M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.8 3.6M6.6 6.6C4 8.3 2.5 12 2.5 12S6 18.5 12 18.5c1.8 0 3.3-.6 4.6-1.4M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+  </Stroke>
+)
+export const LockIcon = () => (
+  <Stroke>
+    <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+  </Stroke>
+)
+export const ShieldIcon = () => (
+  <Stroke>
+    <path d="M12 3.5 5 6v5.5c0 4.5 3 7.7 7 9 4-1.3 7-4.5 7-9V6z" />
+    <path d="m9 12 2 2 4-4" />
+  </Stroke>
+)
+export const LogoutIcon = () => (
+  <Stroke>
+    <path d="M14 4.5H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h7M10.5 12H20m0 0-3.5-3.5M20 12l-3.5 3.5" />
+  </Stroke>
+)

@@ -38,18 +38,28 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-.category-dot,
-.category-chip i {
+.category-chip .cat-icon {
   flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  color: var(--cat);
 }
-.category-chip i.none,
-.category-dot.none {
-  box-sizing: border-box;
-  border: 2px solid var(--muted);
-  background: none;
+.category-chip span.none .cat-icon {
+  color: var(--muted);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .category-chip .cat-icon {
+    color: color-mix(in srgb, var(--cat) 60%, white);
+  }
+  :root:not([data-theme='light']) .category-chip span.none .cat-icon {
+    color: var(--muted);
+  }
+}
+:root[data-theme='dark'] .category-chip .cat-icon {
+  color: color-mix(in srgb, var(--cat) 60%, white);
+}
+:root[data-theme='dark'] .category-chip span.none .cat-icon {
+  color: var(--muted);
 }
 
 /* "Para onde foi o dinheiro" block in Meses. */
@@ -160,8 +170,97 @@
 }
 .category-edit li {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.category-line {
+  display: flex;
   align-items: center;
   gap: 10px;
+}
+.category-look-toggle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+}
+.category-look-toggle .cat-badge.round {
+  width: 34px;
+}
+.category-look-toggle .cat-badge.round svg {
+  width: 17px;
+  height: 17px;
+}
+.category-look-toggle[aria-expanded='true'] .cat-badge {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+.category-look {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--bg);
+}
+.category-look fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.category-look legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 6px;
+}
+.icon-option {
+  position: relative;
+  cursor: pointer;
+}
+.icon-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.icon-option span {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  color: var(--muted);
+}
+.icon-option svg {
+  width: 20px;
+  height: 20px;
+}
+.icon-option input:checked + span {
+  border-color: var(--cat);
+  background: color-mix(in srgb, var(--cat) 16%, var(--surface));
+  color: var(--cat);
+}
+.icon-option input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.category-look .swatch i {
+  width: 30px;
+  height: 30px;
 }
 .category-edit input,
 .category-new input {
@@ -180,22 +279,6 @@
   border-color: var(--accent);
   outline: none;
 }
-.category-color {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-}
-.category-color i {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-}
 .category-new {
   display: flex;
   gap: 8px;
@@ -208,4 +291,50 @@
   width: 30px;
   margin-right: 8px;
   padding: 0;
+}
+
+/* Category tile in the Saídas rows: same width as the card thumbnails, so
+   every row's text starts at the same place. */
+.cat-badge {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  aspect-ratio: 1.586;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--cat) 16%, var(--surface));
+  color: var(--cat);
+}
+.cat-badge.none {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.cat-badge svg {
+  width: 15px;
+  height: 15px;
+}
+.cat-badge.round {
+  width: 26px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+.cat-badge.round svg {
+  width: 14px;
+  height: 14px;
+}
+/* Dark theme: lighter drawing, so dark colors still show. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .cat-badge:not(.none) {
+    background: color-mix(in srgb, var(--cat) 24%, var(--surface));
+    color: color-mix(in srgb, var(--cat) 60%, white);
+  }
+}
+:root[data-theme='dark'] .cat-badge:not(.none) {
+  background: color-mix(in srgb, var(--cat) 24%, var(--surface));
+  color: color-mix(in srgb, var(--cat) 60%, white);
+}
+@media (max-width: 480px) {
+  .cat-badge.card {
+    width: 30px;
+  }
 }

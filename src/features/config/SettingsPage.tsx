@@ -1,14 +1,63 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../../app/authContext'
 import { downloadMyData } from '../../data/account'
 import { authErrorFromUrl, linkGoogle, signOut } from '../../data/auth'
-import { DownloadIcon, GoogleIcon } from '../../ui/icons'
-import { useToast } from '../../ui/toastContext'
 import { useFinance } from '../../data/useFinance'
+import { CategoryBadge } from '../../ui/CategoryBadge'
+import {
+  ChevronRightIcon,
+  DownloadIcon,
+  GoogleIcon,
+  LockIcon,
+  LogoutIcon,
+  ShieldIcon,
+  TrashIcon,
+} from '../../ui/icons'
+import { useToast } from '../../ui/toastContext'
 import { CategoriesModal } from './CategoriesModal'
 import { DeleteAccountModal } from './DeleteAccountModal'
 
+type Tone = 'accent' | 'pos' | 'neg' | 'muted' | 'google'
+
+/** One line of a settings card: colored icon, title, short explanation. */
+function Row({
+  icon,
+  tone,
+  title,
+  detail,
+  end,
+}: {
+  readonly icon: ReactNode
+  readonly tone: Tone
+  readonly title: ReactNode
+  readonly detail?: ReactNode
+  readonly end?: ReactNode
+}) {
+  return (
+    <>
+      <span className={`settings-icon ${tone}`} aria-hidden="true">
+        {icon}
+      </span>
+      <span className="settings-text">
+        <b>{title}</b>
+        {detail && <small>{detail}</small>}
+      </span>
+      {end}
+    </>
+  )
+}
+
+const Chevron = () => (
+  <span className="settings-chevron" aria-hidden="true">
+    <ChevronRightIcon />
+  </span>
+)
+
+/**
+ * Ajustes, one card per subject (asked by the user after Fase 11): account on
+ * top, then ways in, categories, your data, leaving, and deleting apart in red.
+ */
 export function SettingsPage() {
   const auth = useAuth()
   const toast = useToast()
@@ -23,7 +72,11 @@ export function SettingsPage() {
   const user = auth.status === 'signed-in' ? auth.session.user : null
   const identities = user?.identities ?? []
   const google = identities.find((item) => item.provider === 'google')
+  const googleEmail = google?.identity_data?.email
+    ? String(google.identity_data.email)
+    : null
   const hasPassword = identities.some((item) => item.provider === 'email')
+  const categories = finance?.categories ?? []
 
   const run = async (task: () => Promise<void>) => {
     setBusy(true)
@@ -50,97 +103,184 @@ export function SettingsPage() {
   }
 
   return (
-    <section className="panel settings">
-      <h2>Ajustes</h2>
-      <p className="muted">
-        Conectado como <b>{user?.email}</b>
-      </p>
+    <div className="settings">
+      <h2 className="settings-title">Ajustes</h2>
 
-      <h3>Formas de entrar</h3>
-      <ul className="plain-list">
-        {hasPassword && <li>E-mail e senha</li>}
-        {google && (
-          <li>
-            Google
-            {google.identity_data?.email
-              ? ` (${String(google.identity_data.email)})`
-              : ''}
+      <div className="settings-account">
+        <span className="settings-avatar" aria-hidden="true">
+          {(user?.email ?? '?').charAt(0).toUpperCase()}
+        </span>
+        <span className="settings-text">
+          <small>Conectado como</small>
+          <b>{user?.email}</b>
+        </span>
+      </div>
+
+      <section aria-labelledby="ajustes-entrar">
+        <h3 id="ajustes-entrar" className="settings-label">
+          Formas de entrar
+        </h3>
+        <ul className="settings-card">
+          {hasPassword && (
+            <li className="settings-row">
+              <Row
+                icon={<LockIcon />}
+                tone="accent"
+                title="E-mail e senha"
+                detail="Ativo"
+              />
+            </li>
+          )}
+          <li className="settings-row">
+            <Row
+              icon={<GoogleIcon />}
+              tone="google"
+              title="Google"
+              detail={googleEmail ?? (google ? 'Conectado' : 'Não conectado')}
+              end={
+                !google && (
+                  <button
+                    type="button"
+                    className="btn small"
+                    aria-label="Conectar conta Google"
+                    disabled={busy}
+                    onClick={() => run(linkGoogle)}
+                  >
+                    Conectar
+                  </button>
+                )
+              }
+            />
           </li>
-        )}
-      </ul>
-      {!google && (
-        <button
-          type="button"
-          className="btn google"
-          disabled={busy}
-          onClick={() => run(linkGoogle)}
-        >
-          <GoogleIcon />
-          Conectar conta Google
-        </button>
-      )}
+        </ul>
+      </section>
 
-      <h3>Categorias</h3>
-      <p className="muted">
-        Mostram pra onde foi o dinheiro de cada mês, na aba Meses.
+      <section aria-labelledby="ajustes-categorias">
+        <h3 id="ajustes-categorias" className="settings-label">
+          Categorias
+        </h3>
+        <ul className="settings-card">
+          <li>
+            <button
+              type="button"
+              className="settings-row action"
+              aria-label="Editar categorias"
+              disabled={!finance}
+              onClick={() => setEditingCategories(true)}
+            >
+              <span className="settings-stack" aria-hidden="true">
+                {categories.slice(0, 5).map((item) => (
+                  <CategoryBadge key={item.id} category={item} shape="round" />
+                ))}
+              </span>
+              <span className="settings-text">
+                <b>Editar categorias</b>
+                <small>
+                  {!finance
+                    ? 'Carregando…'
+                    : categories.length === 1
+                      ? '1 categoria'
+                      : `${categories.length} categorias`}
+                </small>
+              </span>
+              <Chevron />
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section aria-labelledby="ajustes-dados">
+        <h3 id="ajustes-dados" className="settings-label">
+          Seus dados
+        </h3>
+        <ul className="settings-card">
+          <li>
+            <button
+              type="button"
+              className="settings-row action"
+              aria-label="Baixar meus dados"
+              disabled={busy}
+              onClick={download}
+            >
+              <Row
+                icon={<DownloadIcon />}
+                tone="pos"
+                title="Baixar meus dados"
+                detail="Uma cópia de tudo, num arquivo JSON"
+                end={<Chevron />}
+              />
+            </button>
+          </li>
+          <li>
+            <Link
+              className="settings-row action"
+              to="/privacidade"
+              aria-label="Política de privacidade"
+            >
+              <Row
+                icon={<ShieldIcon />}
+                tone="accent"
+                title="Política de privacidade"
+                detail="O que o app guarda e onde"
+                end={<Chevron />}
+              />
+            </Link>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="settings-row action"
+              aria-label="Sair"
+              disabled={busy}
+              onClick={() => run(signOut)}
+            >
+              <Row
+                icon={<LogoutIcon />}
+                tone="muted"
+                title="Sair"
+                detail="Sai só deste aparelho"
+              />
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <p className="form-error" role="alert">
+        {error}
       </p>
-      <button
-        type="button"
-        className="btn ghost"
-        disabled={!finance}
-        onClick={() => setEditingCategories(true)}
-      >
-        Editar categorias
-      </button>
+
+      <section aria-labelledby="ajustes-perigo">
+        <h3 id="ajustes-perigo" className="settings-label">
+          Cuidado
+        </h3>
+        <ul className="settings-card danger">
+          <li>
+            <button
+              type="button"
+              className="settings-row action"
+              aria-label="Apagar minha conta e meus dados"
+              disabled={busy}
+              onClick={() => setDeleting(true)}
+            >
+              <Row
+                icon={<TrashIcon />}
+                tone="neg"
+                title="Apagar minha conta e meus dados"
+                detail="Apaga tudo, sem volta"
+                end={<Chevron />}
+              />
+            </button>
+          </li>
+        </ul>
+      </section>
+
       {editingCategories && finance && (
         <CategoriesModal
           finance={finance}
           onClose={() => setEditingCategories(false)}
         />
       )}
-
-      <h3>Seus dados</h3>
-      <p className="muted">
-        Uma cópia de tudo que você guardou aqui, num arquivo JSON.
-      </p>
-      <button
-        type="button"
-        className="btn ghost"
-        disabled={busy}
-        onClick={download}
-      >
-        <DownloadIcon />
-        Baixar meus dados
-      </button>
-      <Link className="link" to="/privacidade">
-        Política de privacidade
-      </Link>
-
-      <p className="form-error" role="alert">
-        {error}
-      </p>
-      <button
-        type="button"
-        className="btn ghost"
-        disabled={busy}
-        onClick={() => run(signOut)}
-      >
-        Sair
-      </button>
-
-      <h3>Apagar conta</h3>
-      <p className="muted">
-        Apaga sua conta e tudo que você lançou. Não dá pra desfazer.
-      </p>
-      <button
-        type="button"
-        className="btn danger"
-        disabled={busy}
-        onClick={() => setDeleting(true)}
-      >
-        Apagar minha conta e meus dados
-      </button>
       {deleting && <DeleteAccountModal onClose={() => setDeleting(false)} />}
-    </section>
+    </div>
   )
 }

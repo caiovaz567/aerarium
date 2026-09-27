@@ -18,20 +18,92 @@ export interface Category {
   readonly id: string
   readonly name: string
   readonly color: string
+  /** One of CATEGORY_ICONS, chosen by the person. */
+  readonly icon: string
   readonly sortOrder: number
 }
 
+/** Drawings a category can have (the SVGs live in src/ui/CategoryIcon.tsx). */
+export const CATEGORY_ICONS = [
+  'food',
+  'cart',
+  'coffee',
+  'car',
+  'bus',
+  'fuel',
+  'plane',
+  'home',
+  'bolt',
+  'phone',
+  'heart',
+  'pill',
+  'dumbbell',
+  'star',
+  'game',
+  'music',
+  'tv',
+  'bag',
+  'shirt',
+  'gift',
+  'book',
+  'pet',
+  'repeat',
+  'invest',
+  'bank',
+  'tools',
+  'dots',
+  'tag',
+] as const
+export type CategoryIconName = (typeof CATEGORY_ICONS)[number]
+/** What each icon is called, for screen readers. */
+export const CATEGORY_ICON_LABELS: Record<CategoryIconName, string> = {
+  food: 'Comida',
+  cart: 'Mercado',
+  coffee: 'Café',
+  car: 'Carro',
+  bus: 'Ônibus',
+  fuel: 'Combustível',
+  plane: 'Viagem',
+  home: 'Casa',
+  bolt: 'Energia',
+  phone: 'Celular',
+  heart: 'Saúde',
+  pill: 'Remédio',
+  dumbbell: 'Academia',
+  star: 'Estrela',
+  game: 'Jogos',
+  music: 'Música',
+  tv: 'TV',
+  bag: 'Compras',
+  shirt: 'Roupa',
+  gift: 'Presente',
+  book: 'Estudo',
+  pet: 'Pet',
+  repeat: 'Assinatura',
+  invest: 'Investimento',
+  bank: 'Banco',
+  tools: 'Conserto',
+  dots: 'Outros',
+  tag: 'Etiqueta',
+}
+/** Icon of a category someone creates, until they pick another. */
+export const DEFAULT_ICON: CategoryIconName = 'tag'
+
 /** The list every person starts with; they can rename, add and delete. */
-export const DEFAULT_CATEGORIES: readonly { name: string; color: string }[] = [
-  { name: 'Alimentação', color: '#E8590C' },
-  { name: 'Transporte', color: '#1C7ED6' },
-  { name: 'Moradia', color: '#7048E8' },
-  { name: 'Saúde', color: '#2B8A3E' },
-  { name: 'Lazer', color: '#D6336C' },
-  { name: 'Compras', color: '#F59F00' },
-  { name: 'Educação', color: '#0CA678' },
-  { name: 'Assinaturas', color: '#3140C2' },
-  { name: 'Outros', color: '#868E96' },
+export const DEFAULT_CATEGORIES: readonly {
+  name: string
+  color: string
+  icon: CategoryIconName
+}[] = [
+  { name: 'Alimentação', color: '#E8590C', icon: 'food' },
+  { name: 'Transporte', color: '#1C7ED6', icon: 'car' },
+  { name: 'Moradia', color: '#7048E8', icon: 'home' },
+  { name: 'Saúde', color: '#2B8A3E', icon: 'heart' },
+  { name: 'Lazer', color: '#D6336C', icon: 'star' },
+  { name: 'Compras', color: '#F59F00', icon: 'bag' },
+  { name: 'Educação', color: '#0CA678', icon: 'book' },
+  { name: 'Assinaturas', color: '#3140C2', icon: 'repeat' },
+  { name: 'Outros', color: '#868E96', icon: 'dots' },
 ]
 
 /** Colors for categories the person creates, in turn. */

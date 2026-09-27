@@ -40,6 +40,7 @@ export function financeFixture(): Finance {
       id: categoryId(item.name),
       name: item.name,
       color: item.color,
+      icon: item.icon,
       sortOrder: index,
     })),
     months: [

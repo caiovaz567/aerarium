@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Modal } from './Modal'
+import { PasswordField } from './PasswordField'
 import { TOAST_MS, useToast } from './toastContext'
 import { ToastProvider } from './ToastProvider'
 
@@ -95,5 +96,26 @@ describe('modal', () => {
     expect(save).toHaveFocus()
     fireEvent.click(document.querySelector('.modal-scrim')!)
     expect(onClose).toHaveBeenCalledOnce()
+  })
+})
+
+describe('PasswordField', () => {
+  it('o olhinho mostra e esconde o que foi digitado', () => {
+    render(
+      <PasswordField
+        label="Senha"
+        value="segredo1"
+        onChange={() => {}}
+        autoComplete="current-password"
+      />,
+    )
+    const input = screen.getByLabelText('Senha')
+    expect(input).toHaveAttribute('type', 'password')
+    fireEvent.click(screen.getByRole('button', { name: 'Mostrar senha' }))
+    expect(input).toHaveAttribute('type', 'text')
+    const hide = screen.getByRole('button', { name: 'Esconder senha' })
+    expect(hide).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(hide)
+    expect(input).toHaveAttribute('type', 'password')
   })
 })

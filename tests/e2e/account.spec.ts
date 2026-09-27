@@ -20,6 +20,9 @@ test('ajustes e o modal de apagar conta, sem rolagem lateral', async ({
   await expect(
     page.getByRole('button', { name: 'Baixar meus dados' }),
   ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Editar categorias' }),
+  ).toContainText('9 categorias')
   await noSideScroll(page)
   await page.screenshot({
     path: testInfo.outputPath('ajustes.png'),

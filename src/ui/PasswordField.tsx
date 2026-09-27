@@ -1,6 +1,10 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
+import { EyeIcon, EyeOffIcon } from './icons'
 
-/** Password input whose hint is announced separately from the label. */
+/**
+ * Password input whose hint is announced separately from the label. The eye
+ * shows what was typed (asked by the user after Fase 11).
+ */
 export function PasswordField({
   label,
   value,
@@ -16,18 +20,34 @@ export function PasswordField({
 }) {
   const id = useId()
   const hintId = useId()
+  const [visible, setVisible] = useState(false)
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        type="password"
-        name="password"
-        autoComplete={autoComplete}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        aria-describedby={hint ? hintId : undefined}
-      />
+      <div className="password-wrap">
+        <input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          name="password"
+          autoComplete={autoComplete}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          aria-describedby={hint ? hintId : undefined}
+        />
+        <button
+          type="button"
+          className="password-eye"
+          aria-label={visible ? 'Esconder senha' : 'Mostrar senha'}
+          aria-pressed={visible}
+          aria-controls={id}
+          onClick={() => setVisible(!visible)}
+        >
+          {visible ? <EyeOffIcon /> : <EyeIcon />}
+        </button>
+      </div>
       {hint && <small id={hintId}>{hint}</small>}
     </div>
   )

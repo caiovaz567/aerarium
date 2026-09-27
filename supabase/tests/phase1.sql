@@ -120,6 +120,8 @@ update public.bills set category_id = 'c0000000-0000-4000-8000-000000000001';
 update public.installment_plans set category_id = 'c0000000-0000-4000-8000-000000000002' where id = '40000000-0000-4000-8000-000000000001';
 select pg_temp.expect_error($q$insert into public.categories (name, color) values ('Moradia', '#000000')$q$, '23505', 'Categoria nao repete nome');
 select pg_temp.expect_error($q$insert into public.categories (name, color) values ('Cor ruim', 'azul')$q$, '23514', 'Categoria exige cor #RRGGBB');
+select pg_temp.expect_error($q$insert into public.categories (name, color, icon) values ('Icone ruim', '#000000', 'Carro!')$q$, '23514', 'Categoria exige icone da lista');
+select pg_temp.assert_true((select icon = 'tag' from public.categories where id = 'c0000000-0000-4000-8000-000000000002'), 'Categoria nova comeca com a etiqueta');
 delete from public.categories where id = 'c0000000-0000-4000-8000-000000000002';
 select pg_temp.assert_true((select category_id is null from public.installment_plans where id = '40000000-0000-4000-8000-000000000001'), 'Apagar categoria deixa o parcelamento sem categoria');
 select pg_temp.assert_true((select count(*) > 0 and bool_and(category_id is not null) from public.bills), 'Contas guardam a categoria');

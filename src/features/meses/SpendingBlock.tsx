@@ -9,7 +9,8 @@ import {
 } from '../../domain/categories'
 import { formatMoney } from '../../domain/money'
 import type { Month } from '../../domain/months'
-import { ChevronDownIcon } from '../../ui/icons'
+import { CategoryBadge } from '../../ui/CategoryBadge'
+import { CardIcon, ChevronDownIcon } from '../../ui/icons'
 
 const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
 
@@ -96,11 +97,21 @@ export function SpendingBlock({
                 aria-controls={listId}
                 onClick={() => setOpen(expanded ? null : group.key)}
               >
-                <i
-                  className={`category-dot${dot ? '' : ' none'}`}
-                  style={dot ? { background: dot } : undefined}
-                  aria-hidden="true"
-                />
+                {group.key === UNDETAILED ? (
+                  // The invoices' undetailed part: a card, not a category.
+                  <span className="cat-badge round none" aria-hidden="true">
+                    <CardIcon />
+                  </span>
+                ) : (
+                  <CategoryBadge
+                    category={
+                      finance.categories.find(
+                        (item) => item.id === group.key,
+                      ) ?? null
+                    }
+                    shape="round"
+                  />
+                )}
                 <span className="name">{label(group.key)}</span>
                 <span className="amount">{formatMoney(group.amount)}</span>
                 <span className="share">

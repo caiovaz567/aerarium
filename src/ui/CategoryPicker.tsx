@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react'
 import type { Category } from '../domain/categories'
+import { CategoryIcon } from './CategoryIcon'
 
 /**
  * Fase 11: optional category, as chips. "Sem categoria" first; the chosen one
@@ -16,21 +18,23 @@ export function CategoryPicker({
   /** Radio group name; unique per form. */
   readonly name?: string
 }) {
-  const option = (id: string | null, label: string, color: string | null) => (
-    <label className="category-chip" key={id ?? 'none'}>
+  const option = (category: Category | null) => (
+    <label
+      className="category-chip"
+      key={category?.id ?? 'none'}
+      style={
+        category ? ({ '--cat': category.color } as CSSProperties) : undefined
+      }
+    >
       <input
         type="radio"
         name={name}
-        checked={value === id}
-        onChange={() => onChange(id)}
+        checked={value === (category?.id ?? null)}
+        onChange={() => onChange(category?.id ?? null)}
       />
-      <span>
-        {color ? (
-          <i style={{ background: color }} aria-hidden="true" />
-        ) : (
-          <i className="none" aria-hidden="true" />
-        )}
-        {label}
+      <span className={category ? undefined : 'none'}>
+        <CategoryIcon icon={category?.icon ?? null} />
+        {category?.name ?? 'Sem categoria'}
       </span>
     </label>
   )
@@ -38,8 +42,8 @@ export function CategoryPicker({
     <fieldset className="field">
       <legend>Categoria</legend>
       <div className="category-chips">
-        {option(null, 'Sem categoria', null)}
-        {categories.map((item) => option(item.id, item.name, item.color))}
+        {option(null)}
+        {categories.map((item) => option(item))}
       </div>
     </fieldset>
   )

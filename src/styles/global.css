@@ -662,10 +662,6 @@ body.has-stuck .app-header.scrolled {
   margin-top: 6px;
 }
 
-.settings h3 {
-  margin-top: 14px;
-}
-
 .skip-link {
   position: fixed;
   top: -100px;
@@ -718,5 +714,38 @@ body.has-stuck .app-header.scrolled {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Password with the eye that shows what was typed. */
+.password-wrap {
+  position: relative;
+}
+.password-wrap input {
+  width: 100%;
+  padding-right: 52px;
+}
+.password-eye {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  transform: translateY(-50%);
+}
+.password-eye svg {
+  width: 20px;
+  height: 20px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .password-eye:hover {
+    color: var(--ink);
   }
 }

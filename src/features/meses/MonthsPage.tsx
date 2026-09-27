@@ -230,6 +230,7 @@ export function MonthsPage() {
       />
       <OutflowsBlock
         view={view}
+        categories={finance.categories}
         onInvoice={(item) =>
           setDialog({ kind: 'invoice', id: item.invoice.id })
         }

@@ -1,7 +1,9 @@
 import type { BillRow, IncomeRow } from '../../data/finance'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName } from '../../domain/months'
+import type { Category } from '../../domain/categories'
 import { CardArt } from '../../ui/CardArt'
+import { CategoryBadge } from '../../ui/CategoryBadge'
 import { CheckButton, TrashButton } from '../../ui/controls'
 import type { CardOutflow, CarryHint, LooseOutflow } from './monthView'
 
@@ -77,6 +79,7 @@ function GroupHead({ title, total }: { title: string; total: Cents }) {
 
 export function OutflowsBlock({
   view,
+  categories,
   onInvoice,
   onInvoicePaid,
   onInvoiceDelete,
@@ -95,6 +98,7 @@ export function OutflowsBlock({
     readonly subtotals: { cards: Cents; loose: Cents; bills: Cents }
     readonly balance: { readonly outflows: Cents }
   }
+  readonly categories: readonly Category[]
   readonly onInvoice: (item: CardOutflow) => void
   readonly onInvoicePaid: (item: CardOutflow, paid: boolean) => void
   readonly onInvoiceDelete: (item: CardOutflow) => void
@@ -105,6 +109,8 @@ export function OutflowsBlock({
   readonly onBillDelete: (bill: BillRow) => void
 }) {
   const { cards, loose, bills } = view
+  const category = (id: string | null | undefined) =>
+    categories.find((item) => item.id === id) ?? null
   return (
     <section className="block" aria-labelledby="saidas">
       <div className="block-head">
@@ -188,6 +194,7 @@ export function OutflowsBlock({
                   className="row-main"
                   onClick={() => onLooseOpen(item)}
                 >
+                  <CategoryBadge category={category(item.plan.categoryId)} />
                   <span className="desc">
                     {item.plan.description}
                     <span className="sub">
@@ -227,6 +234,7 @@ export function OutflowsBlock({
                   className="row-main"
                   onClick={() => onBill(bill)}
                 >
+                  <CategoryBadge category={category(bill.categoryId)} />
                   <span className="desc">{bill.description}</span>
                   <span className={`val${bill.amount ? '' : ' zero'}`}>
                     {formatMoney(bill.amount)}

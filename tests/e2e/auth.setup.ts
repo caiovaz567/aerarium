@@ -12,7 +12,7 @@ setup('preparar e entrar com a conta de teste', async ({ page }) => {
   await resetFixture(await e2eClient())
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(email!)
-  await page.getByLabel('Senha').fill(password!)
+  await page.getByLabel('Senha', { exact: true }).fill(password!)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/meses\/\d{4}-\d{2}$/)
   await page.context().storageState({ path: SESSION })

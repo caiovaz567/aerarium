@@ -29,6 +29,7 @@ const categoryRecord = (category: Category) => ({
   id: category.id,
   name: category.name,
   color: category.color,
+  icon: category.icon,
   sort_order: category.sortOrder,
 })
 
@@ -110,6 +111,7 @@ export const categoryOps = {
       id: newId(),
       name: item.name,
       color: item.color,
+      icon: item.icon,
       sortOrder: index,
     }))
     const found: Record<CategorizedKind, Map<string, string>> = {

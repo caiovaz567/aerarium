@@ -262,7 +262,7 @@ describe('Ajustes: categorias', () => {
     return dialog('Categorias')
   }
 
-  it('renomeia, recusa nome repetido e troca a cor', async () => {
+  it('renomeia, recusa nome repetido, troca ícone e cor', async () => {
     const form = open()
     const name = within(form).getByLabelText('Nome da categoria Lazer')
     fireEvent.change(name, { target: { value: 'Diversão' } })
@@ -282,11 +282,22 @@ describe('Ajustes: categorias', () => {
     )
     expect(other).toHaveValue('Compras')
 
-    fireEvent.click(
-      within(form).getByRole('button', { name: 'Trocar a cor de Compras' }),
-    )
+    const look = within(form).getByRole('button', {
+      name: 'Ícone e cor de Compras',
+    })
+    expect(look).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(look)
+    expect(look).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(within(form).getByLabelText('Mercado'))
     await settle()
     expect(writes()[1]).toMatchObject({
+      table: 'categories',
+      op: 'update',
+      payload: { icon: 'cart', color: '#F59F00' },
+    })
+    fireEvent.click(within(form).getByLabelText('Cor #0CA678'))
+    await settle()
+    expect(writes()[2]).toMatchObject({
       table: 'categories',
       op: 'update',
       payload: { color: '#0CA678' },
@@ -330,8 +341,12 @@ describe('Ajustes: categorias', () => {
     expect(writes()[0]).toMatchObject({
       table: 'categories',
       op: 'insert',
-      payload: { name: 'Pets', color: '#AE3EC9', sort_order: 9 },
+      payload: { name: 'Pets', color: '#AE3EC9', icon: 'tag', sort_order: 9 },
     })
     expect(within(form).getByLabelText('Nova categoria')).toHaveValue('')
+    // It opens right away, so the person picks the icon.
+    expect(
+      within(form).getByRole('button', { name: 'Ícone e cor de Pets' }),
+    ).toHaveAttribute('aria-expanded', 'true')
   })
 })

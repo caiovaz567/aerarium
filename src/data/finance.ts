@@ -94,7 +94,7 @@ export async function loadFinance(): Promise<Finance> {
     subscriptions,
   ] = await Promise.all([
     select('cards', 'id,name,color,closing_day,sort_order'),
-    select('categories', 'id,name,color,sort_order'),
+    select('categories', 'id,name,color,icon,sort_order'),
     select('months', 'id,ref'),
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
     select(
@@ -145,6 +145,7 @@ export async function loadFinance(): Promise<Finance> {
         id: text(row.id),
         name: text(row.name),
         color: text(row.color),
+        icon: text(row.icon),
         sortOrder: Number(row.sort_order),
       }))
       .sort(

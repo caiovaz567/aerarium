@@ -146,7 +146,7 @@ describe('esqueleto', () => {
         },
       } as Session,
     })
-    expect(screen.getByText('Google (g@gmail.test)')).toBeInTheDocument()
+    expect(screen.getByText('g@gmail.test')).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Conectar conta Google' }),
     ).not.toBeInTheDocument()

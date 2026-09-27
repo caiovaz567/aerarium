@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { emptyData, invoice, plan, seedData } from './__fixtures__/seed'
 import { monthBalance } from './balance'
 import {
+  CATEGORY_ICON_LABELS,
+  CATEGORY_ICONS,
   CATEGORY_KEYWORDS,
+  DEFAULT_ICON,
   CATEGORY_PALETTE,
   DEFAULT_CATEGORIES,
   groupByCategory,
@@ -24,6 +27,7 @@ const categories: Category[] = DEFAULT_CATEGORIES.map((item, index) => ({
   id: `cat-${index}`,
   name: item.name,
   color: item.color,
+  icon: item.icon,
   sortOrder: index,
 }))
 const idOf = (name: string) => categories.find((item) => item.name === name)!.id
@@ -46,6 +50,16 @@ describe('lista padrão e cores', () => {
       ...CATEGORY_PALETTE,
     ])
       expect(item).toMatch(/^#[0-9A-F]{6}$/)
+  })
+
+  it('ícones: os padrão existem na lista, e todos têm nome pra leitor de tela', () => {
+    for (const item of DEFAULT_CATEGORIES)
+      expect(CATEGORY_ICONS).toContain(item.icon)
+    expect(Object.keys(CATEGORY_ICON_LABELS).sort()).toEqual(
+      [...CATEGORY_ICONS].sort(),
+    )
+    for (const icon of CATEGORY_ICONS) expect(icon).toMatch(/^[a-z]{1,20}$/)
+    expect(CATEGORY_ICONS).toContain(DEFAULT_ICON)
   })
 
   it('palavras-chave só apontam pra categorias da lista padrão', () => {
@@ -99,7 +113,13 @@ describe('sugestão pelo nome', () => {
 
   it('usa a lista da pessoa, pelo nome, mesmo renomeada em caixa diferente', () => {
     const own: Category[] = [
-      { id: 'x', name: 'transporte', color: '#000000', sortOrder: 0 },
+      {
+        id: 'x',
+        name: 'transporte',
+        color: '#000000',
+        icon: 'tag',
+        sortOrder: 0,
+      },
     ]
     expect(suggestCategory('Uber', own)).toBe('x')
     expect(suggestCategory('iFood', own)).toBeNull()

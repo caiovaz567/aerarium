@@ -73,6 +73,7 @@ export async function resetFixture(db: SupabaseClient) {
         id: id(40 + index),
         name: item.name,
         color: item.color,
+        icon: item.icon,
         sort_order: index,
       })),
     ),

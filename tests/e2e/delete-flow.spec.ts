@@ -19,7 +19,9 @@ test.beforeAll(() => {
 async function signIn(page: import('@playwright/test').Page) {
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL)
-  await page.getByLabel('Senha').fill(process.env.E2E_PASSWORD!)
+  await page
+    .getByLabel('Senha', { exact: true })
+    .fill(process.env.E2E_PASSWORD!)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
 }
 
