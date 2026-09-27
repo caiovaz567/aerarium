@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [
     react(),
-    // Seção 10.3. The service worker only keeps the app shell; Supabase calls
+    // The service worker only keeps the app shell; Supabase calls
     // (financial data) always go to the network and are never cached.
     VitePWA({
       registerType: 'prompt',

@@ -39,7 +39,7 @@ const cardRecord = (card: Card) => ({
   sort_order: card.sortOrder,
 })
 
-/** Everything deleting a card takes with it (seção 4.9), to undo it. */
+/** Everything deleting a card takes with it, to undo it. */
 export interface CardSnapshot {
   readonly card: Card
   readonly invoices: readonly InvoiceRow[]
@@ -199,7 +199,7 @@ export const editOps = {
     }
   },
 
-  /** A payment registered by hand on the plan, with its date and month (seção 4.4). */
+  /** A payment registered by hand on the plan, with its date and month. */
   addPayment(payment: PaymentRow): FinanceOp {
     return {
       run: () =>

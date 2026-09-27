@@ -102,7 +102,7 @@ export interface ImportData {
   readonly subscriptions: readonly SubscriptionRow[]
   readonly outflows: readonly OutflowTrace[]
   readonly warnings: readonly string[]
-  /** Installments that only become paid because v2 pays everything on a paid invoice (seção 4.4). */
+  /** Installments that only become paid because v2 pays everything on a paid invoice. */
   readonly autoPaid: readonly string[]
 }
 

@@ -30,7 +30,7 @@ export interface MonthComparison {
 export interface Difference {
   readonly month: Month
   readonly text: string
-  /** True only when the fixed schedule (seção 4.3) explains it. */
+  /** True only when the fixed schedule explains it. */
   readonly explained: boolean
 }
 export interface Comparison {

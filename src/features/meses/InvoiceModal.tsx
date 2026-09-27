@@ -25,7 +25,7 @@ export interface InvoiceChanges {
   readonly paid: boolean
 }
 
-/** Invoice summary (seção 8.2): what comes by itself, launched expenses and the rest. */
+/** Invoice summary: what comes by itself, launched expenses and the rest. */
 export function InvoiceModal({
   invoice,
   card,
@@ -45,7 +45,7 @@ export function InvoiceModal({
   readonly onRemoveExpense: (expense: ExpenseRow) => void
   /** Fase 11: edit a launched expense (description, value, category). */
   readonly onOpenExpense: (expense: ExpenseRow) => void
-  /** Tapping an item opens it (seção 8.2). */
+  /** Tapping an item opens it. */
   readonly onOpenPlan: (id: string) => void
   readonly onOpenSubscription: (id: string) => void
 }) {

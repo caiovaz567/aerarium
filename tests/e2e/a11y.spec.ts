@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { E2E } from './fixture'
 import { signedIn } from './session'
 
-// Fase 10, seção 7.4 item 14: automatic WCAG 2.1 AA check (contrast, names,
+// Automatic WCAG 2.1 AA check (contrast, names,
 // roles) on every screen, in both themes. Read only.
 signedIn()
 

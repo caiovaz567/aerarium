@@ -5,7 +5,7 @@ import type { InstallmentPayment, InstallmentPlan } from './types'
 
 /**
  * Checks an edited (or new) plan before saving, with the same rules the
- * database enforces (seção 4.9), so the person gets a clear message.
+ * database enforces, so the person gets a clear message.
  */
 export function planEditError(
   original: InstallmentPlan | null,

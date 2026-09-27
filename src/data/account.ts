@@ -2,7 +2,7 @@ import type { User } from '@supabase/supabase-js'
 import { dateInSaoPaulo } from '../domain/months'
 import { supabase } from './supabase'
 
-/** Every table with the user's data (seção 5.2). RLS limits reads to the user. */
+/** Every table with the user's data. RLS limits reads to the user. */
 export const ACCOUNT_TABLES = [
   'cards',
   'months',
@@ -36,7 +36,7 @@ async function readTable(table: string): Promise<Rows> {
   }
 }
 
-/** Seção 5.6: the JSON of "Baixar meus dados", exactly as stored. */
+/** The JSON of "Baixar meus dados", exactly as stored. */
 export function buildExport(user: User, tables: AccountTables, now: Date) {
   return {
     app: 'Aerarium',
@@ -87,7 +87,7 @@ export const confirmsDelete = (typed: string) =>
   typed.trim().toUpperCase() === DELETE_WORD
 
 /**
- * Seção 5.6: the Edge Function deletes the auth user and the database removes
+ * The Edge Function deletes the auth user and the database removes
  * the rest by cascade. Only the server may delete users.
  */
 export async function deleteMyAccount() {

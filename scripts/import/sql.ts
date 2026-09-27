@@ -190,7 +190,7 @@ end $$;`,
       ]),
       update(['description', 'amount', 'paid', 'paid_on', 'sort_order']),
     ),
-    // Invoices go in unpaid; composition first, then the trigger freezes the total (seção 4.9).
+    // Invoices go in unpaid; composition first, then the trigger freezes the total.
     ...insert(
       'invoices',
       [

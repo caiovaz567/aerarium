@@ -174,7 +174,7 @@ export interface CardBlock {
   readonly subscriptionNames: readonly string[]
 }
 
-/** Aba Cartões for one month (seção 8.3). */
+/** Aba Cartões for one month. */
 export function cardsView(finance: Finance, target: Month) {
   const blocks: CardBlock[] = finance.cards.map((card) => {
     const invoice =

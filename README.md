@@ -4,7 +4,6 @@ Finanças pessoais, mês a mês. Vite + React + TypeScript, com banco Supabase, 
 
 - Como o app funciona hoje: [docs/APP.md](docs/APP.md).
 - Regras para quem mexe no código (pessoas e agentes): [AGENTS.md](AGENTS.md).
-- Plano original e registro de cada fase: [docs/historico/](docs/historico/).
 
 ## Começar
 

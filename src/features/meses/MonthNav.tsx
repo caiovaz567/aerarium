@@ -10,7 +10,7 @@ import { MonthListModal, NewMonthModal } from './MonthModals'
 import { buildNewMonth } from './monthView'
 
 /**
- * Month bar shared by Meses and Cartões (seção 8.3: "igual à de Meses"),
+ * Month bar shared by Meses and Cartões,
  * with the month list, "create next month" and "delete month".
  */
 export function MonthNav({

@@ -14,7 +14,7 @@ const reducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /**
- * Invoice total per month (seção 8.4). The selected month is always in the
+ * Invoice total per month. The selected month is always in the
  * centre: tapping glides to it, dragging snaps to the nearest month ~120 ms
  * after scrolling stops, and a width change redraws keeping it centred.
  */

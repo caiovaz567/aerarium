@@ -46,7 +46,7 @@ function rememberedWhere(finance: Finance) {
   return finance.cards[0]?.id ?? NO_CARD
 }
 
-/** Lançar (seção 8.5): Gasto, Parcelado or Entrada in a few taps. */
+/** Lançar: Gasto, Parcelado or Entrada in a few taps. */
 export function LaunchModal({
   finance,
   openMonth,

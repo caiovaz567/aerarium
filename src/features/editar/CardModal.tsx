@@ -9,7 +9,7 @@ import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 
 /**
- * New or edit card (seção 8.7): preview, name, color and closing day.
+ * New or edit card: preview, name, color and closing day.
  * Card photos were removed at the user's request after phase 8.
  */
 export function CardModal({

@@ -5,7 +5,7 @@ import { sumMoney, type Cents } from '../../domain/money'
 import { dateBR, monthLabel, type ISODate } from '../../domain/months'
 import { monthView } from '../meses/monthView'
 
-// Excel export (seção 8.8): one sheet per month, then Parcelamentos, Cartões
+// Excel export: one sheet per month, then Parcelamentos, Cartões
 // and Assinaturas. Same layout as v1. Kept free of the library so it can be tested.
 
 export interface CellValue {

@@ -2,7 +2,7 @@
 
 App pessoal de finanças, celular primeiro. Vite + React + TypeScript + Supabase, deploy na Vercel, instalável no iPhone como PWA.
 
-Como o app funciona hoje (telas, regras de negócio, banco, produção, pendências): `docs/APP.md`. Leia antes de mudar algo. O plano original e o registro de cada fase ficam em `docs/historico/`, só para consulta.
+Como o app funciona hoje (telas, regras de negócio, banco, produção, pendências): `docs/APP.md`. Leia antes de mudar algo e mantenha atualizado quando o app mudar.
 
 ## Como trabalhar
 
@@ -44,5 +44,5 @@ Como o app funciona hoje (telas, regras de negócio, banco, produção, pendênc
 - `npm run db:test`: testes SQL com rollback no desenvolvimento. `npm run db:domain`: compara `src/domain` com as views. `npm run db:seed`, `npm run db:preflight`: só desenvolvimento.
 - `npm run supabase -- db push --dry-run` antes de `db push`. `npm run supabase:check`: confere o acesso com a chave pública.
 - `npm run supabase -- functions deploy NOME --project-ref REF --use-api`: publicar Edge Function.
-- `npm run import:backup -- --simular`: relatório do import da v1 (ver `docs/historico/FASE_3.md`).
+- `npm run import:backup -- --simular`: relatório do import da v1 (opções no topo de `scripts/import-backup.ts`).
 - `npm run icons`: redesenha os ícones do PWA.

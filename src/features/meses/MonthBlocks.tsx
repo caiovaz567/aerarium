@@ -77,7 +77,7 @@ function GroupHead({ title, total }: { title: string; total: Cents }) {
   )
 }
 
-/** Saídas "Por tipo": cards, loose installments and bills (seção 8.2). */
+/** Saídas "Por tipo": cards, loose installments and bills. */
 export function OutflowsByType({
   view,
   categories,

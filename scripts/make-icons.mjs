@@ -1,4 +1,4 @@
-// Draws the app icons (seção 10.3): light temple on #3140C2, square corners
+// Draws the app icons: light temple on #3140C2, square corners
 // (iOS rounds them itself). Run with `npm run icons`; the PNGs are committed.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { chromium } from '@playwright/test'

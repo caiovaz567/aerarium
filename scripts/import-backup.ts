@@ -1,11 +1,16 @@
-// Imports the v1 backup (seção 6 do plano). See docs/historico/FASE_3.md.
+// Imports the backup of the first version of the app (v1) into one account,
+// with a month by month report comparing v1 and v2.
 //
 //   npm run import:backup -- --simular
 //   npm run import:backup -- --email EMAIL --projeto REF            (ensaio, desfaz tudo)
 //   npm run import:backup -- --email EMAIL --projeto REF --gravar   (grava)
 //
 // Writes through the Supabase CLI login as the destination user, so RLS applies.
-// No service_role or secret key is read.
+// No service_role or secret key is read. --projeto must be the linked project
+// and the account must already exist (Authentication, Users). Ids are derived
+// from the user and the v1 ids, so running again updates instead of duplicating.
+// --arquivo picks the backup (default scripts/data/aerarium-backup-2026-09-24.json)
+// and --hoje the reference date (default: the date in the file name).
 import { spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'

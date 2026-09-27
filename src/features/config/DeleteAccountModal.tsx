@@ -9,7 +9,7 @@ import {
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 
-/** Seção 5.6: typing APAGAR confirms; there is no undo. */
+/** Typing APAGAR confirms; there is no undo. */
 export function DeleteAccountModal({
   onClose,
 }: {

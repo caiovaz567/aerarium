@@ -21,7 +21,7 @@ import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
 
-/** New or edit installment plan (seção 8.7), with its payment history. */
+/** New or edit installment plan, with its payment history. */
 export function PlanModal({
   finance,
   plan,

@@ -7,7 +7,7 @@ import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
 
-/** Aba Assinaturas (seção 8.6). */
+/** Aba Assinaturas. */
 export function SubscriptionsPage() {
   const query = useFinance()
   const editor = useEditor()

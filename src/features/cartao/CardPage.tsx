@@ -40,7 +40,7 @@ function Triangle({ up }: { up: boolean }) {
   )
 }
 
-/** Card page (seção 8.4): big card, three numbers, the chart and the month detail. */
+/** Card page: big card, three numbers, the chart and the month detail. */
 export function CardPage() {
   const { id } = useParams()
   const navigate = useNavigate()

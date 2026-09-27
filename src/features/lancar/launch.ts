@@ -31,7 +31,7 @@ export function launchMonths(finance: Finance): Month[] {
 }
 
 /**
- * "Entra em" (seção 8.5): the month open in Meses, otherwise this month; when
+ * "Entra em": the month open in Meses, otherwise this month; when
  * that is this month, a card's closing day can move the expense to the next.
  */
 export function suggestMonth(
@@ -109,7 +109,7 @@ const DEFAULT_TEXT: Record<LaunchKind, string> = {
   entrada: 'Entrada',
 }
 
-/** What one launch writes, how to undo it, and the toast text (seção 8.5). */
+/** What one launch writes, how to undo it, and the toast text. */
 export function buildLaunch(
   finance: Finance,
   input: LaunchInput,

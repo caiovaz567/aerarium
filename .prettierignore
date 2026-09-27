@@ -5,7 +5,6 @@ playwright-report/
 test-results/
 .artifacts/
 package-lock.json
-docs/historico/
 scripts/data/
 aerarium-backup-*.json
 .env*

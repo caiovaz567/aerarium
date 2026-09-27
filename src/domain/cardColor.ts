@@ -1,4 +1,4 @@
-// Card colors (seção 7.3 do plano), same rules as v1. Never a bank logo, only a color.
+// Card colors, same rules as v1. Never a bank logo, only a color.
 
 const BRAND: readonly (readonly [RegExp, string])[] = [
   [/nu ?bank|^nu\b/, '#820AD1'],

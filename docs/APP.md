@@ -1,6 +1,6 @@
 # Aerarium: como o app funciona hoje
 
-Resumo do estado atual. O plano original e os registros de cada fase estão em `docs/historico/` (consultar só quando precisar do porquê de uma decisão antiga). Referências como "seção 8.2" em comentários do código apontam para `docs/historico/PLANO_AERARIUM.md`.
+Resumo do estado atual. Atualizar sempre que o app mudar.
 
 ## O que é
 
@@ -8,7 +8,7 @@ App pessoal de finanças, celular primeiro, instalável no iPhone (PWA). Respond
 
 - Produção: https://aerarium-delta.vercel.app (push em `main` publica pela Vercel).
 - Contas: e-mail e senha ou Google, e dá para conectar o Google a uma conta de e-mail (Ajustes). Cada pessoa vê só os próprios dados (RLS).
-- Hoje só o dono usa. Dados reais vieram do backup da v1 (`npm run import:backup`, ver `docs/historico/FASE_3.md`).
+- Hoje só o dono usa. Dados reais vieram do backup da primeira versão (v1), com `npm run import:backup`.
 
 ## Stack e pastas
 
@@ -44,7 +44,7 @@ Tabelas, todas com `user_id` e RLS "cada um só o seu": `cards`, `months`, `inco
 ## Telas
 
 - **Meses**: barra de meses (lista, anterior, próximo ou criar), resumo azul (disponível, comprometido, entradas, saídas, falta pagar), entradas, e Saídas em três visões que o app lembra por aparelho: **Por data** (dias, hora, "Fixos do mês", fileira de cartões para filtrar), **Por tipo** (cartões, parcelas, contas, com círculo de pago e lixeira) e **Por categoria** (rosca, lista com % e comparação com o mês anterior). Resumo da fatura com o que entra sozinho, gastos lançados (tocar edita) e outros gastos.
-- **Cartões** e **tela do cartão** com o gráfico de faixa centralizada (seção 8.4 do plano).
+- **Cartões**: resumo das faturas do mês, um bloco por cartão, parcelas fora dos cartões e arquivados. **Tela do cartão**: cartão grande, números, gráfico da fatura por mês (faixa com o mês selecionado sempre no centro, linha tracejada na previsão, arrastar encaixa) e o que tem no mês.
 - **Lançar** (+): Gasto, Parcelado, Entrada; valor, descrição, onde, categoria (com sugestão), quando (data e hora), já paguei, mês.
 - **Assinaturas**; modais de edição de cartão, parcelamento, assinatura, conta, entrada e gasto.
 - **Ajustes**: conta, formas de entrar, categorias (ícone, cor, nome), baixar meus dados (JSON), privacidade, sair, apagar conta (Edge Function, digitar APAGAR).

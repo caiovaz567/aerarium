@@ -1,4 +1,4 @@
-// Seção 5.6: deletes the account of whoever calls it. The database removes
+// Deletes the account of whoever calls it. The database removes
 // every row of that user by cascade (checked in supabase/tests/phase1.sql).
 // The admin key exists only here, on the server; never in the front.
 import { createClient } from 'npm:@supabase/supabase-js@2'

@@ -4,7 +4,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 const CHECK_MS = 60 * 60 * 1000
 
 /**
- * Seção 10.3: discreet notice when a new version was deployed. It stays until
+ * Discreet notice when a new version was deployed. It stays until
  * tapped, so a pending undo toast is never replaced by it.
  */
 export function UpdatePrompt() {

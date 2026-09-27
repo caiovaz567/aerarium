@@ -180,7 +180,7 @@ export function monthView(finance: Finance, ref: Month) {
   }
 }
 
-/** Percentage for the bar and caption; null when nothing came in (seção 4.9). */
+/** Percentage for the bar and caption; null when nothing came in. */
 export function committedPercent(ratio: number | null): number | null {
   return ratio === null ? null : Math.round(ratio * 100)
 }
@@ -193,7 +193,7 @@ export function defaultMonth(finance: Finance, today: Month): Month | null {
   return before[before.length - 1] ?? refs[0] ?? null
 }
 
-/** Rows for a new month (seção 4.7), with fresh ids, ready to insert. */
+/** Rows for a new month, with fresh ids, ready to insert. */
 export function buildNewMonth(
   finance: Finance,
   target: Month,

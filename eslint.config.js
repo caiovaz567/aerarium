@@ -10,7 +10,6 @@ export default defineConfig([
   globalIgnores([
     'dist/**',
     'coverage/**',
-    'docs/historico/**',
     'scripts/data/**',
     'supabase/.temp/**',
     'test-results/**',

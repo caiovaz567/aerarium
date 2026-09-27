@@ -137,7 +137,7 @@ function CardSection({
   )
 }
 
-/** Aba Cartões (seção 8.3). */
+/** Aba Cartões. */
 export function CardsPage() {
   const [params] = useSearchParams()
   const query = useFinance()

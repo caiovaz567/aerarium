@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Link } from 'react-router'
 import { Brand } from '../../ui/Brand'
 
-/** Seção 9, Fase 10: short privacy policy, open to anyone (no login). */
+/** Short privacy policy, open to anyone (no login). */
 export function PrivacyPage() {
   useEffect(() => {
     window.scrollTo(0, 0)

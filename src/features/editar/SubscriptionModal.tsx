@@ -10,7 +10,7 @@ import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
 
-/** New or edit subscription (seção 8.6). */
+/** New or edit subscription. */
 export function SubscriptionModal({
   finance,
   subscription,
