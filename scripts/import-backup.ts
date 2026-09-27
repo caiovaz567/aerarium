@@ -1,4 +1,4 @@
-// Imports the v1 backup (seção 6 do plano). See docs/FASE_3.md.
+// Imports the v1 backup (seção 6 do plano). See docs/historico/FASE_3.md.
 //
 //   npm run import:backup -- --simular
 //   npm run import:backup -- --email EMAIL --projeto REF            (ensaio, desfaz tudo)
