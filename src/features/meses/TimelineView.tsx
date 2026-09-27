@@ -46,7 +46,12 @@ function Row({
           <CategoryBadge category={category} shape="round" />
         )}
         <span className="timeline-text">
-          <b>{text.title}</b>
+          <b>
+            {text.title}
+            {'fresh' in text && text.fresh && (
+              <span className="fresh-pill">novo</span>
+            )}
+          </b>
           <small>{[time, text.detail].filter(Boolean).join(' · ')}</small>
         </span>
         <span className="timeline-value">{formatMoney(item.amount)}</span>

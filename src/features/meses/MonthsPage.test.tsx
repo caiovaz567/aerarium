@@ -359,6 +359,8 @@ describe('Criar e excluir mês', () => {
       plans: [],
       payments: [],
       subscriptions: [],
+      bankAccounts: [],
+      bankRecords: [],
     })
     expect(screen.getByText('Nenhum mês ainda')).toBeVisible()
     expect(screen.getByRole('button', { name: /^Criar / })).toBeVisible()

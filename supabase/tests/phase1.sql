@@ -25,8 +25,8 @@ begin
   perform pg_temp.assert_true(actual = expected, label || ' [SQLSTATE ' || coalesce(actual, 'none') || ']');
 end $$;
 
-select pg_temp.assert_true((select count(*) = 10 from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 10 tabelas');
+select pg_temp.assert_true((select count(*) = 12 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 12 tabelas');
 select pg_temp.assert_true((select count(*) = 3 from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind = 'v' and c.reloptions @> array['security_invoker=true']), '3 views usam security_invoker');
 select pg_temp.assert_true((select count(*) = 0 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -130,11 +130,17 @@ update public.invoice_expenses set occurred_at = '2026-09-04T01:30:00Z' where id
 select pg_temp.assert_true((select spent_on = '2026-09-03' from public.invoice_expenses where occurred_at is not null limit 1), 'Gasto com hora fica no dia de Sao Paulo');
 update public.bills set occurred_at = '2026-09-02T15:00:00Z' where id = (select id from public.bills order by id limit 1);
 select pg_temp.assert_true((select count(*) = 1 from public.bills where occurred_at is not null), 'Conta guarda data e hora');
+-- Open Finance: bank accounts and handled records belong to their owner.
+insert into public.bank_accounts (id, pluggy_account_id, item_id, name, card_id) values ('b0000000-0000-4000-8000-000000000001', 'acc-1', 'item-1', 'Cartao do banco', '20000000-0000-4000-8000-000000000002');
+insert into public.bank_records (external_id, kind) values ('tx-1', 'ignored');
+select pg_temp.expect_error($q$insert into public.bank_records (external_id, kind) values ('tx-1', 'expense')$q$, '23505', 'Registro do banco nao repete');
+select pg_temp.expect_error($q$insert into public.bank_records (external_id, kind) values ('tx-2', 'outro')$q$, '23514', 'Registro do banco tem tipo conhecido');
+select pg_temp.expect_error($q$insert into public.bank_accounts (pluggy_account_id, item_id, name) values ('acc-1', 'item-1', 'De novo')$q$, '23505', 'Conta do banco nao repete');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 do $$ declare t text; n bigint; begin
-  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories'] loop
+  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories','bank_accounts','bank_records'] loop
     execute format('select count(*) from public.%I', t) into n;
     perform pg_temp.assert_true(n = 0, 'B nao le A: ' || t);
     execute format('with changed as (update public.%I set user_id = user_id returning id) select count(*) from changed', t) into n;
@@ -161,6 +167,7 @@ select pg_temp.expect_error($q$insert into public.installment_plans (card_id, de
 select pg_temp.expect_error($q$insert into public.installment_payments (plan_id, month) values ('40000000-0000-4000-8000-000000000001','2026-09-01')$q$, '23503', 'B nao paga plano de A');
 select pg_temp.expect_error($q$insert into public.subscriptions (card_id,name,amount,charge_day) values ('20000000-0000-4000-8000-000000000001','FK A',1,1)$q$, '23503', 'FK impede assinatura de B em cartao de A');
 select pg_temp.expect_error($q$insert into public.bills (month_id, description, amount, category_id) values ('30000000-0000-4000-8000-000000000099','FK A',1,'c0000000-0000-4000-8000-000000000001')$q$, '23503', 'FK impede conta de B em categoria de A');
+select pg_temp.expect_error($q$insert into public.bank_accounts (pluggy_account_id, item_id, name, card_id) values ('acc-b', 'item-b', 'B', '20000000-0000-4000-8000-000000000002')$q$, '23503', 'FK impede conta do banco de B em cartao de A');
 insert into public.categories (name, color) values ('Moradia', '#7048E8');
 select pg_temp.assert_true((select count(*) = 1 from public.categories), 'B tem categoria com o mesmo nome da de A');
 
@@ -187,7 +194,7 @@ update public.invoices set paid = true where id = '50000000-0000-4000-8000-00000
 reset role;
 delete from auth.users where id = '10000000-0000-4000-8000-000000000001';
 do $$ declare t text; remaining bigint; begin
-  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories'] loop
+  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories','bank_accounts','bank_records'] loop
     execute format('select count(*) from public.%I where user_id = %L', t, '10000000-0000-4000-8000-000000000001') into remaining;
     perform pg_temp.assert_true(remaining = 0, 'Excluir conta remove ' || t);
   end loop;

@@ -222,5 +222,7 @@ export function financeFixture(): Finance {
         categoryId: categoryId('Assinaturas'),
       },
     ],
+    bankAccounts: [],
+    bankRecords: [],
   }
 }

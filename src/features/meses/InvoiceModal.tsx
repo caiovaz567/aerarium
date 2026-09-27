@@ -16,6 +16,7 @@ import { CheckField, MoneyField, TextField } from '../../ui/controls'
 import { CloseIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
+import { isFreshFromBank } from './outflowText'
 import { visibleNote } from './monthView'
 
 export interface InvoiceChanges {
@@ -199,6 +200,9 @@ export function InvoiceModal({
                     <i className="dot other" />
                     <span>
                       {expense.description}
+                      {isFreshFromBank(expense) && (
+                        <span className="fresh-pill">novo</span>
+                      )}
                       <small>{dayMonth(expense.spentOn)}</small>
                     </span>
                     <b>{formatMoney(expense.amount)}</b>

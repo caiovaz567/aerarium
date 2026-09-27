@@ -418,3 +418,7 @@ enabled = true
 # the gateway check stays off; that way it works with legacy and new JWT keys.
 [functions.delete-account]
 verify_jwt = false
+
+# bank (Open Finance proxy) also checks the session token itself.
+[functions.bank]
+verify_jwt = false

@@ -139,3 +139,13 @@ export const WalletIcon = () => (
     <path d="M16 13.5h.01" />
   </Stroke>
 )
+export const BankIcon = () => (
+  <Stroke>
+    <path d="M3 9.5 12 4l9 5.5M5.5 10v8M10 10v8M14 10v8M18.5 10v8M3 20h18" />
+  </Stroke>
+)
+export const RefreshIcon = () => (
+  <Stroke>
+    <path d="M20 11a8 8 0 0 0-14.5-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.5 4.5L20 16M20 20v-4h-4" />
+  </Stroke>
+)

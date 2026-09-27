@@ -177,3 +177,25 @@
     display: none;
   }
 }
+
+/* Open Finance: which app card each bank card feeds. */
+.bank-card {
+  flex: none;
+  max-width: 44%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+.bank-notices {
+  margin: 0;
+  padding: 10px 12px 10px 28px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+  color: var(--ink);
+  font-size: 14px;
+}

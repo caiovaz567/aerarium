@@ -44,11 +44,21 @@ Tabelas, todas com `user_id` e RLS "cada um só o seu": `cards`, `months`, `inco
 ## Telas
 
 - **Meses**: barra de meses (lista, anterior, próximo ou criar), resumo azul (disponível, comprometido, entradas, saídas, falta pagar), entradas, e Saídas em três visões que o app lembra por aparelho: **Por data** (dias, hora, "Fixos do mês", fileira de cartões para filtrar), **Por tipo** (cartões, parcelas, contas, com círculo de pago e lixeira) e **Por categoria** (rosca, lista com % e comparação com o mês anterior). Resumo da fatura com o que entra sozinho, gastos lançados (tocar edita) e outros gastos.
+- **Ajustes → Bancos conectados** (só o dono): ver a seção Open Finance.
 - **Cartões**: resumo das faturas do mês, um bloco por cartão, parcelas fora dos cartões e arquivados. **Tela do cartão**: cartão grande, números, gráfico da fatura por mês (faixa com o mês selecionado sempre no centro, linha tracejada na previsão, arrastar encaixa) e o que tem no mês.
 - **Lançar** (+): Gasto, Parcelado, Entrada; valor, descrição, onde, categoria (com sugestão), quando (data e hora), já paguei, mês.
 - **Assinaturas**; modais de edição de cartão, parcelamento, assinatura, conta, entrada e gasto.
 - **Ajustes**: conta, formas de entrar, categorias (ícone, cor, nome), baixar meus dados (JSON), privacidade, sair, apagar conta (Edge Function, digitar APAGAR).
 - Excel no cabeçalho. Aviso "Nova versão disponível" quando há deploy.
+
+## Open Finance (Meu Pluggy)
+
+Só para a conta do dono. Compras dos cartões chegam do banco pelo Meu Pluggy (grátis para uso pessoal, até 5 bancos, os dados atualizam uma vez por dia).
+
+- **Edge Function `bank`** (`supabase/functions/bank`): proxy só de leitura. Confere o token de quem chama e só responde se for `PLUGGY_OWNER_USER_ID`; devolve contas de cartão, compras (`GET /v2/transactions`, paginação por cursor) e faturas dos itens em `PLUGGY_ITEM_IDS`. Secrets: `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, `PLUGGY_ITEM_IDS`, `PLUGGY_OWNER_USER_ID`. No desenvolvimento, o item é o Sandbox Open Finance e o dono é a conta de teste `aerarium.e2e.banco@example.test`.
+- **Regras** (`src/domain/bank.ts`): compra nova entra na fatura do mês (a fatura do banco, a aberta ou pelo dia de fechamento) com categoria sugerida; a mesma compra lançada à mão (mesmo cartão e valor, até 3 dias) é ligada, não duplicada; parcelada vira parcelamento (ou se liga a um feito à mão) e as parcelas seguintes só são reconhecidas; cobrança de assinatura cadastrada é reconhecida (avisa se o valor mudou); pagamentos e estornos são ignorados; fatura paga não recebe nada; mês que não existe espera ser criado. Fatura fechada no banco define o total ("outros" = o resto); fatura aberta que recebe compras tem o "outros" digitado zerado uma vez.
+- **Tabelas**: `bank_accounts` (cartão do banco → cartão do app, com palpite pelo nome) e `bank_records` (tudo que já foi tratado, para nunca repetir). `invoice_expenses.external_id` e `installment_plans.external_key` ligam ao banco.
+- **Telas**: Ajustes → Bancos conectados (cartão de cada conta e "Atualizar agora"). A primeira importação mostra uma prévia; depois, o app busca sozinho ao abrir se a última busca tem mais de 6 horas. Compras do banco dos últimos 3 dias mostram "novo".
 
 ## Regras de interface (critério de aceite)
 
@@ -56,6 +66,6 @@ Celular primeiro (conferir em 390×844). Nada pula de lugar ao trocar de mês ou
 
 ## Pendências e próximos passos
 
-- **Open Finance (em andamento, ramo `novidades`)**: compras dos cartões pelo Meu Pluggy (grátis, uso pessoal, só na conta do dono, até 5 bancos, atualiza 1x por dia). Decisões: entram direto com categoria sugerida e sem duplicar o que foi lançado à mão; total da fatura vem do banco ("outros" vira a diferença); parceladas viram parcelamento e casam com as existentes; cobranças de assinaturas cadastradas não duplicam. Chaves só como secrets do Supabase.
+- **Open Finance na produção**: aplicar a migration, publicar a função `bank` e cadastrar os secrets com os 5 itens reais do Meu Pluggy. Conectar os bancos à aplicação da Pluggy só dá até o fim do teste de 15 dias do painel (aberto em 27/09/2026).
 - SMTP próprio no Supabase (esqueci a senha para qualquer e-mail), marca na tela de consentimento do Google, e-mail de contato na política de privacidade: só se outras pessoas forem usar.
 - Ideias levantadas: projeção dos próximos meses, metas, orçamento por categoria, lembrete de vencimento, busca, lançar sem internet.

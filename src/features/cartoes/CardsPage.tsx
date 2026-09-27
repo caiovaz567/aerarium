@@ -155,6 +155,8 @@ export function CardsPage() {
       plans: [],
       payments: [],
       subscriptions: [],
+      bankAccounts: [],
+      bankRecords: [],
     },
   )
 

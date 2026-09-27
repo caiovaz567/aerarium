@@ -1,5 +1,6 @@
 // Creates (or resets) the fictitious accounts the Playwright tests sign in with:
-// the main one and a disposable one that the "Apagar minha conta" test deletes.
+// the main one, a disposable one that the "Apagar minha conta" test deletes,
+// and one for Open Finance (the bank function answers only it, in development).
 // Development project only. The password lives in .env.local, never in Git.
 import { spawnSync } from 'node:child_process'
 import { randomBytes, randomUUID } from 'node:crypto'
@@ -17,6 +18,9 @@ const USER_ID = '10000000-0000-4000-8000-000000000e2e'
 const EMAIL = 'aerarium.e2e@example.test'
 const DISPOSABLE_ID = '10000000-0000-4000-8000-000000000de1'
 const DISPOSABLE_EMAIL = 'aerarium.e2e.apagar@example.test'
+// Open Finance tests: the only account the bank function answers in development.
+const BANK_ID = '10000000-0000-4000-8000-000000000ba0'
+const BANK_EMAIL = 'aerarium.e2e.banco@example.test'
 
 const development = JSON.parse(
   readFileSync('supabase/development.json', 'utf8'),
@@ -64,7 +68,7 @@ select email, email_confirmed_at is not null as confirmed from auth.users where 
 `
 
 const sql = `begin;
-${account(USER_ID, EMAIL)}${account(DISPOSABLE_ID, DISPOSABLE_EMAIL)}commit;`
+${account(USER_ID, EMAIL)}${account(DISPOSABLE_ID, DISPOSABLE_EMAIL)}${account(BANK_ID, BANK_EMAIL)}commit;`
 
 mkdirSync('.artifacts/db', { recursive: true })
 const file = resolve('.artifacts/db', `${randomUUID()}.sql`)
@@ -89,7 +93,7 @@ try {
   if (result.status !== 0 || output.error)
     throw new Error(output.error?.message || result.stderr || 'Falha no SQL.')
   console.log(
-    `Contas de teste prontas: ${EMAIL} e ${DISPOSABLE_EMAIL}. Senha em ${envFile}.`,
+    `Contas de teste prontas: ${EMAIL}, ${DISPOSABLE_EMAIL} e ${BANK_EMAIL}. Senha em ${envFile}.`,
   )
 } finally {
   unlinkSync(file)

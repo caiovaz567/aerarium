@@ -1,5 +1,5 @@
 import type { Category } from '../domain/categories'
-import { fromDecimal } from '../domain/money'
+import { fromDecimal, type Cents } from '../domain/money'
 import { isoDate, month, type ISODate, type Month } from '../domain/months'
 import type {
   Bill,
@@ -42,8 +42,30 @@ export type ExpenseRow = InvoiceExpense & {
   readonly spentOn: ISODate
   /** Fase 12: exact instant (ISO), when known; spentOn follows it. */
   readonly occurredAt?: string | null
+  /** Open Finance: the bank transaction it came from or was matched to. */
+  readonly externalId?: string | null
+  /** When it was saved (ISO); marks bank purchases as new for a few days. */
+  readonly createdAt?: string | null
 }
-export type PlanRow = InstallmentPlan & { readonly note: string | null }
+export type PlanRow = InstallmentPlan & {
+  readonly note: string | null
+  /** Open Finance: recognizes this purchase's next installments. */
+  readonly externalKey?: string | null
+}
+/** A credit card account at the bank (Open Finance) and the card it feeds. */
+export interface BankAccountRow {
+  readonly id: string
+  readonly pluggyAccountId: string
+  readonly itemId: string
+  readonly name: string
+  readonly number: string | null
+  readonly cardId: string | null
+}
+/** A bank transaction or bill already handled. */
+export interface BankRecordRow {
+  readonly externalId: string
+  readonly amount: Cents | null
+}
 export type PaymentRow = InstallmentPayment & { readonly id: string }
 export type SubscriptionRow = Subscription & {
   readonly name: string
@@ -64,6 +86,8 @@ export interface Finance {
   readonly plans: readonly PlanRow[]
   readonly payments: readonly PaymentRow[]
   readonly subscriptions: readonly SubscriptionRow[]
+  readonly bankAccounts: readonly BankAccountRow[]
+  readonly bankRecords: readonly BankRecordRow[]
 }
 
 export const financeKey = (userId: string) => ['finance', userId] as const
@@ -102,6 +126,8 @@ export async function loadFinance(): Promise<Finance> {
     plans,
     payments,
     subscriptions,
+    bankAccounts,
+    bankRecords,
   ] = await Promise.all([
     select('cards', 'id,name,color,closing_day,sort_order'),
     select('categories', 'id,name,color,icon,sort_order'),
@@ -117,11 +143,11 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoice_expenses',
-      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at',
+      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,created_at',
     ),
     select(
       'installment_plans',
-      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id',
+      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id,external_key',
     ),
     select(
       'installment_payments',
@@ -131,6 +157,8 @@ export async function loadFinance(): Promise<Finance> {
       'subscriptions',
       'id,card_id,name,amount::text,charge_day,note,active,category_id',
     ),
+    select('bank_accounts', 'id,pluggy_account_id,item_id,name,number,card_id'),
+    select('bank_records', 'external_id,amount::text'),
   ])
   const monthRows = months
     .map((row) => ({ id: text(row.id), ref: monthOfDate(row.ref) }))
@@ -208,6 +236,8 @@ export async function loadFinance(): Promise<Finance> {
         spentOn: isoDate(text(row.spent_on)),
         categoryId: category(row.category_id),
         occurredAt: instant(row.occurred_at),
+        externalId: (row.external_id as string | null) ?? null,
+        createdAt: instant(row.created_at),
       }))
       .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),
     plans: plans.map((row) => ({
@@ -220,6 +250,7 @@ export async function loadFinance(): Promise<Finance> {
       firstMonth: monthOfDate(row.first_month),
       note: (row.note as string | null) ?? null,
       categoryId: category(row.category_id),
+      externalKey: (row.external_key as string | null) ?? null,
     })),
     payments: payments.map((row) => ({
       id: text(row.id),
@@ -238,6 +269,18 @@ export async function loadFinance(): Promise<Finance> {
       note: (row.note as string | null) ?? null,
       active: Boolean(row.active),
       categoryId: category(row.category_id),
+    })),
+    bankAccounts: bankAccounts.map((row) => ({
+      id: text(row.id),
+      pluggyAccountId: text(row.pluggy_account_id),
+      itemId: text(row.item_id),
+      name: text(row.name),
+      number: (row.number as string | null) ?? null,
+      cardId: (row.card_id as string | null) ?? null,
+    })),
+    bankRecords: bankRecords.map((row) => ({
+      externalId: text(row.external_id),
+      amount: row.amount == null ? null : money(row.amount),
     })),
   }
 }

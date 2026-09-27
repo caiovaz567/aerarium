@@ -15,6 +15,7 @@ import {
   TrashIcon,
 } from '../../ui/icons'
 import { useToast } from '../../ui/toastContext'
+import { BankSection } from '../banco/BankSection'
 import { CategoriesModal } from './CategoriesModal'
 import { DeleteAccountModal } from './DeleteAccountModal'
 
@@ -154,6 +155,8 @@ export function SettingsPage() {
           </li>
         </ul>
       </section>
+
+      {finance && <BankSection finance={finance} />}
 
       <section aria-labelledby="ajustes-categorias">
         <h3 id="ajustes-categorias" className="settings-label">

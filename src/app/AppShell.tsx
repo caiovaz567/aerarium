@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useMatch } from 'react-router'
 import { categoryOps } from '../data/categoryOps'
+import { useBankAutoSync } from '../features/banco/useBank'
 import type { Finance } from '../data/finance'
 import { useFinance, useFinanceOp } from '../data/useFinance'
 import { EditorProvider } from '../features/editar/EditorProvider'
@@ -95,6 +96,7 @@ export function AppShell() {
   const finance = useFinance()
   useCategorySetup(finance.data)
   const toast = useToast()
+  useBankAutoSync(finance.data, toast)
   const inMonths = useMatch('/meses/:ym')
   const openLaunch = () => {
     // Like v1: nothing to put things in yet.

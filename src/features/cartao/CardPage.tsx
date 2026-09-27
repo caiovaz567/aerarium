@@ -343,4 +343,6 @@ const emptyFinance = {
   plans: [],
   payments: [],
   subscriptions: [],
+  bankAccounts: [],
+  bankRecords: [],
 }
