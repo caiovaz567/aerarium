@@ -7,55 +7,27 @@ import {
   UNDETAILED,
   type OutflowItem,
 } from '../../domain/categories'
-import { formatMoney } from '../../domain/money'
-import type { Month } from '../../domain/months'
+import {
+  cents,
+  formatMoney,
+  formatMoneyShort,
+  sumMoney,
+} from '../../domain/money'
+import { monthShort, type Month } from '../../domain/months'
+import { categoryChanges } from '../../domain/timeline'
 import { CategoryBadge } from '../../ui/CategoryBadge'
 import { CardIcon, ChevronDownIcon } from '../../ui/icons'
+import { describeOutflow } from './outflowText'
+import { SpendingDonut } from './SpendingDonut'
 
 const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
 
-/** What each piece is called in the list, and where it comes from. */
-function describeOutflow(finance: Finance, item: OutflowItem) {
-  const card = finance.cards.find((row) => row.id === item.cardId)
-  const onCard = card ? card.name : 'Fora do cartão'
-  switch (item.source) {
-    case 'bill': {
-      const bill = finance.bills.find((row) => row.id === item.id)
-      return { title: bill?.description ?? 'Conta', detail: 'Conta' }
-    }
-    case 'expense': {
-      const expense = finance.expenses.find((row) => row.id === item.id)
-      return { title: expense?.description ?? 'Gasto', detail: onCard }
-    }
-    case 'installment': {
-      const plan = finance.plans.find((row) => row.id === item.id)
-      return {
-        title: plan?.description ?? 'Parcela',
-        detail: `parcela ${item.number}/${plan?.totalInstallments} · ${onCard}`,
-      }
-    }
-    case 'subscription': {
-      const subscription = finance.subscriptions.find(
-        (row) => row.id === item.id,
-      )
-      return {
-        title: subscription?.name ?? 'Assinatura',
-        detail: `assinatura · ${onCard}`,
-      }
-    }
-    case 'other':
-      return {
-        title: `Fatura ${card?.name ?? ''}`.trim(),
-        detail: 'sem detalhe',
-      }
-  }
-}
-
 /**
- * Fase 11, "Para onde foi o dinheiro": the month's outflows by category. A tap
- * opens the category with what is in it; a tap on an item opens it to edit.
+ * Saídas "Por categoria" (Fase 11, ring in Fase 12): a ring with the share of
+ * each category, then the list; each row says how it changed against the month
+ * before. A tap opens the category with what is in it; a tap on an item opens it.
  */
-export function SpendingBlock({
+export function SpendingList({
   finance,
   month,
   onOpen,
@@ -66,7 +38,10 @@ export function SpendingBlock({
 }) {
   const [open, setOpen] = useState<string | null>(null)
   const groups = groupByCategory(monthOutflowItems(month, finance))
-  if (!groups.length) return null
+  if (!groups.length)
+    return (
+      <p className="empty-hint">Nenhuma saída ainda. Toca no + pra lançar.</p>
+    )
 
   const label = (key: string) =>
     key === UNCATEGORIZED
@@ -75,18 +50,20 @@ export function SpendingBlock({
         ? 'Outros gastos das faturas'
         : (finance.categories.find((item) => item.id === key)?.name ??
           'Sem categoria')
-  const color = (key: string) =>
-    finance.categories.find((item) => item.id === key)?.color ?? null
+  const compared = categoryChanges(month, finance)
+  const total = sumMoney(groups.map((group) => group.amount))
 
   return (
-    <section className="block" aria-labelledby="categorias">
-      <div className="block-head">
-        <h2 id="categorias">Para onde foi o dinheiro</h2>
-      </div>
-      <ul className="spending-list">
+    <>
+      <SpendingDonut
+        finance={finance}
+        groups={groups}
+        total={total as (typeof groups)[number]['amount']}
+      />
+      <ul className="spending-list" aria-label="Por categoria">
         {groups.map((group) => {
           const expanded = open === group.key
-          const dot = color(group.key)
+          const change = compared?.changes.get(group.key) ?? null
           const listId = `categoria-${group.key}`
           return (
             <li key={group.key}>
@@ -114,19 +91,20 @@ export function SpendingBlock({
                 )}
                 <span className="name">{label(group.key)}</span>
                 <span className="amount">{formatMoney(group.amount)}</span>
+                <span className="chevron">
+                  <ChevronDownIcon />
+                </span>
                 <span className="share">
-                  <span className="bar" aria-hidden="true">
-                    <i
-                      style={{
-                        width: `${Math.max(2, group.share * 100)}%`,
-                        background: dot ?? 'var(--muted)',
-                      }}
-                    />
-                  </span>
-                  {percent.format(group.share * 100)}%
-                  <span className="chevron">
-                    <ChevronDownIcon />
-                  </span>
+                  {percent.format(group.share * 100)}% das saídas
+                  {change !== null && compared && (
+                    <span
+                      className={`change-pill ${change > 0 ? 'up' : 'down'}`}
+                    >
+                      {change > 0 ? '▲' : '▼'}{' '}
+                      {formatMoneyShort(cents(Math.abs(change)))} vs{' '}
+                      {monthShort(compared.previous)}
+                    </span>
+                  )}
                 </span>
               </button>
               {expanded && (
@@ -164,6 +142,6 @@ export function SpendingBlock({
           )
         })}
       </ul>
-    </section>
+    </>
   )
 }

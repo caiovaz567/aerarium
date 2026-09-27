@@ -10,6 +10,9 @@ import { readMoney } from '../meses/forms'
 import { categoryHistory } from '../../data/categoryOps'
 import { suggestCategory } from '../../domain/categories'
 import { CategoryPicker } from '../../ui/CategoryPicker'
+import { WalletIcon } from '../../ui/icons'
+import { WhenField } from '../../ui/WhenField'
+import { instantToSaoPaulo, saoPauloToInstant } from '../../domain/timeline'
 import {
   buildLaunch,
   installmentPreview,
@@ -43,25 +46,6 @@ function rememberedWhere(finance: Finance) {
   return finance.cards[0]?.id ?? NO_CARD
 }
 
-function WalletIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3" />
-      <rect x="4" y="8" width="16" height="11" rx="2.5" />
-      <path d="M16 13.5h.01" />
-    </svg>
-  )
-}
-
 /** Lançar (seção 8.5): Gasto, Parcelado or Entrada in a few taps. */
 export function LaunchModal({
   finance,
@@ -88,6 +72,8 @@ export function LaunchModal({
   const [pickedCategory, setPickedCategory] = useState<{
     readonly id: string | null
   } | null>(null)
+  // Fase 12: when it happened; now, unless the person changes it.
+  const [when, setWhen] = useState(() => instantToSaoPaulo(new Date()))
   const [error, setError] = useState('')
   const ids = { count: useId(), text: useId(), month: useId() }
 
@@ -125,6 +111,13 @@ export function LaunchModal({
     )
       return setError('Em quantas vezes? Coloca um número de 2 a 120.')
     if (!target) return setError('Crie um mês primeiro, na aba Meses.')
+    let occurredAt: string | null = null
+    if (kind === 'gasto')
+      try {
+        occurredAt = saoPauloToInstant(when)
+      } catch {
+        return setError('Escolhe a data e a hora.')
+      }
     let launch
     try {
       launch = buildLaunch(finance, {
@@ -137,6 +130,7 @@ export function LaunchModal({
         month: target,
         today: day,
         categoryId: usesCard ? categoryId : null,
+        occurredAt,
       })
     } catch (reason) {
       return setError((reason as Error).message)
@@ -275,6 +269,8 @@ export function LaunchModal({
             onChange={setPaid}
           />
         )}
+
+        {kind === 'gasto' && <WhenField value={when} onChange={setWhen} />}
 
         {target && (
           <div className="field">

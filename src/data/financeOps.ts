@@ -1,6 +1,6 @@
 import { setInvoicePaid } from '../domain/invoices'
 import { toDecimal, type Cents } from '../domain/money'
-import type { ISODate, Month } from '../domain/months'
+import { dateInSaoPaulo, type ISODate, type Month } from '../domain/months'
 import type {
   BillRow,
   ExpenseRow,
@@ -59,6 +59,7 @@ const billRecord = (row: BillRow) => ({
   paid_on: row.paidOn,
   sort_order: row.sortOrder,
   category_id: row.categoryId ?? null,
+  occurred_at: row.occurredAt ?? null,
 })
 const invoiceRecord = (row: InvoiceRow) => ({
   id: row.id,
@@ -75,6 +76,7 @@ const expenseRecord = (row: ExpenseRow) => ({
   amount: toDecimal(row.amount),
   spent_on: row.spentOn,
   category_id: row.categoryId ?? null,
+  occurred_at: row.occurredAt ?? null,
 })
 
 /** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
@@ -230,6 +232,7 @@ export const ops = {
       amount: Cents
       paid: boolean
       categoryId?: string | null
+      occurredAt?: string | null
     },
     today: ISODate,
   ): FinanceOp {
@@ -245,6 +248,9 @@ export const ops = {
               paid_on: paidOn,
               ...(changes.categoryId !== undefined && {
                 category_id: changes.categoryId,
+              }),
+              ...(changes.occurredAt !== undefined && {
+                occurred_at: changes.occurredAt,
               }),
             })
             .eq('id', bill.id),
@@ -296,8 +302,17 @@ export const ops = {
 
   updateExpense(
     expense: ExpenseRow,
-    changes: { description: string; amount: Cents; categoryId: string | null },
+    changes: {
+      description: string
+      amount: Cents
+      categoryId: string | null
+      occurredAt?: string | null
+    },
   ): FinanceOp {
+    // The database moves spent_on to the day of occurred_at; so does the screen.
+    const spentOn = changes.occurredAt
+      ? dateInSaoPaulo(new Date(changes.occurredAt))
+      : expense.spentOn
     return {
       run: () =>
         ok(
@@ -306,12 +321,15 @@ export const ops = {
               description: changes.description,
               amount: toDecimal(changes.amount),
               category_id: changes.categoryId,
+              ...(changes.occurredAt !== undefined && {
+                occurred_at: changes.occurredAt,
+              }),
             })
             .eq('id', expense.id),
         ),
       apply: (f) => ({
         ...f,
-        expenses: patch(f.expenses, expense.id, changes),
+        expenses: patch(f.expenses, expense.id, { ...changes, spentOn }),
       }),
     }
   },

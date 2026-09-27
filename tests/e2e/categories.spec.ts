@@ -24,11 +24,15 @@ async function audit(page: Page) {
   expect(result.violations.map((item) => item.id)).toEqual([])
 }
 
-test('"Para onde foi o dinheiro" em setembro, aberto e sem rolagem lateral', async ({
+test('Por categoria em setembro, aberto e sem rolagem lateral', async ({
   page,
 }, testInfo) => {
   await page.goto('/meses/2026-09')
-  const block = page.getByRole('region', { name: 'Para onde foi o dinheiro' })
+  await page
+    .getByRole('region', { name: 'Saídas' })
+    .getByRole('button', { name: 'Por categoria' })
+    .click()
+  const block = page.getByRole('list', { name: 'Por categoria' })
   await expect(block.getByRole('button', { name: /^Moradia/ })).toContainText(
     'R$ 180,35',
   )

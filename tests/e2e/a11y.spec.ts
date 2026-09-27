@@ -59,7 +59,7 @@ test('só com o teclado: pular pro conteúdo, lançar e fechar', async ({
 }) => {
   test.skip(isMobile, 'Teclado é no computador.')
   await page.goto('/meses/2026-09')
-  await expect(page.getByText('Conta de luz')).toBeVisible()
+  await expect(page.getByText('Conta de luz').first()).toBeVisible()
   await page.keyboard.press('Tab')
   const skip = page.getByRole('link', { name: 'Ir para o conteúdo' })
   await expect(skip).toBeFocused()

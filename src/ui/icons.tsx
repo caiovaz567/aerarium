@@ -132,3 +132,10 @@ export const LogoutIcon = () => (
     <path d="M14 4.5H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h7M10.5 12H20m0 0-3.5-3.5M20 12l-3.5 3.5" />
   </Stroke>
 )
+export const WalletIcon = () => (
+  <Stroke>
+    <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3" />
+    <rect x="4" y="8" width="16" height="11" rx="2.5" />
+    <path d="M16 13.5h.01" />
+  </Stroke>
+)

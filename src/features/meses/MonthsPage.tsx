@@ -17,8 +17,8 @@ import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
 import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
-import { IncomesBlock, OutflowsBlock } from './MonthBlocks'
-import { SpendingBlock } from './SpendingBlock'
+import { IncomesBlock } from './MonthBlocks'
+import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
 import { MonthSummary } from './MonthSummary'
@@ -228,7 +228,10 @@ export function MonthsPage() {
           toast(`Sobra de ${monthName(hint.previous)} colocada`)
         }}
       />
-      <OutflowsBlock
+      <OutflowViews
+        finance={finance}
+        month={selected}
+        onOpen={openOutflow}
         view={view}
         categories={finance.categories}
         onInvoice={(item) =>
@@ -244,7 +247,6 @@ export function MonthsPage() {
         onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
         onBillDelete={deleteBill}
       />
-      <SpendingBlock finance={finance} month={selected} onOpen={openOutflow} />
 
       {income && (
         <IncomeModal

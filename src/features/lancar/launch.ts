@@ -11,6 +11,7 @@ import { splitInstallments } from '../../domain/installments'
 import { cents, formatMoney, sumMoney, type Cents } from '../../domain/money'
 import {
   addMonths,
+  dateInSaoPaulo,
   monthName,
   monthOf,
   type ISODate,
@@ -92,6 +93,8 @@ export interface LaunchInput {
   readonly today: ISODate
   /** Fase 11: spending category (not for Entrada). */
   readonly categoryId?: string | null
+  /** Fase 12: when it happened (ISO instant); its day wins over `today`. */
+  readonly occurredAt?: string | null
 }
 
 export interface Launch {
@@ -113,6 +116,8 @@ export function buildLaunch(
   newId: () => string = () => crypto.randomUUID(),
 ): Launch {
   const description = input.description.trim() || DEFAULT_TEXT[input.kind]
+  const occurredAt = input.occurredAt ?? null
+  const day = occurredAt ? dateInSaoPaulo(new Date(occurredAt)) : input.today
   const card = finance.cards.find((item) => item.id === input.where) ?? null
 
   if (input.kind === 'parcelado') {
@@ -205,9 +210,10 @@ export function buildLaunch(
       description,
       amount: input.amount,
       paid: input.paid,
-      paidOn: input.paid ? input.today : null,
+      paidOn: input.paid ? day : null,
       sortOrder: inMonth([...finance.bills, ...(created?.bills ?? [])]),
       categoryId: input.categoryId ?? null,
+      occurredAt,
     }
     return finish(
       (snapshot) => ({ ...snapshot, bills: [...snapshot.bills, bill] }),
@@ -238,8 +244,9 @@ export function buildLaunch(
     invoiceId: invoice.id,
     description,
     amount: input.amount,
-    spentOn: input.today,
+    spentOn: day,
     categoryId: input.categoryId ?? null,
+    occurredAt,
   }
   const message = `${formatMoney(input.amount)} na fatura ${card.name}${invoice.paid ? ' (ela já estava paga)' : ''}`
   if (created)

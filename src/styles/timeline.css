@@ -1,0 +1,170 @@
+/* Fase 12: Saídas by date, type or category. */
+
+.segmented.views {
+  margin: 4px 16px 12px;
+}
+
+/* Card filter: one row that slides sideways; the page itself never does. */
+.card-filter {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 2px 16px 4px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  /* Snapping lines chips up with the padding, not the edge. */
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.card-filter::-webkit-scrollbar {
+  display: none;
+}
+/* With a mouse there is no swipe: show every card, wrapping. */
+@media (hover: hover) and (pointer: fine) {
+  .card-filter {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+.filter-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  scroll-snap-align: start;
+}
+.filter-chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.filter-chip .card-art.xs {
+  width: 24px;
+}
+.filter-chip .wallet {
+  width: 24px;
+  height: 18px;
+}
+
+/* Ring of "Por categoria". */
+.donut {
+  position: relative;
+  width: 180px;
+  margin: 4px auto 12px;
+}
+.donut svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+}
+.donut-center small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.donut-center b {
+  font: 800 17px / 1.1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+.change-pill {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.change-pill.up {
+  background: var(--neg-soft);
+  color: var(--neg);
+}
+.change-pill.down {
+  background: var(--pos-soft);
+  color: var(--pos);
+}
+
+/* Days. */
+.timeline-day + .timeline-day {
+  margin-top: 4px;
+}
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 16px 6px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.timeline-list {
+  margin: 0;
+  padding: 0 0 4px;
+  list-style: none;
+}
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  .timeline-row:hover {
+    background: var(--surface-2);
+  }
+}
+.timeline-row .cat-badge.round {
+  width: 32px;
+}
+.timeline-row .cat-badge.round svg {
+  width: 16px;
+  height: 16px;
+}
+.timeline-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.timeline-text b {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.timeline-text small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.timeline-value {
+  font-weight: 600;
+  white-space: nowrap;
+}

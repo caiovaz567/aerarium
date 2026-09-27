@@ -1,8 +1,16 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, beforeEach } from 'vitest'
 
 afterEach(cleanup)
+
+// Every test starts the same way. Meses opens "Por tipo" (cards, installments,
+// bills), which most tests were written for; the date view tests pick theirs.
+beforeEach(() => {
+  if (typeof localStorage === 'undefined') return
+  localStorage.clear()
+  localStorage.setItem('aerarium.meses.visao', 'tipo')
+})
 
 // jsdom lacks these browser APIs used by the layout.
 globalThis.ResizeObserver ??= class {

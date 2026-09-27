@@ -211,7 +211,11 @@ test('categoria: lançar com sugestão, renomear, e tudo fica gravado', async ({
   await dialog.getByRole('button', { name: 'Lançar' }).click()
   await saved(page)
   await page.reload()
-  const block = page.getByRole('region', { name: 'Para onde foi o dinheiro' })
+  await page
+    .getByRole('region', { name: 'Saídas' })
+    .getByRole('button', { name: 'Por categoria' })
+    .click()
+  const block = page.getByRole('list', { name: 'Por categoria' })
   await expect(block.getByRole('button', { name: /^Saúde/ })).toContainText(
     'R$ 30,00',
   )

@@ -77,7 +77,8 @@ function GroupHead({ title, total }: { title: string; total: Cents }) {
   )
 }
 
-export function OutflowsBlock({
+/** Saídas "Por tipo": cards, loose installments and bills (seção 8.2). */
+export function OutflowsByType({
   view,
   categories,
   onInvoice,
@@ -112,15 +113,7 @@ export function OutflowsBlock({
   const category = (id: string | null | undefined) =>
     categories.find((item) => item.id === id) ?? null
   return (
-    <section className="block" aria-labelledby="saidas">
-      <div className="block-head">
-        <h2 id="saidas">Saídas</h2>
-        <span className="meta">
-          {view.paidCount} de {view.outflowCount} pagas
-        </span>
-        <span className="sum neg">{formatMoney(view.balance.outflows)}</span>
-      </div>
-
+    <div aria-label="Por tipo" role="group">
       {cards.length > 0 && (
         <>
           <GroupHead title="Cartões" total={view.subtotals.cards} />
@@ -253,6 +246,6 @@ export function OutflowsBlock({
       {view.outflowCount === 0 && (
         <p className="empty-hint">Nenhuma saída ainda. {EMPTY}</p>
       )}
-    </section>
+    </div>
   )
 }

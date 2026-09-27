@@ -93,7 +93,7 @@ test('sem internet: aviso no topo, e o que falha volta com explicação', async 
   context,
 }) => {
   await page.goto('/meses/2026-09')
-  await expect(page.getByText('Conta de luz')).toBeVisible()
+  await expect(page.getByText('Conta de luz').first()).toBeVisible()
 
   await context.setOffline(true)
   await expect(page.locator('.sync')).toHaveText('Sem internet')
@@ -122,5 +122,5 @@ test('servidor fora do ar: mensagem com "Tentar de novo", nada de tela em branco
   })
   await page.unroute('**/rest/v1/**')
   await page.getByRole('button', { name: 'Tentar de novo' }).click()
-  await expect(page.getByText('Conta de luz')).toBeVisible()
+  await expect(page.getByText('Conta de luz').first()).toBeVisible()
 })

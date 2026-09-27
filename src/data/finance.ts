@@ -29,12 +29,19 @@ export type IncomeRow = Income & {
   readonly id: string
   readonly monthId: string
 }
-export type BillRow = Bill & { readonly id: string; readonly monthId: string }
+export type BillRow = Bill & {
+  readonly id: string
+  readonly monthId: string
+  /** Fase 12: exact instant (ISO), when known. */
+  readonly occurredAt?: string | null
+}
 export type InvoiceRow = Invoice & { readonly monthId: string }
 export type ExpenseRow = InvoiceExpense & {
   readonly id: string
   readonly description: string
   readonly spentOn: ISODate
+  /** Fase 12: exact instant (ISO), when known; spentOn follows it. */
+  readonly occurredAt?: string | null
 }
 export type PlanRow = InstallmentPlan & { readonly note: string | null }
 export type PaymentRow = InstallmentPayment & { readonly id: string }
@@ -67,6 +74,9 @@ const money = (value: unknown) => fromDecimal(String(value))
 const date = (value: unknown) => (value == null ? null : isoDate(String(value)))
 const monthOfDate = (value: unknown) => month(String(value).slice(0, 7))
 const category = (value: unknown) => (value as string | null) ?? null
+/** Same instant, always as ISO in UTC, whatever format the database sends. */
+const instant = (value: unknown) =>
+  value == null ? null : new Date(String(value)).toISOString()
 
 async function select(table: string, columns: string): Promise<Row[]> {
   // TanStack Query already retries the whole load (queryClient.ts); a second
@@ -99,7 +109,7 @@ export async function loadFinance(): Promise<Finance> {
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
     select(
       'bills',
-      'id,month_id,description,amount::text,paid,paid_on,sort_order,category_id',
+      'id,month_id,description,amount::text,paid,paid_on,sort_order,category_id,occurred_at',
     ),
     select(
       'invoices',
@@ -107,7 +117,7 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoice_expenses',
-      'id,invoice_id,description,amount::text,spent_on,category_id',
+      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at',
     ),
     select(
       'installment_plans',
@@ -174,6 +184,7 @@ export async function loadFinance(): Promise<Finance> {
         paidOn: date(row.paid_on),
         sortOrder: Number(row.sort_order),
         categoryId: category(row.category_id),
+        occurredAt: instant(row.occurred_at),
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder),
     invoices: invoices.map((row) => ({
@@ -196,6 +207,7 @@ export async function loadFinance(): Promise<Finance> {
         amount: money(row.amount),
         spentOn: isoDate(text(row.spent_on)),
         categoryId: category(row.category_id),
+        occurredAt: instant(row.occurred_at),
       }))
       .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),
     plans: plans.map((row) => ({

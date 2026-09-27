@@ -14,6 +14,7 @@ import './styles/launch.css'
 import './styles/edit.css'
 import './styles/categories.css'
 import './styles/settings.css'
+import './styles/timeline.css'
 import { App } from './app/App'
 
 const root = document.getElementById('root')

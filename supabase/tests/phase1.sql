@@ -125,6 +125,11 @@ select pg_temp.assert_true((select icon = 'tag' from public.categories where id 
 delete from public.categories where id = 'c0000000-0000-4000-8000-000000000002';
 select pg_temp.assert_true((select category_id is null from public.installment_plans where id = '40000000-0000-4000-8000-000000000001'), 'Apagar categoria deixa o parcelamento sem categoria');
 select pg_temp.assert_true((select count(*) > 0 and bool_and(category_id is not null) from public.bills), 'Contas guardam a categoria');
+-- Fase 12: exact time; the expense's date follows it (São Paulo time).
+update public.invoice_expenses set occurred_at = '2026-09-04T01:30:00Z' where id = (select id from public.invoice_expenses order by id limit 1);
+select pg_temp.assert_true((select spent_on = '2026-09-03' from public.invoice_expenses where occurred_at is not null limit 1), 'Gasto com hora fica no dia de Sao Paulo');
+update public.bills set occurred_at = '2026-09-02T15:00:00Z' where id = (select id from public.bills order by id limit 1);
+select pg_temp.assert_true((select count(*) = 1 from public.bills where occurred_at is not null), 'Conta guarda data e hora');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);

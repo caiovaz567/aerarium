@@ -9,6 +9,9 @@ import {
   TextField,
 } from '../../ui/controls'
 import { CategoryPicker } from '../../ui/CategoryPicker'
+import { WhenField } from '../../ui/WhenField'
+import { instantToSaoPaulo, saoPauloToInstant } from '../../domain/timeline'
+import { dayMonth } from '../../domain/months'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
 
@@ -116,10 +119,14 @@ export function BillModal({
     amount: Cents
     paid: boolean
     categoryId: string | null
+    occurredAt: string | null
   }) => void
   readonly onDelete: () => void
 }) {
   const [description, setDescription] = useState(bill.description)
+  const [when, setWhen] = useState(
+    bill.occurredAt ? instantToSaoPaulo(bill.occurredAt) : '',
+  )
   const [value, setValue] = useState(formatMoneyInput(bill.amount))
   const [paid, setPaid] = useState(bill.paid)
   const [categoryId, setCategoryId] = useState(bill.categoryId ?? null)
@@ -134,11 +141,19 @@ export function BillModal({
         if (!description.trim()) return setError('Escreve uma descrição.')
         const read = readMoney(value)
         if ('error' in read) return setError(read.error)
+        let occurredAt: string | null = null
+        if (when)
+          try {
+            occurredAt = saoPauloToInstant(when)
+          } catch {
+            return setError('Escolhe a data e a hora.')
+          }
         onSave({
           description: description.trim(),
           amount: read.amount,
           paid,
           categoryId,
+          occurredAt,
         })
       }}
     >
@@ -150,6 +165,7 @@ export function BillModal({
       />
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />
       <CheckField label="Já paguei" checked={paid} onChange={setPaid} />
+      <WhenField label="Quando (opcional)" value={when} onChange={setWhen} />
       <CategoryPicker
         categories={categories}
         value={categoryId}
@@ -174,10 +190,14 @@ export function ExpenseModal({
     description: string
     amount: Cents
     categoryId: string | null
+    occurredAt: string | null
   }) => void
   readonly onDelete: () => void
 }) {
   const [description, setDescription] = useState(expense.description)
+  const [when, setWhen] = useState(
+    expense.occurredAt ? instantToSaoPaulo(expense.occurredAt) : '',
+  )
   const [value, setValue] = useState(formatMoneyInput(expense.amount))
   const [categoryId, setCategoryId] = useState(expense.categoryId ?? null)
   const [error, setError] = useState('')
@@ -193,10 +213,18 @@ export function ExpenseModal({
         if ('error' in read) return setError(read.error)
         if (read.amount <= 0)
           return setError('O valor precisa ser maior que zero.')
+        let occurredAt: string | null = null
+        if (when)
+          try {
+            occurredAt = saoPauloToInstant(when)
+          } catch {
+            return setError('Escolhe a data e a hora.')
+          }
         onSave({
           description: description.trim(),
           amount: read.amount,
           categoryId,
+          occurredAt,
         })
       }}
     >
@@ -207,6 +235,14 @@ export function ExpenseModal({
         placeholder="Ex.: Uber"
       />
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />
+      <WhenField
+        label="Quando (opcional)"
+        value={when}
+        onChange={setWhen}
+        hint={
+          when ? undefined : `Sem hora; o dia é ${dayMonth(expense.spentOn)}.`
+        }
+      />
       <CategoryPicker
         categories={categories}
         value={categoryId}

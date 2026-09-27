@@ -38,24 +38,30 @@ const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
 const spaced = (value: string | null | undefined) => value?.replace(/\s/g, ' ')
 const writes = () => fake.current!.calls.filter((call) => call.op !== 'select')
 const dialog = (name: string) => screen.getByRole('dialog', { name })
-const block = () =>
-  screen.getByRole('region', { name: 'Para onde foi o dinheiro' })
+const block = () => screen.getByRole('list', { name: 'Por categoria' })
 const rows = () =>
   within(block())
     .getAllByRole('button', { expanded: false })
     .map((row) => spaced(row.textContent))
 
-describe('Para onde foi o dinheiro', () => {
+describe('Saídas por categoria', () => {
+  beforeEach(() => localStorage.setItem('aerarium.meses.visao', 'categoria'))
+
   it('setembro por categoria, somando as saídas do mês (R$ 873,17)', () => {
     renderApp('/meses/2026-09')
     expect(rows()).toEqual([
-      'MoradiaR$ 180,3521%',
-      'ComprasR$ 120,0014%',
-      'AssinaturasR$ 39,905%',
-      'TransporteR$ 12,001%',
-      'Sem categoriaR$ 249,9029%',
-      'Outros gastos das faturasR$ 271,0231%',
+      'MoradiaR$ 180,3521% das saídas▲ R$ 180 vs ago',
+      'ComprasR$ 120,0014% das saídas',
+      'AssinaturasR$ 39,905% das saídas',
+      'TransporteR$ 12,001% das saídas',
+      'Sem categoriaR$ 249,9029% das saídas▼ R$ 1.400 vs ago',
+      'Outros gastos das faturasR$ 271,0231% das saídas',
     ])
+    expect(
+      screen.getByRole('img', {
+        name: /^Saídas do mês por categoria, R\$\s873,17 no total$/,
+      }),
+    ).toBeInTheDocument()
   })
 
   it('tocar abre a categoria; tocar num item abre pra editar e grava a categoria', async () => {
@@ -115,8 +121,9 @@ describe('Para onde foi o dinheiro', () => {
       plans: [],
     })
     expect(
-      screen.queryByRole('region', { name: 'Para onde foi o dinheiro' }),
+      screen.queryByRole('list', { name: 'Por categoria' }),
     ).not.toBeInTheDocument()
+    expect(screen.getByText(/Nenhuma saída ainda/)).toBeVisible()
   })
 })
 
@@ -206,6 +213,7 @@ describe('gasto lançado', () => {
           description: 'Uber',
           amount: '15.00',
           category_id: categoryId('Lazer'),
+          occurred_at: null,
         },
       }),
     ])
