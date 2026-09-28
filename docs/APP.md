@@ -66,6 +66,7 @@ Celular primeiro (conferir em 390×844). Nada pula de lugar ao trocar de mês ou
 
 ## Pendências e próximos passos
 
-- **Open Finance na produção**: aplicar a migration, publicar a função `bank` e cadastrar os secrets com os 5 itens reais do Meu Pluggy. Conectar os bancos à aplicação da Pluggy só dá até o fim do teste de 15 dias do painel (aberto em 27/09/2026).
+- **Open Finance** está na produção desde 28/09/2026 (migration, função `bank` e secrets com os 5 itens do Meu Pluggy). Falta a primeira importação pelo dono. Conectar bancos novos à aplicação da Pluggy só dá até o fim do teste de 15 dias do painel (aberto em 27/09/2026).
+- **Relatório diário por e-mail** das compras que chegaram do banco, com as cores do app: pedido pelo dono, a fazer.
 - SMTP próprio no Supabase (esqueci a senha para qualquer e-mail), marca na tela de consentimento do Google, e-mail de contato na política de privacidade: só se outras pessoas forem usar.
 - Ideias levantadas: projeção dos próximos meses, metas, orçamento por categoria, lembrete de vencimento, busca, lançar sem internet.
