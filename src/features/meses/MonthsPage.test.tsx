@@ -206,11 +206,13 @@ describe('Meses: mudanças', () => {
       target: { value: 'abc' },
     })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    // Letters never reach the field: only digits count.
+    expect(within(dialog).getByLabelText('Valor (R$)')).toHaveValue('')
     expect(within(dialog).getByRole('alert')).toHaveTextContent(
-      'Esse valor não deu certo. Exemplo: 1.147,29',
+      'Coloca um valor.',
     )
     fireEvent.change(within(dialog).getByLabelText('Valor (R$)'), {
-      target: { value: '5.500' },
+      target: { value: '5.500,00' },
     })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
     await settle()
@@ -245,7 +247,7 @@ describe('Resumo da fatura', () => {
       within(dialog).getByRole('button', { name: 'Sei o total da fatura' }),
     )
     const total = within(dialog).getByLabelText('Total da fatura')
-    fireEvent.change(total, { target: { value: '100' } })
+    fireEvent.change(total, { target: { value: '100,00' } })
     expect(
       within(dialog).getByText('Total da fatura', { selector: 'span' })
         .nextSibling,
@@ -254,7 +256,7 @@ describe('Resumo da fatura', () => {
     expect(within(dialog).getByRole('alert')).toHaveTextContent(
       'O total não pode ser menor que parcelas + assinaturas + gastos lançados (R$ 171,90).',
     )
-    fireEvent.change(total, { target: { value: '500' } })
+    fireEvent.change(total, { target: { value: '500,00' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
     await waitFor(() =>
       expect(writes()[0]).toMatchObject({

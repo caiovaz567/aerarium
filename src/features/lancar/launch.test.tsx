@@ -291,7 +291,7 @@ describe('modal Lançar', () => {
     const dialog = open()
     expect(within(dialog).getByLabelText('Valor')).toHaveFocus()
     fireEvent.change(within(dialog).getByLabelText('Valor'), {
-      target: { value: '12' },
+      target: { value: '12,00' },
     })
     fireEvent.change(within(dialog).getByLabelText('Descrição'), {
       target: { value: 'Uber' },
@@ -330,7 +330,7 @@ describe('modal Lançar', () => {
     )
     fireEvent.click(within(dialog).getByRole('button', { name: 'Parcelado' }))
     fireEvent.change(within(dialog).getByLabelText('Valor total da compra'), {
-      target: { value: '1.200' },
+      target: { value: '1.200,00' },
     })
     fireEvent.change(within(dialog).getByLabelText('Em quantas vezes'), {
       target: { value: '10' },

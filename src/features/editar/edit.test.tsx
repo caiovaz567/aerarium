@@ -245,7 +245,7 @@ describe('Editar parcelamento', () => {
     const form = dialog('Novo parcelamento')
     expect(within(form).getByLabelText('Cobrado em')).toHaveValue('c1')
     type(form, 'O que é', 'Fone')
-    type(form, 'Valor da parcela', '50')
+    type(form, 'Valor da parcela', '50,00')
     type(form, 'Total de parcelas', '3')
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
     await settle()

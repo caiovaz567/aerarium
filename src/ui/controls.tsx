@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import { maskMoneyInput } from '../domain/money'
 import { CheckIcon, PlusIcon, TrashIcon } from './icons'
 
 /** Round "paid" toggle used on every outflow row. */
@@ -65,12 +66,14 @@ export function MoneyField({
       <label htmlFor={id}>{label}</label>
       <input
         id={id}
-        inputMode="decimal"
+        // Digits only, filling from the right like a bank app.
+        inputMode="numeric"
+        pattern="[0-9]*"
         autoComplete="off"
         placeholder="0,00"
-        value={value}
+        value={maskMoneyInput(value)}
         autoFocus={autoFocus}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(maskMoneyInput(event.target.value))}
       />
       {hint && <small>{hint}</small>}
     </div>

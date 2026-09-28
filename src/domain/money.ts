@@ -90,6 +90,19 @@ export function formatMoneyShort(value: Cents): string {
   return shortFormat.format(BigInt(divideMoney(value, 100)))
 }
 
+/**
+ * Typing an amount like a bank app (the user's choice): only digits count and
+ * they fill from the right, cents first. "1250" → "12,50", "114729" →
+ * "1.147,29". Up to 12 digits. Zeros alone stay "0,00"; nothing is "".
+ */
+export function maskMoneyInput(input: string): string {
+  const typed = input.replace(/\D/g, '')
+  if (!typed) return ''
+  const digits = (typed.replace(/^0+/, '') || '0').slice(0, 12).padStart(3, '0')
+  const whole = digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return `${whole},${digits.slice(-2)}`
+}
+
 export function formatMoneyInput(value: Cents): string {
   return toDecimal(value).replace('.', ',')
 }

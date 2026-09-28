@@ -139,7 +139,7 @@ describe('Lançar com categoria', () => {
     renderApp('/meses/2026-09')
     const form = open()
     fireEvent.change(within(form).getByLabelText('Valor'), {
-      target: { value: '25' },
+      target: { value: '25,00' },
     })
     fireEvent.change(within(form).getByLabelText('Descrição'), {
       target: { value: 'iFood' },
@@ -158,7 +158,7 @@ describe('Lançar com categoria', () => {
     renderApp('/meses/2026-09')
     const form = open()
     fireEvent.change(within(form).getByLabelText('Valor'), {
-      target: { value: '12' },
+      target: { value: '12,00' },
     })
     fireEvent.change(within(form).getByLabelText('Descrição'), {
       target: { value: 'Uber' },
@@ -200,7 +200,7 @@ describe('gasto lançado', () => {
     const form = dialog('Editar gasto')
     expect(within(form).getByLabelText('Transporte')).toBeChecked()
     fireEvent.change(within(form).getByLabelText('Valor (R$)'), {
-      target: { value: '15' },
+      target: { value: '15,00' },
     })
     fireEvent.click(within(form).getByLabelText('Lazer'))
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))

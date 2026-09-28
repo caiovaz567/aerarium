@@ -10,6 +10,7 @@ import {
   parseMoney,
   sumMoney,
   toDecimal,
+  maskMoneyInput,
 } from './money'
 
 describe('dinheiro em centavos', () => {
@@ -92,4 +93,29 @@ describe('dinheiro em centavos', () => {
   )
   it('recusa saídas negativas', () =>
     expect(() => nonNegative(cents(-1))).toThrow())
+})
+
+describe('digitar valor como app de banco', () => {
+  it.each([
+    ['', ''],
+    ['1', '0,01'],
+    ['12', '0,12'],
+    ['125', '1,25'],
+    ['1250', '12,50'],
+    ['114729', '1.147,29'],
+    ['123456789012', '1.234.567.890,12'],
+    ['1234567890123', '1.234.567.890,12'],
+    ['0', '0,00'],
+    ['000', '0,00'],
+    ['0,05', '0,05'],
+    ['1.147,29', '1.147,29'],
+    ['R$ 12,50', '12,50'],
+    ['abc', ''],
+  ])('"%s" vira "%s"', (typed, shown) => {
+    expect(maskMoneyInput(typed)).toBe(shown)
+  })
+
+  it('apagar o último dígito volta um passo', () => {
+    expect(maskMoneyInput('12,5')).toBe('1,25')
+  })
 })

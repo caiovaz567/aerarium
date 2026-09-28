@@ -9,6 +9,7 @@ import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
 import { categoryHistory } from '../../data/categoryOps'
 import { suggestCategory } from '../../domain/categories'
+import { maskMoneyInput } from '../../domain/money'
 import { CategoryPicker } from '../../ui/CategoryPicker'
 import { WalletIcon } from '../../ui/icons'
 import { WhenField } from '../../ui/WhenField'
@@ -175,11 +176,12 @@ export function LaunchModal({
           </label>
           <input
             id="lancar-valor"
-            inputMode="decimal"
+            inputMode="numeric"
+            pattern="[0-9]*"
             autoComplete="off"
             placeholder="0,00"
             value={value}
-            onChange={(event) => setValue(event.target.value)}
+            onChange={(event) => setValue(maskMoneyInput(event.target.value))}
           />
         </div>
 
