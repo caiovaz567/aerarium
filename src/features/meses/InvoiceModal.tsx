@@ -203,7 +203,11 @@ export function InvoiceModal({
                       {isFreshFromBank(expense) && (
                         <span className="fresh-pill">novo</span>
                       )}
-                      <small>{dayMonth(expense.spentOn)}</small>
+                      <small>
+                        {[expense.note, dayMonth(expense.spentOn)]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </small>
                     </span>
                     <b>{formatMoney(expense.amount)}</b>
                   </button>

@@ -192,10 +192,14 @@ export function ExpenseModal({
     amount: Cents
     categoryId: string | null
     occurredAt: string | null
+    note?: string | null
   }) => void
   readonly onDelete: () => void
 }) {
+  // A purchase from the bank keeps the bank's name; the person adds a note.
+  const fromBank = Boolean(expense.externalId)
   const [description, setDescription] = useState(expense.description)
+  const [note, setNote] = useState(expense.note ?? '')
   const [when, setWhen] = useState(
     expense.occurredAt ? instantToSaoPaulo(expense.occurredAt) : '',
   )
@@ -222,19 +226,35 @@ export function ExpenseModal({
             return setError('Escolhe a data e a hora.')
           }
         onSave({
-          description: description.trim(),
+          description: fromBank ? expense.description : description.trim(),
           amount: read.amount,
           categoryId,
           occurredAt,
+          ...(fromBank && { note: note.trim().slice(0, 200) || null }),
         })
       }}
     >
-      <TextField
-        label="Descrição"
-        value={description}
-        onChange={setDescription}
-        placeholder="Ex.: Uber"
-      />
+      {fromBank ? (
+        <>
+          <div className="field">
+            <span>Nome no banco</span>
+            <p className="bank-name">{expense.description}</p>
+          </div>
+          <TextField
+            label="Descrição (opcional)"
+            value={note}
+            onChange={setNote}
+            placeholder="Ex.: presente da Ana"
+          />
+        </>
+      ) : (
+        <TextField
+          label="Descrição"
+          value={description}
+          onChange={setDescription}
+          placeholder="Ex.: Uber"
+        />
+      )}
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />
       <WhenField
         label="Quando (opcional)"

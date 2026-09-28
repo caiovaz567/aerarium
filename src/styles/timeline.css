@@ -160,6 +160,11 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
+.timeline-note {
+  color: var(--accent);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
 .timeline-text small {
   color: var(--muted);
   font-size: 12.5px;

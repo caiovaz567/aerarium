@@ -44,6 +44,8 @@ export type ExpenseRow = InvoiceExpense & {
   readonly occurredAt?: string | null
   /** Open Finance: the bank transaction it came from or was matched to. */
   readonly externalId?: string | null
+  /** The person's own words about a bank purchase (its name is the bank's). */
+  readonly note?: string | null
   /** When it was saved (ISO); marks bank purchases as new for a few days. */
   readonly createdAt?: string | null
 }
@@ -143,7 +145,7 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoice_expenses',
-      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,created_at',
+      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,note,created_at',
     ),
     select(
       'installment_plans',
@@ -237,6 +239,7 @@ export async function loadFinance(): Promise<Finance> {
         categoryId: category(row.category_id),
         occurredAt: instant(row.occurred_at),
         externalId: (row.external_id as string | null) ?? null,
+        note: (row.note as string | null) ?? null,
         createdAt: instant(row.created_at),
       }))
       .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),

@@ -127,7 +127,11 @@ export function SpendingList({
                         <li key={`${item.source}-${item.id}`}>
                           <button type="button" onClick={() => onOpen(item)}>
                             {text.title}
-                            <small>{text.detail}</small>
+                            <small>
+                              {['note' in text && text.note, text.detail]
+                                .filter(Boolean)
+                                .join(' · ')}
+                            </small>
                           </button>
                           <span className="value">
                             {formatMoney(item.amount)}

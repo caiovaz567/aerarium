@@ -136,6 +136,9 @@ insert into public.bank_records (external_id, kind) values ('tx-1', 'ignored');
 select pg_temp.expect_error($q$insert into public.bank_records (external_id, kind) values ('tx-1', 'expense')$q$, '23505', 'Registro do banco nao repete');
 select pg_temp.expect_error($q$insert into public.bank_records (external_id, kind) values ('tx-2', 'outro')$q$, '23514', 'Registro do banco tem tipo conhecido');
 select pg_temp.expect_error($q$insert into public.bank_accounts (pluggy_account_id, item_id, name) values ('acc-1', 'item-1', 'De novo')$q$, '23505', 'Conta do banco nao repete');
+update public.invoice_expenses set note = 'Presente' where id = (select id from public.invoice_expenses order by id limit 1);
+select pg_temp.assert_true((select count(*) = 1 from public.invoice_expenses where note = 'Presente'), 'Gasto guarda uma descricao propria');
+select pg_temp.expect_error($q$update public.invoice_expenses set note = repeat('a', 201)$q$, '23514', 'Descricao do gasto tem limite');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);

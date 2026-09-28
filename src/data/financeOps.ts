@@ -77,6 +77,7 @@ const expenseRecord = (row: ExpenseRow) => ({
   spent_on: row.spentOn,
   category_id: row.categoryId ?? null,
   occurred_at: row.occurredAt ?? null,
+  note: row.note ?? null,
 })
 
 /** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
@@ -307,6 +308,7 @@ export const ops = {
       amount: Cents
       categoryId: string | null
       occurredAt?: string | null
+      note?: string | null
     },
   ): FinanceOp {
     // The database moves spent_on to the day of occurred_at; so does the screen.
@@ -324,6 +326,7 @@ export const ops = {
               ...(changes.occurredAt !== undefined && {
                 occurred_at: changes.occurredAt,
               }),
+              ...(changes.note !== undefined && { note: changes.note }),
             })
             .eq('id', expense.id),
         ),

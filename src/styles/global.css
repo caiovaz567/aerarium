@@ -427,6 +427,18 @@ body.has-stuck .app-header.scrolled {
   color: var(--ink);
   font-size: 16px;
 }
+/* A bank purchase's name: shown, not typed. */
+.field .bank-name {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 /* Money fields show "R$" inside the box, before the digits. */
 .money-input {
   position: relative;

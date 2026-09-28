@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   bankInvoiceMonth,
   bankMoment,
+  bankText,
   guessCard,
   planBankImport,
   purchaseText,
@@ -107,6 +108,12 @@ describe('textos e datas do banco', () => {
     expect(purchaseText('Notebook Parcela 3 / 12')).toBe('Notebook')
   })
 
+  it('nome da compra avulsa fica exato como o banco manda', () => {
+    expect(bankText('  DROGASIL   22/31 ')).toBe('DROGASIL 22/31')
+    expect(bankText('   ')).toBe('Compra')
+    expect(bankText('x'.repeat(250))).toHaveLength(200)
+  })
+
   it('meia-noite em São Paulo é só a data; com hora, guarda o instante', () => {
     expect(bankMoment('2026-09-21T03:00:00.000Z')).toEqual({
       day: '2026-09-21',
@@ -201,13 +208,49 @@ describe('importar compras', () => {
       },
       ids,
     )
-    expect(result.links).toEqual([{ expenseId: 'uber-mao', externalId: 't1' }])
+    // The bank's name wins; what was typed stays as the note.
+    expect(result.links).toEqual([
+      {
+        expenseId: 'uber-mao',
+        externalId: 't1',
+        description: 'UBER *TRIP',
+        note: 'Uber',
+      },
+    ])
     expect(result.expenses.map((item) => item.externalId)).toEqual(['t2', 't3'])
     expect(result.records.map((item) => item.kind)).toEqual([
       'matched',
       'expense',
       'expense',
     ])
+  })
+
+  it('ao ligar: texto igual ao do banco não vira descrição; descrição já escrita fica', () => {
+    const plan = (description: string, note?: string) =>
+      planBankImport(
+        state({
+          expenses: [
+            {
+              id: 'mao',
+              invoiceId: 'inv9',
+              description,
+              amount: cents(1200),
+              spentOn: isoDate('2026-09-03'),
+              note,
+            },
+          ],
+        }),
+        {
+          accounts: [account],
+          transactions: [
+            tx('t1', 'UBER *TRIP', 1200, '2026-09-05T03:00:00.000Z'),
+          ],
+          bills: [],
+        },
+        ids,
+      ).links[0]
+    expect(plan('uber *trip')?.note).toBeNull()
+    expect(plan('Uber', 'Ida ao aeroporto')?.note).toBe('Ida ao aeroporto')
   })
 
   it('assinatura cadastrada é reconhecida; se o valor mudou, avisa', () => {

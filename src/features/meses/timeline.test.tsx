@@ -2,7 +2,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { financeKey } from '../../data/finance'
 import { fakeSupabase } from '../../test/fakeSupabase'
-import { categoryId } from '../../test/financeFixture'
+import { categoryId, financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
 // Fase 12: Saídas by date, the three views and the short summary.
@@ -135,5 +135,59 @@ describe('Por data', () => {
       within(day('qui, 3 set')).getByRole('button', { name: /Uber/ }),
     )
     expect(screen.getByRole('dialog', { name: 'Editar gasto' })).toBeVisible()
+  })
+})
+
+describe('Compra do banco', () => {
+  const fromBank = () => {
+    const finance = financeFixture()
+    return {
+      ...finance,
+      expenses: finance.expenses.map((item) =>
+        item.description === 'Uber'
+          ? {
+              ...item,
+              description: 'UBER *TRIP HELP.UBER.COM',
+              externalId: 'tx-1',
+              note: 'Ida ao aeroporto',
+            }
+          : item,
+      ),
+    }
+  }
+
+  it('mostra o nome do banco e a descrição da pessoa embaixo', () => {
+    renderApp('/meses/2026-09', undefined, fromBank())
+    expect(rows(day('qui, 3 set'))).toEqual([
+      'UBER *TRIP HELP.UBER.COMIda ao aeroportoNubank TesteR$ 12,00',
+    ])
+  })
+
+  it('editar: o nome do banco não muda; a descrição é opcional e é salva', async () => {
+    renderApp('/meses/2026-09', undefined, fromBank())
+    fireEvent.click(
+      within(day('qui, 3 set')).getByRole('button', { name: /UBER/ }),
+    )
+    const dialog = screen.getByRole('dialog', { name: 'Editar gasto' })
+    expect(within(dialog).getByText('UBER *TRIP HELP.UBER.COM')).toBeVisible()
+    expect(within(dialog).queryByLabelText('Descrição')).toBeNull()
+    fireEvent.change(within(dialog).getByLabelText('Descrição (opcional)'), {
+      target: { value: '  ' },
+    })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    expect(fake.current!.calls).toContainEqual(
+      expect.objectContaining({
+        table: 'invoice_expenses',
+        op: 'update',
+        payload: expect.objectContaining({
+          description: 'UBER *TRIP HELP.UBER.COM',
+          note: null,
+        }),
+      }),
+    )
+    expect(rows(day('qui, 3 set'))).toEqual([
+      'UBER *TRIP HELP.UBER.COMNubank TesteR$ 12,00',
+    ])
   })
 })

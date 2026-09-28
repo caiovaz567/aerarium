@@ -31,6 +31,7 @@ export function describeOutflow(finance: Finance, item: OutflowItem) {
         title: expense?.description ?? 'Gasto',
         detail: onCard,
         fresh: isFreshFromBank(expense),
+        note: expense?.note ?? null,
       }
     }
     case 'installment': {

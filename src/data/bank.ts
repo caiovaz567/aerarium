@@ -286,7 +286,11 @@ export const bankOps = {
         for (const link of result.links)
           await ok(
             table('invoice_expenses')
-              .update({ external_id: link.externalId })
+              .update({
+                external_id: link.externalId,
+                description: link.description,
+                note: link.note,
+              })
               .eq('id', link.expenseId),
           )
         for (const [invoiceId, otherAmount] of totals)
@@ -327,7 +331,14 @@ export const bankOps = {
         expenses: [
           ...f.expenses.map((item) => {
             const link = result.links.find((row) => row.expenseId === item.id)
-            return link ? { ...item, externalId: link.externalId } : item
+            return link
+              ? {
+                  ...item,
+                  externalId: link.externalId,
+                  description: link.description,
+                  note: link.note,
+                }
+              : item
           }),
           ...expenses,
         ],

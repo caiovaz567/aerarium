@@ -52,6 +52,9 @@ function Row({
               <span className="fresh-pill">novo</span>
             )}
           </b>
+          {'note' in text && text.note && (
+            <span className="timeline-note">{text.note}</span>
+          )}
           <small>{[time, text.detail].filter(Boolean).join(' · ')}</small>
         </span>
         <span className="timeline-value">{formatMoney(item.amount)}</span>

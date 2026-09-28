@@ -73,6 +73,7 @@ export interface ImportExpense {
   readonly spentOn: ISODate
   readonly categoryId?: string | null
   readonly externalId?: string | null
+  readonly note?: string | null
 }
 export interface ImportPlan extends InstallmentPlan {
   readonly externalKey?: string | null
@@ -122,10 +123,15 @@ export interface ImportResult {
     readonly categoryId: string | null
     readonly externalId: string
   }[]
-  /** Expenses launched by hand that are the same purchase. */
+  /**
+   * Expenses launched by hand that are the same purchase. They take the
+   * bank's name; what was typed stays as the note when it says more.
+   */
   readonly links: readonly {
     readonly expenseId: string
     readonly externalId: string
+    readonly description: string
+    readonly note: string | null
   }[]
   readonly plans: readonly {
     readonly id: string
@@ -159,6 +165,11 @@ export interface ImportResult {
 
 /** How long the bank's text and the person's can drift apart in days. */
 const SAME_PURCHASE_DAYS = 3
+
+/** The bank's name for a purchase, exactly as it comes (spaces tidied). */
+export function bankText(description: string) {
+  return description.replace(/\s+/g, ' ').trim().slice(0, 200) || 'Compra'
+}
 
 /** Installment text without "02/10", "PARC" and alike, for the plan's key. */
 export function purchaseText(description: string) {
@@ -297,8 +308,9 @@ export function planBankImport(
       continue
     }
     const { day, at } = bankMoment(transaction.date)
-    const text =
-      purchaseText(transaction.description) || transaction.description
+    const name = bankText(transaction.description)
+    // A plan lasts many invoices: its name leaves out "PARC 02/10".
+    const text = purchaseText(name) || name
 
     const total = transaction.totalInstallments ?? 1
     if (total > 1) {
@@ -376,18 +388,26 @@ export function planBankImport(
     )
     if (manual) {
       linked.add(manual.id)
-      result.links.push({ expenseId: manual.id, externalId: transaction.id })
+      const typed = manual.description.trim()
+      result.links.push({
+        expenseId: manual.id,
+        externalId: transaction.id,
+        description: name,
+        note:
+          manual.note ??
+          (normalizeText(typed) === normalizeText(name) ? null : typed),
+      })
       record(transaction.id, 'matched', manual.id)
       continue
     }
 
     const invoice = invoiceFor(cardId, target)
     touched.add(invoice.id)
-    const categoryId = suggestCategory(text, state.categories, history)
+    const categoryId = suggestCategory(name, state.categories, history)
     const expense = {
       id: newId(),
       invoiceId: invoice.id,
-      description: text,
+      description: name,
       amount: transaction.amount,
       spentOn: day,
       occurredAt: at,
@@ -395,7 +415,7 @@ export function planBankImport(
       externalId: transaction.id,
     }
     result.expenses.push(expense)
-    history.push({ description: text, categoryId })
+    history.push({ description: name, categoryId })
     record(transaction.id, 'expense', expense.id)
   }
 
