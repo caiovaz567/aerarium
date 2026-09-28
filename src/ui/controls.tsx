@@ -67,17 +67,20 @@ export function MoneyField({
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        inputMode={allowNegative ? 'text' : 'decimal'}
-        autoComplete="off"
-        placeholder="0,00"
-        value={maskMoneyInput(value, allowNegative)}
-        autoFocus={autoFocus}
-        onChange={(event) =>
-          onChange(maskMoneyInput(event.target.value, allowNegative))
-        }
-      />
+      <div className="money-input">
+        <span aria-hidden="true">R$</span>
+        <input
+          id={id}
+          inputMode={allowNegative ? 'text' : 'decimal'}
+          autoComplete="off"
+          placeholder="0,00"
+          value={maskMoneyInput(value, allowNegative)}
+          autoFocus={autoFocus}
+          onChange={(event) =>
+            onChange(maskMoneyInput(event.target.value, allowNegative))
+          }
+        />
+      </div>
       {hint && <small>{hint}</small>}
     </div>
   )

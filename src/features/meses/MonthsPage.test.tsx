@@ -212,8 +212,10 @@ describe('Meses: mudanças', () => {
       'Coloca um valor.',
     )
     fireEvent.change(within(dialog).getByLabelText('Valor (R$)'), {
-      target: { value: '5.500,00' },
+      target: { value: '5500' },
     })
+    // Thousands dots appear by themselves.
+    expect(within(dialog).getByLabelText('Valor (R$)')).toHaveValue('5.500')
     fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
     await settle()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

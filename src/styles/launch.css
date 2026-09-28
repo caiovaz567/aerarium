@@ -34,6 +34,12 @@
   font: 800 30px / 1.1 var(--display);
   letter-spacing: -0.01em;
 }
+.launch-value .money-input > span {
+  font: 700 20px / 1 var(--display);
+}
+.field.launch-value .money-input input {
+  padding-left: 52px;
+}
 .field .launch-preview {
   min-height: 1.2em;
   color: var(--accent);

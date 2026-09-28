@@ -174,14 +174,17 @@ export function LaunchModal({
           <label htmlFor="lancar-valor">
             {kind === 'parcelado' ? 'Valor total da compra' : 'Valor'}
           </label>
-          <input
-            id="lancar-valor"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder="0,00"
-            value={value}
-            onChange={(event) => setValue(maskMoneyInput(event.target.value))}
-          />
+          <div className="money-input">
+            <span aria-hidden="true">R$</span>
+            <input
+              id="lancar-valor"
+              inputMode="decimal"
+              autoComplete="off"
+              placeholder="0,00"
+              value={value}
+              onChange={(event) => setValue(maskMoneyInput(event.target.value))}
+            />
+          </div>
         </div>
 
         {kind === 'parcelado' && (
