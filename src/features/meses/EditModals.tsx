@@ -94,6 +94,7 @@ export function IncomeModal({
         label="Valor (R$)"
         value={value}
         onChange={setValue}
+        allowNegative={carryover}
         hint={
           carryover
             ? 'Pode ser negativo, quando o mês fechou no vermelho.'

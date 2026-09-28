@@ -32,7 +32,11 @@ export function toDecimal(value: Cents): string {
 
 /** Empty is missing input, not zero. Brazilian grouping or decimal point accepted. */
 export function parseMoney(input: string, allowNegative = false): Cents | null {
-  const value = input.trim().replace(/^R\$\s*/, '')
+  // "12," is someone about to type cents: read it as 12.
+  const value = input
+    .trim()
+    .replace(/^R\$\s*/, '')
+    .replace(/,$/, '')
   if (!value) return null
   let normalized: string
   if (/^-?[1-9]\d{0,2}(?:\.\d{3})+(?:,\d{1,2})?$/.test(value)) {
@@ -91,16 +95,24 @@ export function formatMoneyShort(value: Cents): string {
 }
 
 /**
- * Typing an amount like a bank app (the user's choice): only digits count and
- * they fill from the right, cents first. "1250" → "12,50", "114729" →
- * "1.147,29". Up to 12 digits. Zeros alone stay "0,00"; nothing is "".
+ * Typing an amount left to right (the user's choice): thousands dots appear by
+ * themselves and a comma starts the cents. "1250" → "1.250", "1250,5" →
+ * "1.250,5". The dots in the field are always ours, so a dot typed at the end
+ * means a comma. Up to 10 whole digits and 2 of cents; letters never stay.
  */
-export function maskMoneyInput(input: string): string {
-  const typed = input.replace(/\D/g, '')
-  if (!typed) return ''
-  const digits = (typed.replace(/^0+/, '') || '0').slice(0, 12).padStart(3, '0')
-  const whole = digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  return `${whole},${digits.slice(-2)}`
+export function maskMoneyInput(input: string, allowNegative = false): string {
+  const negative = allowNegative && input.trim().startsWith('-')
+  const text = input.includes(',') ? input : input.replace(/\.$/, ',')
+  const [before = '', ...after] = text.split(',')
+  const whole = before
+    .replace(/\D/g, '')
+    .replace(/^0+(?=\d)/, '')
+    .slice(0, 10)
+  const sign = negative ? '-' : ''
+  if (!whole && !after.length) return sign
+  const grouped = (whole || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  if (!after.length) return `${sign}${grouped}`
+  return `${sign}${grouped},${after.join('').replace(/\D/g, '').slice(0, 2)}`
 }
 
 export function formatMoneyInput(value: Cents): string {

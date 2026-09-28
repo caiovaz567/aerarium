@@ -176,8 +176,7 @@ export function LaunchModal({
           </label>
           <input
             id="lancar-valor"
-            inputMode="numeric"
-            pattern="[0-9]*"
+            inputMode="decimal"
             autoComplete="off"
             placeholder="0,00"
             value={value}

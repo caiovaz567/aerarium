@@ -46,19 +46,22 @@ export function TrashButton({
   )
 }
 
-/** Text input for money: numeric keyboard, accepts 12 / 12,5 / 1.147,29 / 1147.29. */
+/** Text input for money, typed left to right: "1250" shows "1.250", a comma starts the cents. */
 export function MoneyField({
   label,
   value,
   onChange,
   hint,
   autoFocus,
+  allowNegative = false,
 }: {
   readonly label: string
   readonly value: string
   readonly onChange: (value: string) => void
   readonly hint?: ReactNode
   readonly autoFocus?: boolean
+  /** The iPhone number pad has no minus sign, so these get the full keyboard. */
+  readonly allowNegative?: boolean
 }) {
   const id = useId()
   return (
@@ -66,14 +69,14 @@ export function MoneyField({
       <label htmlFor={id}>{label}</label>
       <input
         id={id}
-        // Digits only, filling from the right like a bank app.
-        inputMode="numeric"
-        pattern="[0-9]*"
+        inputMode={allowNegative ? 'text' : 'decimal'}
         autoComplete="off"
         placeholder="0,00"
-        value={maskMoneyInput(value)}
+        value={maskMoneyInput(value, allowNegative)}
         autoFocus={autoFocus}
-        onChange={(event) => onChange(maskMoneyInput(event.target.value))}
+        onChange={(event) =>
+          onChange(maskMoneyInput(event.target.value, allowNegative))
+        }
       />
       {hint && <small>{hint}</small>}
     </div>

@@ -40,7 +40,6 @@ describe('dinheiro em centavos', () => {
     '--1',
     'R$ 1 000',
     '12abc',
-    '12,',
     '0.001',
     '-0,01',
   ])('recusa entrada inválida %s', (value) =>
@@ -95,27 +94,44 @@ describe('dinheiro em centavos', () => {
     expect(() => nonNegative(cents(-1))).toThrow())
 })
 
-describe('digitar valor como app de banco', () => {
+describe('digitar valor da esquerda pra direita', () => {
   it.each([
     ['', ''],
-    ['1', '0,01'],
-    ['12', '0,12'],
-    ['125', '1,25'],
-    ['1250', '12,50'],
-    ['114729', '1.147,29'],
-    ['123456789012', '1.234.567.890,12'],
-    ['1234567890123', '1.234.567.890,12'],
-    ['0', '0,00'],
-    ['000', '0,00'],
-    ['0,05', '0,05'],
+    ['1', '1'],
+    ['12', '12'],
+    ['1250', '1.250'],
+    ['1.2500', '12.500'],
+    ['1234567890123', '1.234.567.890'],
+    ['0', '0'],
+    ['05', '5'],
+    ['000', '0'],
+    [',', '0,'],
+    ['12,', '12,'],
+    ['12,5', '12,5'],
+    ['12,505', '12,50'],
+    ['1,2,3', '1,23'],
+    ['1147,29', '1.147,29'],
     ['1.147,29', '1.147,29'],
+    ['12.', '12,'],
     ['R$ 12,50', '12,50'],
     ['abc', ''],
+    ['-12', '12'],
   ])('"%s" vira "%s"', (typed, shown) => {
     expect(maskMoneyInput(typed)).toBe(shown)
   })
 
-  it('apagar o último dígito volta um passo', () => {
-    expect(maskMoneyInput('12,5')).toBe('1,25')
+  it('apagar volta um passo, sem virar centavos', () => {
+    expect(maskMoneyInput('1.25')).toBe('125')
+  })
+
+  it('aceita o sinal de menos quando o campo pode ser negativo', () => {
+    expect(maskMoneyInput('-', true)).toBe('-')
+    expect(maskMoneyInput('-1250,5', true)).toBe('-1.250,5')
+    expect(maskMoneyInput('12', true)).toBe('12')
+  })
+
+  it('lê "12," como 12 reais', () => {
+    expect(parseMoney('12,')).toBe(1200)
+    expect(parseMoney('1.250,')).toBe(125000)
   })
 })
