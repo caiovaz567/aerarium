@@ -52,11 +52,14 @@ export type ExpenseRow = InvoiceExpense & {
   readonly note?: string | null
   /** When it was saved (ISO); marks bank purchases as new for a few days. */
   readonly createdAt?: string | null
+  /** Fase 13.3: when the owner checked whose it is (bank purchases). */
+  readonly reviewedAt?: string | null
 }
 export type PlanRow = InstallmentPlan & {
   readonly note: string | null
   /** Open Finance: recognizes this purchase's next installments. */
   readonly externalKey?: string | null
+  readonly reviewedAt?: string | null
 }
 /** A credit card account at the bank (Open Finance) and the card it feeds. */
 export interface BankAccountRow {
@@ -160,11 +163,11 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoice_expenses',
-      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,note,for_other,created_at',
+      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,note,for_other,created_at,reviewed_at',
     ),
     select(
       'installment_plans',
-      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id,external_key,for_other',
+      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id,external_key,for_other,reviewed_at',
     ),
     select(
       'installment_payments',
@@ -264,6 +267,7 @@ export async function loadFinance(): Promise<Finance> {
         note: (row.note as string | null) ?? null,
         forOther: row.for_other === true,
         createdAt: instant(row.created_at),
+        reviewedAt: instant(row.reviewed_at),
       }))
       .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),
     plans: plans.map((row) => ({
@@ -278,6 +282,7 @@ export async function loadFinance(): Promise<Finance> {
       categoryId: category(row.category_id),
       externalKey: (row.external_key as string | null) ?? null,
       forOther: row.for_other === true,
+      reviewedAt: instant(row.reviewed_at),
     })),
     payments: payments.map((row) => ({
       id: text(row.id),

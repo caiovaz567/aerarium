@@ -153,6 +153,8 @@ insert into public.user_settings (other_person) values ('Pai');
 select pg_temp.assert_true((select bool_and(other_share >= other_amount) from public.v_invoice_totals), 'Com outra pessoa, o outros da fatura e dela');
 select pg_temp.assert_true((select bool_and(v.outflows = coalesce((select sum(t.mine) from public.v_invoice_totals t where t.month_id = v.month_id), 0) + coalesce((select sum(amount) from public.bills b where b.month_id = v.month_id), 0) + coalesce((select sum(amount) from public.v_installment_schedule s where s.card_id is null and not s.for_other and s.month = v.ref), 0)) from public.v_month_summary v), 'Saidas do mes contam so a parte do dono');
 select pg_temp.expect_error($q$update public.user_settings set other_person = '   '$q$, '23514', 'Nome da outra pessoa nao e vazio');
+update public.invoice_expenses set reviewed_at = now() where for_other;
+select pg_temp.assert_true((select bool_and(reviewed_at is not null) from public.invoice_expenses where for_other), 'Gasto do banco guarda quando foi conferido');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);

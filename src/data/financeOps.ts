@@ -80,6 +80,7 @@ const expenseRecord = (row: ExpenseRow) => ({
   note: row.note ?? null,
   external_id: row.externalId ?? null,
   for_other: row.forOther ?? false,
+  reviewed_at: row.reviewedAt ?? null,
 })
 
 /** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
@@ -420,6 +421,7 @@ export const ops = {
             category_id: plan.categoryId ?? null,
             external_key: plan.externalKey ?? null,
             for_other: plan.forOther ?? false,
+            reviewed_at: plan.reviewedAt ?? null,
           }),
         )
         if (payments.length)

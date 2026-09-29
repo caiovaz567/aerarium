@@ -20,6 +20,7 @@ const result: ImportResult = {
       categoryId: null,
       externalId: 't1',
       forOther: true,
+      reviewed: true,
     },
     {
       id: 'e2',
@@ -31,6 +32,7 @@ const result: ImportResult = {
       categoryId: null,
       externalId: 't2',
       forOther: false,
+      reviewed: true,
     },
   ],
   links: [],
@@ -45,6 +47,7 @@ const result: ImportResult = {
       categoryId: null,
       externalKey: 'k',
       forOther: true,
+      reviewed: true,
     },
   ],
   planLinks: [],

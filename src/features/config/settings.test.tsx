@@ -1,5 +1,5 @@
 import type { Session, User } from '@supabase/supabase-js'
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ErrorBoundary } from '../../app/ErrorBoundary'
@@ -142,9 +142,12 @@ describe('apagar minha conta', () => {
     expect(
       await screen.findByText('Sua conta e seus dados foram apagados.'),
     ).toBeInTheDocument()
-    expect(
-      screen.queryByRole('heading', { name: 'Ajustes' }),
-    ).not.toBeInTheDocument()
+    // The notice shows first; leaving Ajustes follows right after.
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Ajustes' }),
+      ).not.toBeInTheDocument(),
+    )
   })
 
   it('se falhar, explica e continua no modal', async () => {

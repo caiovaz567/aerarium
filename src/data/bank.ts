@@ -236,6 +236,51 @@ export const bankOps = {
     }
   },
 
+  /**
+   * Fase 13.3: the owner checked what came from the bank; each one keeps
+   * whose it was set to.
+   */
+  review(
+    choices: readonly {
+      readonly kind: 'expense' | 'plan'
+      readonly id: string
+      readonly forOther: boolean
+    }[],
+  ): FinanceOp {
+    const at = new Date().toISOString()
+    const pick = (kind: 'expense' | 'plan', id: string) =>
+      choices.find((item) => item.kind === kind && item.id === id)
+    return {
+      run: async () => {
+        for (const choice of choices)
+          await ok(
+            table(
+              choice.kind === 'expense'
+                ? 'invoice_expenses'
+                : 'installment_plans',
+            )
+              .update({ for_other: choice.forOther, reviewed_at: at })
+              .eq('id', choice.id),
+          )
+      },
+      apply: (f) => ({
+        ...f,
+        expenses: f.expenses.map((item) => {
+          const choice = pick('expense', item.id)
+          return choice
+            ? { ...item, forOther: choice.forOther, reviewedAt: at }
+            : item
+        }),
+        plans: f.plans.map((item) => {
+          const choice = pick('plan', item.id)
+          return choice
+            ? { ...item, forOther: choice.forOther, reviewedAt: at }
+            : item
+        }),
+      }),
+    }
+  },
+
   /** Closing and due days from the bank, only where the card has none. */
   fillCardDays(finance: Finance, data: BankData): FinanceOp | null {
     const changes = cardDaysFromBank(
@@ -298,6 +343,7 @@ export const bankOps = {
       paidOn: null,
       closedTotal: null,
     }))
+    const now = new Date().toISOString()
     const plans: PlanRow[] = result.plans.map((item) => ({
       id: item.id,
       cardId: item.cardId,
@@ -310,12 +356,15 @@ export const bankOps = {
       categoryId: item.categoryId,
       externalKey: item.externalKey,
       forOther: item.forOther,
+      reviewedAt: item.reviewed ? now : null,
     }))
-    const now = new Date().toISOString()
-    const expenses: ExpenseRow[] = result.expenses.map((item) => ({
-      ...item,
-      createdAt: now,
-    }))
+    const expenses: ExpenseRow[] = result.expenses.map(
+      ({ reviewed, ...item }) => ({
+        ...item,
+        createdAt: now,
+        reviewedAt: reviewed ? now : null,
+      }),
+    )
     const totals = new Map(
       result.invoiceTotals.map((item) => [item.invoiceId, item.otherAmount]),
     )
@@ -344,6 +393,7 @@ export const bankOps = {
                 category_id: item.categoryId,
                 external_key: item.externalKey,
                 for_other: item.forOther,
+                reviewed_at: item.reviewedAt,
               })),
             ),
           )
@@ -366,6 +416,7 @@ export const bankOps = {
                 category_id: item.categoryId,
                 external_id: item.externalId,
                 for_other: item.forOther,
+                reviewed_at: item.reviewedAt,
               })),
             ),
           )

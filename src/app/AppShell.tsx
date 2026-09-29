@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useMatch } from 'react-router'
 import { categoryOps } from '../data/categoryOps'
 import { useBankAutoSync } from '../features/banco/useBank'
+import { pendingReview } from '../features/banco/review'
+import { ReviewModal } from '../features/banco/ReviewModal'
 import type { Finance } from '../data/finance'
 import { useFinance, useFinanceOp } from '../data/useFinance'
 import { EditorProvider } from '../features/editar/EditorProvider'
@@ -91,12 +93,29 @@ function useCategorySetup(finance: Finance | undefined) {
   }, [finance, run])
 }
 
+/**
+ * Fase 13.3: when purchases from the bank wait to be checked, "Chegou do
+ * banco" opens by itself once per session; a banner in Meses reopens it.
+ */
+function useReview(finance: Finance | undefined) {
+  const pending = finance ? pendingReview(finance).length : 0
+  const [open, setOpen] = useState(false)
+  const shown = useRef(false)
+  useEffect(() => {
+    if (!pending || shown.current) return
+    shown.current = true
+    setOpen(true)
+  }, [pending])
+  return { pending, open: open && pending > 0, setOpen }
+}
+
 export function AppShell() {
   const [launching, setLaunching] = useState(false)
   const finance = useFinance()
   useCategorySetup(finance.data)
   const toast = useToast()
   useBankAutoSync(finance.data, toast)
+  const review = useReview(finance.data)
   const inMonths = useMatch('/meses/:ym')
   const openLaunch = () => {
     // Like v1: nothing to put things in yet.
@@ -139,8 +158,28 @@ export function AppShell() {
         </NavLink>
       </nav>
       <main id="conteudo" className="app-content" tabIndex={-1}>
+        {review.pending > 0 && inMonths && (
+          <button
+            type="button"
+            className="review-banner"
+            onClick={() => review.setOpen(true)}
+          >
+            <b>
+              {review.pending === 1
+                ? '1 compra nova do banco'
+                : `${review.pending} compras novas do banco`}
+            </b>
+            <span>Conferir</span>
+          </button>
+        )}
         <Outlet />
       </main>
+      {review.open && finance.data && (
+        <ReviewModal
+          finance={finance.data}
+          onClose={() => review.setOpen(false)}
+        />
+      )}
       {launching && finance.data && (
         <LaunchModal
           finance={finance.data}

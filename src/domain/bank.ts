@@ -130,6 +130,8 @@ export interface ImportResult {
     readonly externalId: string
     /** Fase 13.3: the other person's, as guessed (the owner reviews it). */
     readonly forOther: boolean
+    /** The first import is history: nothing to check purchase by purchase. */
+    readonly reviewed: boolean
   }[]
   /**
    * Expenses launched by hand that are the same purchase. They take the
@@ -151,6 +153,7 @@ export interface ImportResult {
     readonly categoryId: string | null
     readonly externalKey: string
     readonly forOther: boolean
+    readonly reviewed: boolean
   }[]
   /** Plans made by hand that are the same purchase. */
   readonly planLinks: readonly {
@@ -339,7 +342,8 @@ export function planBankImport(
   const touched = new Set<string>()
   const plans: ImportPlan[] = [...state.plans]
   const history = [...state.history]
-  const owner = ownerGuess(state, state.records.size === 0)
+  const firstImport = state.records.size === 0
+  const owner = ownerGuess(state, firstImport)
 
   const invoiceFor = (cardId: string, target: Month) => {
     const existing = invoices.find(
@@ -429,6 +433,7 @@ export function planBankImport(
             categoryId,
             externalKey: key,
             forOther: owner.guess(text, cardId),
+            reviewed: firstImport,
           }
           result.plans.push(created)
           plan = {
@@ -493,6 +498,7 @@ export function planBankImport(
       id: newId(),
       invoiceId: invoice.id,
       forOther,
+      reviewed: firstImport,
       description: name,
       amount: transaction.amount,
       spentOn: day,
