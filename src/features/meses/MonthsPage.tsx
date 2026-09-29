@@ -20,6 +20,7 @@ import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
 import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
+import { ProfileSwitch } from './ProfileSwitch'
 import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
@@ -213,6 +214,7 @@ export function MonthsPage() {
   return (
     <>
       <h2 className="visually-hidden">Meses</h2>
+      {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
       <MonthNav finance={finance} selected={selected} pathFor={monthPath} />
       {profile === 'other' ? (
         <OtherMonth finance={finance} month={selected} onOpen={openOutflow} />

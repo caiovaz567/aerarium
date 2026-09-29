@@ -20,7 +20,6 @@ import {
   RepeatIcon,
 } from '../ui/icons'
 import { ProfileProvider } from './profile'
-import { useProfile } from './profileContext'
 import { useSyncState } from './syncContext'
 import { useOnline } from './useOnline'
 
@@ -38,34 +37,7 @@ function SyncStatus() {
   )
 }
 
-/** Fase 13.3: Eu | Pai, only when someone else uses the cards. */
-function ProfileSwitch({ other }: { readonly other: string }) {
-  const { profile, setProfile } = useProfile(other)
-  return (
-    <div
-      className="segmented profile-switch"
-      role="group"
-      aria-label="Ver gastos de"
-    >
-      <button
-        type="button"
-        aria-pressed={profile === 'me'}
-        onClick={() => setProfile('me')}
-      >
-        Eu
-      </button>
-      <button
-        type="button"
-        aria-pressed={profile === 'other'}
-        onClick={() => setProfile('other')}
-      >
-        {other}
-      </button>
-    </div>
-  )
-}
-
-function Header({ other }: { readonly other: string | null }) {
+function Header() {
   const header = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
 
@@ -93,7 +65,6 @@ function Header({ other }: { readonly other: string | null }) {
     <header ref={header} className={`app-header${scrolled ? ' scrolled' : ''}`}>
       <div className="app-header-inner">
         <Brand />
-        {other && <ProfileSwitch other={other} />}
         <SyncStatus />
         <ExcelButton />
         {/* On phones, Ajustes lives in the bottom bar instead. */}
@@ -160,7 +131,7 @@ export function AppShell() {
         <a className="skip-link" href="#conteudo">
           Ir para o conteúdo
         </a>
-        <Header other={finance.data?.otherPerson ?? null} />
+        <Header />
         <nav className="tabs" aria-label="Seções">
           <NavLink className="tab" to="/meses">
             <CalendarIcon />

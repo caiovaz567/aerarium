@@ -683,11 +683,10 @@
   white-space: nowrap;
 }
 .profile-switch {
-  flex: none;
-  margin: 0;
+  margin: 0 0 12px;
 }
 .profile-switch button {
-  min-height: 32px;
-  padding: 0 12px;
-  font-size: 13px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 700;
 }
