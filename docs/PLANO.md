@@ -19,6 +19,8 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 
 ### 13.1 Logos dos bancos
 
+- [x] Feito em 29/09/2026 (branch `novidades`): logos, cor pelo banco, vencimento, dias preenchidos pelo Open Finance. Falta o dono testar e publicar.
+
 - Cartão ganha `bank` (ex.: `nubank`, `itau`), adivinhado pelo nome do cartão e trocável no modal do cartão. Vale para cartões fora do Open Finance.
 - Logos da lista de conectores da Pluggy (`imageUrl`), guardados como arquivos estáticos do app (PNG, para funcionar também no e-mail; o Gmail não mostra SVG). Sem logo: o desenho de cartão de hoje.
 - Visual: quadradinho arredondado estilo ícone de app. Aparece em Cartões, tela do cartão, "Onde" do Lançar, filtros de Saídas e resumo da fatura.
@@ -26,6 +28,8 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 - Aceite: 390×844 e 1280×800, dois temas, axe, logo nunca distorcido.
 
 ### 13.2 Tela do cartão estilo "Fatura do cartão"
+
+- [x] Feito em 29/09/2026 (branch `novidades`). O limite só foi testado com dados de teste: conferir com os bancos reais depois da primeira importação.
 
 - Topo azul: logo, nome, final; **vencimento** ("11 out · faltam 9 dias"), **total**, etiqueta "A pagar" ou "Paga".
 - **Limite disponível** com anel de uso: `creditLimit` e `availableCreditLimit` da Pluggy (a função `bank` passa a devolver). Só em cartão do Open Finance; sem dado, o bloco some.
