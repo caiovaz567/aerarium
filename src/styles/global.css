@@ -8,6 +8,9 @@ html {
      above the bottom edge. The page is always at least the whole screen. */
   min-height: calc(100vh + env(safe-area-inset-top, 0px));
   min-width: 320px;
+  /* The page keeps the scrollbar's space, so switching to a shorter view
+     (profile "Pai") does not move everything sideways on a computer. */
+  scrollbar-gutter: stable;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--body);

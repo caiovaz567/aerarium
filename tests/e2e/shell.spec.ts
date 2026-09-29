@@ -108,7 +108,11 @@ test('modal abre no centro, sem rolagem lateral, e fecha', async ({
   await page.waitForTimeout(250)
   const box = (await dialog.boundingBox())!
   const viewport = page.viewportSize()!
-  expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThan(2)
+  // Centered on the page, which keeps the scrollbar's space on a computer.
+  const pageWidth = await page.evaluate(
+    () => document.body.getBoundingClientRect().width,
+  )
+  expect(Math.abs(box.x + box.width / 2 - pageWidth / 2)).toBeLessThan(2)
   expect(Math.abs(box.y + box.height / 2 - viewport.height / 2)).toBeLessThan(
     30,
   )
