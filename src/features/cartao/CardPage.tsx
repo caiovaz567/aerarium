@@ -65,7 +65,8 @@ function LimitRing({ share }: { share: number }) {
         />
       </svg>
       <span>
-        <b>{percent.format(share * 100)}%</b>
+        {/* Whole percents fit the ring; never rounds up to a full 100%. */}
+        <b>{Math.floor(share * 100)}%</b>
         <small>usado</small>
       </span>
     </span>
