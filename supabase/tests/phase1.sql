@@ -25,8 +25,8 @@ begin
   perform pg_temp.assert_true(actual = expected, label || ' [SQLSTATE ' || coalesce(actual, 'none') || ']');
 end $$;
 
-select pg_temp.assert_true((select count(*) = 12 from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 12 tabelas');
+select pg_temp.assert_true((select count(*) = 13 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 13 tabelas');
 select pg_temp.assert_true((select count(*) = 3 from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind = 'v' and c.reloptions @> array['security_invoker=true']), '3 views usam security_invoker');
 select pg_temp.assert_true((select count(*) = 0 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
