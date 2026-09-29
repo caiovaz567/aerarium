@@ -4,6 +4,8 @@ App pessoal de finanças, celular primeiro. Vite + React + TypeScript + Supabase
 
 Como o app funciona hoje (telas, regras de negócio, banco, produção, pendências): `docs/APP.md`. Leia antes de mudar algo e mantenha atualizado quando o app mudar.
 
+O que fazer a seguir, em ordem: `docs/PLANO.md`. Marque o que terminar e siga o próximo item.
+
 ## Como trabalhar
 
 - Uma mudança por vez. No fim: `npm run check`, testes de navegador quando a tela muda, commit, resumo curto, e esperar a confirmação do usuário.
