@@ -45,7 +45,9 @@ export function OtherMonth({
           Gastos do {name} em {monthName(month)}
         </div>
         <p className="hero-num">{formatMoney(total)}</p>
-        <p className="bar-cap">Nos seus cartões. Não conta no seu saldo.</p>
+        <p className="bar-cap">
+          Nos seus cartões. Você paga a fatura e ele te devolve.
+        </p>
         {(byCard.length > 0 || outside > 0) && (
           <ul className="other-cards">
             {byCard.map((item) => (
