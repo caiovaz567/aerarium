@@ -11,7 +11,7 @@ import { isoDate, month } from './months'
 // marked, and on the cards he uses, the whole invoice at the bank tells the
 // rest of his part.
 const sep = month('2026-09')
-const data = (bankTotal: number | null = null, shared = true) =>
+const data = (bankTotal: number | null = null, withOther = true) =>
   emptyData({
     incomes: [
       {
@@ -28,7 +28,7 @@ const data = (bankTotal: number | null = null, shared = true) =>
         bankTotal: bankTotal === null ? null : cents(bankTotal),
       }),
     ],
-    cards: [{ id: 'card', shared }],
+    otherPerson: withOther ? 'Pai' : null,
     plans: [
       plan({ id: 'meu' }),
       plan({ id: 'do-pai', installmentAmount: cents(4000), forOther: true }),
@@ -65,15 +65,15 @@ describe('gastos de quem usa o cartão junto', () => {
     ).toMatchObject({ total: 21000, mine: 16200, otherShare: 4800 })
   })
 
-  it('no cartão que ele usa, a parte dele é o total do banco menos o seu', () => {
-    const totals = (bank: number, shared = true) => {
-      const base = data(bank, shared)
+  it('com o total do banco, a parte dele é o total menos o seu, em qualquer cartão', () => {
+    const totals = (bank: number, withOther = true) => {
+      const base = data(bank, withOther)
       return invoiceTotals(base.invoices[0]!, base)
     }
     expect(totals(30000)).toMatchObject({ mine: 16200, otherShare: 13800 })
     // A bank total below the owner's never takes away what was marked his.
     expect(totals(10000).otherShare).toBe(4800)
-    // A card he does not use: only what was marked his.
+    // Without anyone else (a normal user): only what was marked.
     expect(totals(30000, false).otherShare).toBe(4800)
   })
 

@@ -38,7 +38,6 @@ const cardRecord = (card: Card) => ({
   closing_day: card.closingDay,
   due_day: card.dueDay ?? null,
   bank: card.bank ?? null,
-  shared: card.shared ?? false,
   sort_order: card.sortOrder,
 })
 

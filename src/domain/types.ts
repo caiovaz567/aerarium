@@ -83,13 +83,11 @@ export interface InvoiceContext {
   readonly subscriptions: readonly Subscription[]
   readonly expenses: readonly InvoiceExpense[]
   /**
-   * Fase 13.3: cards the other person also uses. On those, their part of an
-   * invoice is its bank total minus the owner's part.
+   * Fase 13.3, only for the owner: someone else ("Pai") uses the cards. They
+   * can use any card: their part of an invoice is its bank total minus the
+   * owner's part.
    */
-  readonly cards?: readonly {
-    readonly id: string
-    readonly shared?: boolean
-  }[]
+  readonly otherPerson?: string | null
   /**
    * Fase 13.3, profile "Pai": the month's outflows seen as the other person's
    * (their purchases, plans and the rest of the invoices), not the owner's.

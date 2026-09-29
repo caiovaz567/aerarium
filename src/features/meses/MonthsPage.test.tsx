@@ -468,14 +468,8 @@ describe('Pai usa os cartões', () => {
     localStorage.removeItem('aerarium.perfil')
   })
 
-  it('cartão que o pai usa: total no banco menos o seu é a parte dele', async () => {
-    const finance = withDad()
-    renderApp('/meses/2026-09', undefined, {
-      ...finance,
-      cards: finance.cards.map((card) =>
-        card.id === 'c1' ? { ...card, shared: true } : card,
-      ),
-    })
+  it('qualquer cartão: total no banco menos o seu é a parte do pai', async () => {
+    renderApp('/meses/2026-09', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
     const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
     fireEvent.change(

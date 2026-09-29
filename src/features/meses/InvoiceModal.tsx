@@ -67,7 +67,7 @@ export function InvoiceModal({
   const [paid, setPaid] = useState(invoice.paid)
   const [error, setError] = useState('')
   // Fase 13.3: on a card the other person also uses.
-  const shared = Boolean(card.shared && finance.otherPerson)
+  const shared = Boolean(finance.otherPerson)
   const [bank, setBank] = useState(
     invoice.bankTotal == null ? '' : formatMoneyInput(invoice.bankTotal),
   )
