@@ -83,11 +83,16 @@ export interface InvoiceContext {
   readonly subscriptions: readonly Subscription[]
   readonly expenses: readonly InvoiceExpense[]
   /**
-   * Fase 13.3, only for the owner: someone else ("Pai") uses the cards. They
-   * can use any card: their part of an invoice is its bank total minus the
-   * owner's part.
+   * Fase 13.3, only for the owner: someone else ("Pai") uses the cards, any
+   * of them. Their part of an invoice is what was marked theirs.
    */
   readonly otherPerson?: string | null
+  /**
+   * Invoices of months before this one (the owner's, from before Open Finance
+   * brought each purchase) also give the other person the rest of the bank
+   * total: bank total minus the owner's part.
+   */
+  readonly otherBankUntil?: Month | null
   /**
    * Fase 13.3, profile "Pai": the month's outflows seen as the other person's
    * (their purchases, plans and the rest of the invoices), not the owner's.

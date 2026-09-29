@@ -270,7 +270,11 @@ describe('tela do cartão', () => {
 
   it('com o pai ligado: total no banco pela tela do cartão e a parte dele', async () => {
     const finance = financeFixture()
-    renderApp('/cartoes/c1', undefined, { ...finance, otherPerson: 'Pai' })
+    renderApp('/cartoes/c1', undefined, {
+      ...finance,
+      otherPerson: 'Pai',
+      otherBankUntil: month('2026-10'),
+    })
     const summary = screen.getByRole('region', { name: 'Resumo da fatura' })
     expect(spaced(summary.textContent)).toContain(
       'Total no bancoDigitarParte do PaiR$ 0,00',
@@ -298,6 +302,17 @@ describe('tela do cartão', () => {
     expect(spaced(summary.textContent)).toContain(
       'Total no bancoR$ 500,00Parte do PaiR$ 57,08',
     )
+  })
+
+  it('a partir de outubro: só a parte do pai, sem digitar o total do banco', () => {
+    renderApp('/cartoes/c1', undefined, {
+      ...financeFixture(),
+      otherPerson: 'Pai',
+      otherBankUntil: month('2026-09'),
+    })
+    const summary = screen.getByRole('region', { name: 'Resumo da fatura' })
+    expect(summary).not.toHaveTextContent('Total no banco')
+    expect(spaced(summary.textContent)).toContain('Parte do PaiR$ 0,00')
   })
 
   it('usuário normal não vê nada disso', () => {

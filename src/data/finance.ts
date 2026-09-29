@@ -113,6 +113,8 @@ export interface Finance {
    * month before it is due. Everyone else: due in its own month.
    */
   readonly dueNextMonth?: boolean
+  /** Owner only (user_settings.other_bank_until): see InvoiceContext. */
+  readonly otherBankUntil?: Month | null
   /** Profile "Pai": outflows seen as the other person's (not loaded). */
   readonly viewAs?: 'owner' | 'other'
 }
@@ -190,7 +192,7 @@ export async function loadFinance(): Promise<Finance> {
       'id,pluggy_account_id,item_id,name,number,card_id,credit_limit::text,available_limit::text,limit_at',
     ),
     select('bank_records', 'external_id,amount::text,ref_id'),
-    select('user_settings', 'other_person,due_next_month'),
+    select('user_settings', 'other_person,due_next_month,other_bank_until'),
   ])
   const monthRows = months
     .map((row) => ({ id: text(row.id), ref: monthOfDate(row.ref) }))
@@ -330,5 +332,8 @@ export async function loadFinance(): Promise<Finance> {
     })),
     otherPerson,
     dueNextMonth: settings[0]?.due_next_month === true,
+    otherBankUntil: settings[0]?.other_bank_until
+      ? monthOfDate(settings[0].other_bank_until)
+      : null,
   }
 }

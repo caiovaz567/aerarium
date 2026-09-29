@@ -7,6 +7,7 @@ import {
   chartComparison,
   chartSeries,
 } from '../../domain/chartSeries'
+import { bankFillsOther } from '../../domain/invoices'
 import { installmentStatus } from '../../domain/installments'
 import { cents, formatMoney } from '../../domain/money'
 import {
@@ -260,20 +261,22 @@ export function CardPage() {
             </div>
             {finance.otherPerson && view.invoice && (
               <>
-                <div className="bank-total">
-                  <dt>Total no banco</dt>
-                  <dd>
-                    <button
-                      type="button"
-                      className="link"
-                      onClick={() => setTypingBank(true)}
-                    >
-                      {view.bankTotal === null
-                        ? 'Digitar'
-                        : formatMoney(view.bankTotal)}
-                    </button>
-                  </dd>
-                </div>
+                {bankFillsOther(view.invoice.month, finance) && (
+                  <div className="bank-total">
+                    <dt>Total no banco</dt>
+                    <dd>
+                      <button
+                        type="button"
+                        className="link"
+                        onClick={() => setTypingBank(true)}
+                      >
+                        {view.bankTotal === null
+                          ? 'Digitar'
+                          : formatMoney(view.bankTotal)}
+                      </button>
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt>Parte do {finance.otherPerson}</dt>
                   <dd>{formatMoney(view.otherShare)}</dd>

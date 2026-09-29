@@ -25,6 +25,15 @@ export function fixedCardAmounts(
   }
 }
 
+/** Whether the bank total gives the other person the rest of this month's invoice. */
+export function bankFillsOther(target: Month, context: InvoiceContext) {
+  return Boolean(
+    context.otherPerson &&
+    context.otherBankUntil &&
+    target < context.otherBankUntil,
+  )
+}
+
 export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
   const fixed = fixedCardAmounts(invoice.cardId, invoice.month, context)
   const expensesAmount = sumMoney(
@@ -56,11 +65,11 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
       .map((item) => nonNegative(item.amount)),
   ])
   const mine = cents(Math.max(0, total - marked))
-  // The other person can use any card (owner only): the bank's total has
-  // everything, so their part is all of it that is not the owner's.
+  // Before otherBankUntil (owner only), the bank's total has everything, so
+  // the other person's part is all of it that is not the owner's.
   const bank = invoice.bankTotal
   const otherShare =
-    context.otherPerson && bank != null
+    bankFillsOther(invoice.month, context) && bank != null
       ? cents(Math.max(marked, bank - mine))
       : marked
   return {

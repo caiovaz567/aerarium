@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import type { Card, ExpenseRow, Finance, InvoiceRow } from '../../data/finance'
 import { installmentSchedule } from '../../domain/installments'
-import { invoiceTotals, setInvoiceTotal } from '../../domain/invoices'
+import {
+  bankFillsOther,
+  invoiceTotals,
+  setInvoiceTotal,
+} from '../../domain/invoices'
 import {
   formatMoney,
   formatMoneyInput,
@@ -66,8 +70,9 @@ export function InvoiceModal({
   const [note, setNote] = useState(visibleNote(invoice.note, card) ?? '')
   const [paid, setPaid] = useState(invoice.paid)
   const [error, setError] = useState('')
-  // Fase 13.3: on a card the other person also uses.
-  const shared = Boolean(finance.otherPerson)
+  // Fase 13.3, owner only: in old months the bank total gives the other
+  // person the rest of the invoice.
+  const shared = bankFillsOther(invoice.month, finance)
   const [bank, setBank] = useState(
     invoice.bankTotal == null ? '' : formatMoneyInput(invoice.bankTotal),
   )

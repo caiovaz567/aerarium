@@ -8,8 +8,8 @@ import { isoDate, month } from './months'
 
 // Fase 13.3: the owner's father uses some of the same cards. The owner
 // launches what is theirs ("outros" included); what the father bought is
-// marked, and on the cards he uses, the whole invoice at the bank tells the
-// rest of his part.
+// marked. In months before otherBankUntil (before Open Finance brought each
+// purchase), the whole invoice at the bank also tells the rest of his part.
 const sep = month('2026-09')
 const data = (bankTotal: number | null = null, withOther = true) =>
   emptyData({
@@ -29,6 +29,7 @@ const data = (bankTotal: number | null = null, withOther = true) =>
       }),
     ],
     otherPerson: withOther ? 'Pai' : null,
+    otherBankUntil: month('2026-10'),
     plans: [
       plan({ id: 'meu' }),
       plan({ id: 'do-pai', installmentAmount: cents(4000), forOther: true }),
@@ -65,7 +66,7 @@ describe('gastos de quem usa o cartão junto', () => {
     ).toMatchObject({ total: 21000, mine: 16200, otherShare: 4800 })
   })
 
-  it('com o total do banco, a parte dele é o total menos o seu, em qualquer cartão', () => {
+  it('meses antigos, com o total do banco: a parte dele é o total menos o seu', () => {
     const totals = (bank: number, withOther = true) => {
       const base = data(bank, withOther)
       return invoiceTotals(base.invoices[0]!, base)
@@ -75,6 +76,17 @@ describe('gastos de quem usa o cartão junto', () => {
     expect(totals(10000).otherShare).toBe(4800)
     // Without anyone else (a normal user): only what was marked.
     expect(totals(30000, false).otherShare).toBe(4800)
+  })
+
+  it('a partir de outubro: só o que foi marcado dele, mesmo com o total do banco', () => {
+    const base = data(30000)
+    const only = (otherBankUntil: ReturnType<typeof month> | null) =>
+      invoiceTotals(base.invoices[0]!, { ...base, otherBankUntil })
+    expect(only(sep)).toMatchObject({ mine: 16200, otherShare: 4800 })
+    expect(only(null).otherShare).toBe(4800)
+    expect(monthBalance(sep, { ...base, otherBankUntil: null }).otherOwed).toBe(
+      14800,
+    )
   })
 
   it('fatura paga com total menor que o marcado dele: a sua fica zero', () => {

@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeKey } from '../../data/finance'
+import { month, type Month } from '../../domain/months'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
@@ -373,11 +374,12 @@ describe('Criar e excluir mês', () => {
 })
 
 describe('Pai usa os cartões', () => {
-  const withDad = () => {
+  const withDad = (otherBankUntil: Month | null = month('2026-10')) => {
     const finance = financeFixture()
     return {
       ...finance,
       otherPerson: 'Pai',
+      otherBankUntil,
       expenses: finance.expenses.map((item) =>
         item.description === 'Uber' ? { ...item, forOther: true } : item,
       ),
@@ -468,7 +470,21 @@ describe('Pai usa os cartões', () => {
     localStorage.removeItem('aerarium.perfil')
   })
 
-  it('qualquer cartão: total no banco menos o seu é a parte do pai', async () => {
+  it('a partir de outubro: a parte do pai é só o marcado, sem total do banco', () => {
+    renderApp('/meses/2026-09', undefined, withDad(month('2026-09')))
+    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
+    const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
+    expect(
+      within(invoice).queryByLabelText('Total da fatura no banco'),
+    ).toBeNull()
+    expect(
+      text(
+        screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,
+      ),
+    ).toContain('R$ 12,00')
+  })
+
+  it('meses antigos: total no banco menos o seu é a parte do pai', async () => {
     renderApp('/meses/2026-09', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
     const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
