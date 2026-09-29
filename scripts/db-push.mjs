@@ -48,8 +48,7 @@ if (target === 'dev') {
       capture: true,
     })
     // With --agent yes the CLI answers in JSON: {"migrations": [...]}.
-    const reply = plan.trim().split('
-').pop() ?? '{}'
+    const reply = plan.trim().split('\n').pop() ?? '{}'
     const files = /** @type {string[]} */ (JSON.parse(reply).migrations ?? [])
     if (!files.length) {
       console.log('\nA produção já está em dia. Nada pra aplicar.')
