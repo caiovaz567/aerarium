@@ -40,6 +40,8 @@ export interface BankData {
     readonly dueDate: string | null
     readonly creditLimit?: number | null
     readonly availableLimit?: number | null
+    /** What the open bill has so far (Pluggy's account balance). */
+    readonly balance?: number | null
   }[]
   readonly transactions: readonly {
     readonly id: string
@@ -92,6 +94,8 @@ export function importInput(finance: Finance, data: BankData) {
     cardId: cardOf.get(item.id) ?? null,
     dueDate: dayOf(item.dueDate),
     closeDate: dayOf(item.closeDate),
+    openBalance:
+      item.balance != null && item.balance > 0 ? toCents(item.balance) : null,
   }))
   const transactions: BankTransaction[] = data.transactions.map((item) => ({
     id: item.id,

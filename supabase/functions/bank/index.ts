@@ -155,6 +155,8 @@ Deno.serve(async (request) => {
         dueDate: string | null
         creditLimit: number | null
         availableLimit: number | null
+        /** What the open bill has so far. */
+        balance: number | null
       }[],
       transactions: [] as {
         id: string
@@ -196,6 +198,7 @@ Deno.serve(async (request) => {
           dueDate: account.creditData?.balanceDueDate ?? null,
           creditLimit: account.creditData?.creditLimit ?? null,
           availableLimit: account.creditData?.availableCreditLimit ?? null,
+          balance: account.balance ?? null,
         })
         for (const transaction of await transactions<Transaction>(
           apiKey,

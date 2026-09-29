@@ -33,6 +33,8 @@ export interface BankAccount {
   /** Due date of the bill still open at the bank, if the bank says. */
   readonly dueDate: ISODate | null
   readonly closeDate: ISODate | null
+  /** What the bill still open at the bank has so far. */
+  readonly openBalance?: Cents | null
 }
 
 export interface BankTransaction {
@@ -584,6 +586,29 @@ export function planBankImport(
           .filter((item) => item.invoiceId === invoice.id)
           .map((item) => item.amount),
       ),
+    })
+  }
+
+  // The bill still open at the bank: what it has so far, so the other
+  // person's part shows before it closes. A closed bill for the same invoice
+  // (above) is final and wins.
+  for (const account of input.accounts) {
+    if (!account.cardId || !account.dueDate || account.openBalance == null)
+      continue
+    const target = billMonth(account.dueDate, state.dueNextMonth)
+    const invoice = invoices.find(
+      (item) => item.cardId === account.cardId && item.month === target,
+    )
+    const closed = input.bills.some(
+      (bill) =>
+        bill.accountId === account.pluggyAccountId &&
+        billMonth(bill.dueDate, state.dueNextMonth) === target,
+    )
+    if (!invoice || closed || invoice.bankTotal === account.openBalance)
+      continue
+    result.bankTotals.push({
+      invoiceId: invoice.id,
+      bankTotal: account.openBalance,
     })
   }
 
