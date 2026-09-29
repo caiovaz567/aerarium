@@ -56,13 +56,14 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
       .map((item) => nonNegative(item.amount)),
   ])
   const mine = cents(Math.max(0, total - marked))
-  // A closed bill at the bank has the whole invoice: the other person's part
-  // is all of it that is not the owner's.
-  const bank = context.bankRecords?.find(
-    (item) => item.refId === invoice.id && item.externalId.startsWith('bill:'),
-  )?.amount
+  // On a card the other person also uses, the bank's total has everything:
+  // their part is all of it that is not the owner's.
+  const shared = context.cards?.find(
+    (card) => card.id === invoice.cardId,
+  )?.shared
+  const bank = invoice.bankTotal
   const otherShare =
-    bank != null ? cents(Math.max(marked, bank - mine)) : marked
+    shared && bank != null ? cents(Math.max(marked, bank - mine)) : marked
   return {
     ...fixed,
     expensesAmount,

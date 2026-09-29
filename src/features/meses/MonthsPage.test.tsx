@@ -467,4 +467,38 @@ describe('Pai usa os cartões', () => {
     expect(heroValue('Saídas')).toBe('R$ 873,17')
     localStorage.removeItem('aerarium.perfil')
   })
+
+  it('cartão que o pai usa: total no banco menos o seu é a parte dele', async () => {
+    const finance = withDad()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      cards: finance.cards.map((card) =>
+        card.id === 'c1' ? { ...card, shared: true } : card,
+      ),
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
+    const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
+    fireEvent.change(
+      within(invoice).getByLabelText('Total da fatura no banco'),
+      { target: { value: '1.000,00' } },
+    )
+    // Yours: 442,92 minus his Uber 12,00.
+    expect(invoice).toHaveTextContent(/Parte do Pai: R\$\s569,08/)
+    fireEvent.click(within(invoice).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'invoices',
+        op: 'update',
+        payload: { bank_total: '1000.00' },
+      }),
+    )
+    expect(
+      text(
+        screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,
+      ),
+    ).toContain('R$ 569,08')
+    // Your own numbers do not change.
+    expect(heroValue('Saídas')).toBe('R$ 861,17')
+  })
 })

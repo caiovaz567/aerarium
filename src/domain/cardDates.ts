@@ -8,13 +8,20 @@ import {
   type Month,
 } from './months'
 
-// Fase 13.2: the dates of a card's invoice, like a bank app shows them. An
-// invoice month is the month it is paid in, so its due date is in that month.
+// Fase 13.2: the dates of a card's invoice, like a bank app shows them. For
+// everyone, an invoice is due in its own month. Only the owner (dueNextMonth,
+// 29/09/2026) counts an invoice as the month before it is due: the bill due in
+// October is their September's; nothing changes for anyone else.
 
 /** The due date of the invoice of `target` (day clamped to the month's end). */
-export function dueDate(target: Month, dueDay: number): ISODate {
-  const day = Math.min(dueDay, daysInMonth(target))
-  return isoDate(`${target}-${String(day).padStart(2, '0')}`)
+export function dueDate(
+  target: Month,
+  dueDay: number,
+  nextMonth = false,
+): ISODate {
+  const due = nextMonth ? addMonths(target, 1) : target
+  const day = Math.min(dueDay, daysInMonth(due))
+  return isoDate(`${due}-${String(day).padStart(2, '0')}`)
 }
 
 const noon = (value: ISODate) => Date.parse(`${value}T12:00:00Z`)
@@ -46,16 +53,21 @@ export function limitUse(limit: Cents, available: Cents) {
 }
 
 /**
- * The invoice month of a purchase on a card: after closing it goes to the next
- * one; and when the due day comes before the closing day, the invoice that
- * closes this month is only paid next month.
+ * The invoice month of a purchase on a card: after the closing day it goes to
+ * the next one (everyone). With the owner's convention: that bill is due the
+ * month it closes when the due day comes after the closing day, else the
+ * month after, and the invoice is the month before it is due. Without a due
+ * day, it is taken as a week after closing.
  */
 export function invoiceMonthForCard(
   spentOn: ISODate,
   card: { readonly closingDay: number | null; readonly dueDay?: number | null },
+  nextMonth = false,
 ): Month {
-  const target = invoiceMonthForExpense(spentOn, card.closingDay)
-  return card.closingDay && card.dueDay && card.dueDay <= card.closingDay
-    ? addMonths(target, 1)
-    : target
+  const closes = invoiceMonthForExpense(spentOn, card.closingDay)
+  if (!nextMonth || !card.closingDay) return closes
+  const dueDay = card.dueDay ?? card.closingDay + 7
+  return dueDay > card.closingDay && dueDay <= 31
+    ? addMonths(closes, -1)
+    : closes
 }

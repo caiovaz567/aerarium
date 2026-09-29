@@ -333,8 +333,13 @@ export function MonthsPage() {
           }}
           onRemoveExpense={removeExpense}
           onOpenExpense={(row) => setDialog({ kind: 'expense', id: row.id })}
-          onSave={({ paid, ...changes }) => {
+          onSave={({ paid, bankTotal, ...changes }) => {
             run(ops.updateInvoice(invoice.invoice, changes))
+            if (
+              bankTotal !== undefined &&
+              bankTotal !== (invoice.invoice.bankTotal ?? null)
+            )
+              run(ops.setBankTotal(invoice.invoice, bankTotal))
             if (paid !== invoice.invoice.paid)
               run(ops.invoicePaid(invoice.invoice, paid, today()))
             close()

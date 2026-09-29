@@ -47,7 +47,11 @@ export function suggestMonth(
   const current = monthOf(options.today)
   let target = options.openMonth ?? current
   if (target === current && options.card?.closingDay)
-    target = invoiceMonthForCard(options.today, options.card)
+    target = invoiceMonthForCard(
+      options.today,
+      options.card,
+      finance.dueNextMonth ?? false,
+    )
   if (allowed.includes(target)) return target
   // Outside what exists: the closest end.
   return target < allowed[0]! ? allowed[0]! : allowed[allowed.length - 1]!

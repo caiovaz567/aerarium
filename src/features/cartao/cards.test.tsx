@@ -221,6 +221,8 @@ describe('tela do cartão', () => {
     const finance = financeFixture()
     renderApp('/cartoes/c1', undefined, {
       ...finance,
+      // The owner's convention: September's invoice is due in October.
+      dueNextMonth: true,
       cards: finance.cards.map((card) =>
         card.id === 'c1' ? { ...card, closingDay: 3, dueDay: 25 } : card,
       ),
@@ -240,11 +242,27 @@ describe('tela do cartão', () => {
     expect(
       spaced(screen.getByRole('region', { name: 'Fatura atual' }).textContent),
     ).toBe(
-      'Nubank Testefinal 5580Vencimento25 setfaltam 10 diasFatura de setembroR$ 442,92A pagar',
+      'Nubank Testefinal 5580Vencimento25 outfaltam 40 diasFatura de setembroR$ 442,92A pagar',
     )
     expect(
       spaced(screen.getByRole('region', { name: 'Limite' }).textContent),
     ).toBe('Limite disponívelR$ 3.750,00de R$ 5.000,0025%usado')
+    expect(spaced(document.querySelector('.card-dates')!.textContent)).toBe(
+      'Próxima fatura25 de novembroMelhor dia pra comprardia 4',
+    )
+  })
+
+  it('para todo mundo, o vencimento é no mês da fatura', () => {
+    const finance = financeFixture()
+    renderApp('/cartoes/c1', undefined, {
+      ...finance,
+      cards: finance.cards.map((card) =>
+        card.id === 'c1' ? { ...card, closingDay: 3, dueDay: 25 } : card,
+      ),
+    })
+    expect(
+      spaced(screen.getByRole('region', { name: 'Fatura atual' }).textContent),
+    ).toContain('Vencimento25 setfaltam 10 dias')
     expect(spaced(document.querySelector('.card-dates')!.textContent)).toBe(
       'Próxima fatura25 de outubroMelhor dia pra comprardia 4',
     )

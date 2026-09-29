@@ -6,7 +6,7 @@ import { BANKS, cardBank, NO_BANK } from '../../domain/banks'
 import { autoColor, CARD_PALETTE } from '../../domain/cardColor'
 import { BankLogo } from '../../ui/BankLogo'
 import { CardArt } from '../../ui/CardArt'
-import { ArmedButton, TextField } from '../../ui/controls'
+import { ArmedButton, CheckField, TextField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 
@@ -31,6 +31,7 @@ export function CardModal({
   const [color, setColor] = useState<string | null>(card?.color ?? null)
   const [closing, setClosing] = useState(String(card?.closingDay ?? ''))
   const [due, setDue] = useState(String(card?.dueDay ?? ''))
+  const [shared, setShared] = useState(card?.shared ?? false)
   // null: follows the name until the person picks one.
   const [bankChoice, setBankChoice] = useState(card?.bank ?? null)
   const shownBank = cardBank({ name, bank: bankChoice }) ?? NO_BANK
@@ -61,6 +62,7 @@ export function CardModal({
       closingDay: day,
       dueDay,
       bank: bankChoice,
+      shared,
       sortOrder:
         card?.sortOrder ??
         Math.max(0, ...finance.cards.map((item) => item.sortOrder)) + 1,
@@ -174,6 +176,14 @@ export function CardModal({
             }
           />
         </div>
+        {finance.otherPerson && (
+          <CheckField
+            label={`O ${finance.otherPerson} usa este cartão`}
+            hint={`A parte dele é o total da fatura no banco menos o que é seu.`}
+            checked={shared}
+            onChange={setShared}
+          />
+        )}
         <p className="form-error" role="alert">
           {error}
         </p>

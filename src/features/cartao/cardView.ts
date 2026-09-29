@@ -69,7 +69,8 @@ export function cardInvoiceView(
     ) ?? null
   const totals = invoice ? invoiceTotals(invoice, finance) : null
   const account = finance.bankAccounts.find((item) => item.cardId === card.id)
-  const due = card.dueDay ? dueDate(current, card.dueDay) : null
+  const next = finance.dueNextMonth ?? false
+  const due = card.dueDay ? dueDate(current, card.dueDay, next) : null
   const limit =
     account?.creditLimit != null && account.availableLimit != null
       ? {
@@ -84,7 +85,9 @@ export function cardInvoiceView(
     total: totals?.total ?? cents(0),
     due,
     dueText: due && invoice && !invoice.paid ? dueText(due, today) : null,
-    nextDue: card.dueDay ? dueDate(addMonths(current, 1), card.dueDay) : null,
+    nextDue: card.dueDay
+      ? dueDate(addMonths(current, 1), card.dueDay, next)
+      : null,
     bestDay: card.closingDay ? bestPurchaseDay(card.closingDay) : null,
     limit,
     parts: totals

@@ -23,6 +23,8 @@ export interface Card {
   readonly dueDay?: number | null
   /** Fase 13.1: bank for the logo; null = guessed from the name, 'none' = no logo. */
   readonly bank?: string | null
+  /** Fase 13.3: the other person also uses this card. */
+  readonly shared?: boolean
   readonly sortOrder: number
 }
 export interface MonthEntry {
@@ -108,6 +110,11 @@ export interface Finance {
    * ("Pai").
    */
   readonly otherPerson?: string | null
+  /**
+   * The owner's convention (user_settings.due_next_month): an invoice is the
+   * month before it is due. Everyone else: due in its own month.
+   */
+  readonly dueNextMonth?: boolean
   /** Profile "Pai": outflows seen as the other person's (not loaded). */
   readonly viewAs?: 'owner' | 'other'
 }
@@ -152,7 +159,7 @@ export async function loadFinance(): Promise<Finance> {
     bankRecords,
     settings,
   ] = await Promise.all([
-    select('cards', 'id,name,color,closing_day,due_day,bank,sort_order'),
+    select('cards', 'id,name,color,closing_day,due_day,bank,shared,sort_order'),
     select('categories', 'id,name,color,icon,sort_order'),
     select('months', 'id,ref'),
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
@@ -162,7 +169,7 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoices',
-      'id,card_id,month_id,other_amount::text,estimated,note,paid,paid_on,closed_total::text',
+      'id,card_id,month_id,other_amount::text,estimated,note,paid,paid_on,closed_total::text,bank_total::text',
     ),
     select(
       'invoice_expenses',
@@ -185,7 +192,7 @@ export async function loadFinance(): Promise<Finance> {
       'id,pluggy_account_id,item_id,name,number,card_id,credit_limit::text,available_limit::text,limit_at',
     ),
     select('bank_records', 'external_id,amount::text,ref_id'),
-    select('user_settings', 'other_person'),
+    select('user_settings', 'other_person,due_next_month'),
   ])
   const monthRows = months
     .map((row) => ({ id: text(row.id), ref: monthOfDate(row.ref) }))
@@ -203,6 +210,7 @@ export async function loadFinance(): Promise<Finance> {
         closingDay: (row.closing_day as number | null) ?? null,
         dueDay: (row.due_day as number | null) ?? null,
         bank: (row.bank as string | null) ?? null,
+        shared: row.shared === true,
         sortOrder: Number(row.sort_order),
       }))
       .sort(
@@ -256,6 +264,7 @@ export async function loadFinance(): Promise<Finance> {
       paid: Boolean(row.paid),
       paidOn: date(row.paid_on),
       closedTotal: row.closed_total == null ? null : money(row.closed_total),
+      bankTotal: row.bank_total == null ? null : money(row.bank_total),
     })),
     expenses: expenses
       .map((row) => ({
@@ -323,5 +332,6 @@ export async function loadFinance(): Promise<Finance> {
       refId: (row.ref_id as string | null) ?? null,
     })),
     otherPerson,
+    dueNextMonth: settings[0]?.due_next_month === true,
   }
 }

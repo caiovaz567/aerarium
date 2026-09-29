@@ -67,6 +67,8 @@ export interface ImportInvoice {
   readonly paid: boolean
   /** "Outros" typed by the person. */
   readonly otherAmount: Cents
+  /** The whole invoice at the bank, when known. */
+  readonly bankTotal?: Cents | null
 }
 export interface ImportExpense {
   readonly id: string
@@ -101,6 +103,8 @@ export interface ImportState {
   readonly records: ReadonlyMap<string, { readonly amount: Cents | null }>
   /** Fase 13.3: someone else uses the cards (only for the owner). */
   readonly otherPerson?: boolean
+  /** The owner's convention: an invoice is the month before it is due. */
+  readonly dueNextMonth?: boolean
 }
 
 export type RecordKind =
@@ -165,6 +169,11 @@ export interface ImportResult {
     readonly invoiceId: string
     readonly otherAmount: Cents
   }[]
+  /** The whole invoice at the bank (its closed bill), kept on the invoice. */
+  readonly bankTotals: readonly {
+    readonly invoiceId: string
+    readonly bankTotal: Cents
+  }[]
   readonly records: readonly {
     readonly externalId: string
     readonly kind: RecordKind
@@ -218,20 +227,28 @@ export function bankMoment(date: string): { day: ISODate; at: string | null } {
   return { day, at: local === '00:00:00' ? null : instant.toISOString() }
 }
 
+/**
+ * The app's invoice for a bill due on `due`: its own month, or the month
+ * before with the owner's convention (see cardDates).
+ */
+export const billMonth = (due: ISODate, nextMonth = false): Month =>
+  nextMonth ? addMonths(monthOf(due), -1) : monthOf(due)
+
 /** Which app invoice month a bank charge belongs to. */
 export function bankInvoiceMonth(
   transaction: BankTransaction,
   account: BankAccount,
   bills: readonly BankBill[],
   card: Pick<ImportCard, 'closingDay' | 'dueDay'>,
+  nextMonth = false,
 ): Month {
   const bill = transaction.billId
     ? bills.find((item) => item.id === transaction.billId)
     : undefined
-  if (bill) return monthOf(bill.dueDate)
+  if (bill) return billMonth(bill.dueDate, nextMonth)
   const { day } = bankMoment(transaction.date)
-  if (!account.dueDate) return invoiceMonthForCard(day, card)
-  const open = monthOf(account.dueDate)
+  if (!account.dueDate) return invoiceMonthForCard(day, card, nextMonth)
+  const open = billMonth(account.dueDate, nextMonth)
   // The open bill's closing: the bank's, else a week before it is due.
   const close =
     account.closeDate ??
@@ -322,6 +339,7 @@ export function planBankImport(
     plans: [] as ImportResult['plans'][number][],
     planLinks: [] as ImportResult['planLinks'][number][],
     invoiceTotals: [] as ImportResult['invoiceTotals'][number][],
+    bankTotals: [] as ImportResult['bankTotals'][number][],
     records: [] as ImportResult['records'][number][],
     notices: [] as string[],
     billChecks: [] as ImportResult['billChecks'][number][],
@@ -396,6 +414,7 @@ export function planBankImport(
       account,
       input.bills,
       card ?? { closingDay: null },
+      state.dueNextMonth,
     )
     // Months are created by the person (they carry over what was left).
     if (!monthIds.has(target)) continue
@@ -536,19 +555,18 @@ export function planBankImport(
     record(transaction.id, 'expense', expense.id)
   }
 
-  // A closed bill is kept with its invoice: the whole invoice at the bank.
-  // The owner's own launches ("outros" included) stay as they are; the rest
-  // of the bill is the other person's part (see invoiceTotals).
+  // A closed bill is the whole invoice at the bank (the owner's use and the
+  // other person's). It is kept on the invoice; the owner's own launches
+  // ("outros" included) never change (see invoiceTotals).
   for (const bill of input.bills) {
-    const key = `bill:${bill.id}`
-    if (state.records.get(key)?.amount === bill.total) continue
     const account = accounts.get(bill.accountId)
     if (!account?.cardId) continue
-    const target = monthOf(bill.dueDate)
+    const target = billMonth(bill.dueDate, state.dueNextMonth)
     const invoice = invoices.find(
       (item) => item.cardId === account.cardId && item.month === target,
     )
-    if (!invoice || invoice.paid) continue
+    if (!invoice || invoice.bankTotal === bill.total) continue
+    result.bankTotals.push({ invoiceId: invoice.id, bankTotal: bill.total })
     const fixed = fixedCardAmounts(account.cardId, target, {
       plans,
       payments: state.payments,
@@ -567,7 +585,6 @@ export function planBankImport(
           .map((item) => item.amount),
       ),
     })
-    record(key, 'bill', invoice.id, bill.total)
   }
 
   // An open invoice fed by the bank sums the purchases that arrived: the

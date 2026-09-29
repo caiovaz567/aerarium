@@ -6,16 +6,12 @@ import { invoiceTotals } from './invoices'
 import { cents, sumMoney } from './money'
 import { isoDate, month } from './months'
 
-// Fase 13.3: the owner's father uses the same cards. The owner launches what
-// is theirs ("outros" included); what the father bought is marked, and a
-// closed bill at the bank tells the rest of his part.
+// Fase 13.3: the owner's father uses some of the same cards. The owner
+// launches what is theirs ("outros" included); what the father bought is
+// marked, and on the cards he uses, the whole invoice at the bank tells the
+// rest of his part.
 const sep = month('2026-09')
-const bill = (amount: number) => ({
-  externalId: 'bill:b9',
-  refId: 'invoice',
-  amount: cents(amount),
-})
-const data = (bankTotal: number | null = null) =>
+const data = (bankTotal: number | null = null, shared = true) =>
   emptyData({
     incomes: [
       {
@@ -26,7 +22,13 @@ const data = (bankTotal: number | null = null) =>
         sortOrder: 0,
       },
     ],
-    invoices: [invoice({ otherAmount: cents(3000) })],
+    invoices: [
+      invoice({
+        otherAmount: cents(3000),
+        bankTotal: bankTotal === null ? null : cents(bankTotal),
+      }),
+    ],
+    cards: [{ id: 'card', shared }],
     plans: [
       plan({ id: 'meu' }),
       plan({ id: 'do-pai', installmentAmount: cents(4000), forOther: true }),
@@ -40,7 +42,6 @@ const data = (bankTotal: number | null = null) =>
       { invoiceId: 'invoice', amount: cents(1200) },
       { invoiceId: 'invoice', amount: cents(800), forOther: true },
     ],
-    bankRecords: bankTotal === null ? [] : [bill(bankTotal)],
   })
 const withIds = (base: ReturnType<typeof data>) => ({
   ...base,
@@ -64,12 +65,16 @@ describe('gastos de quem usa o cartão junto', () => {
     ).toMatchObject({ total: 21000, mine: 16200, otherShare: 4800 })
   })
 
-  it('com a fatura fechada no banco, a parte dele é o total menos o seu', () => {
-    const totals = (bank: number) =>
-      invoiceTotals(invoice({ otherAmount: cents(3000) }), data(bank))
+  it('no cartão que ele usa, a parte dele é o total do banco menos o seu', () => {
+    const totals = (bank: number, shared = true) => {
+      const base = data(bank, shared)
+      return invoiceTotals(base.invoices[0]!, base)
+    }
     expect(totals(30000)).toMatchObject({ mine: 16200, otherShare: 13800 })
     // A bank total below the owner's never takes away what was marked his.
     expect(totals(10000).otherShare).toBe(4800)
+    // A card he does not use: only what was marked his.
+    expect(totals(30000, false).otherShare).toBe(4800)
   })
 
   it('fatura paga com total menor que o marcado dele: a sua fica zero', () => {

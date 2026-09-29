@@ -178,6 +178,25 @@ describe('Editar cartão', () => {
     expect(logo()).toBeNull()
   })
 
+  it('com o pai ligado, dá pra marcar que ele usa o cartão', async () => {
+    const finance = financeFixture()
+    renderApp('/cartoes?mes=2026-09', undefined, {
+      ...finance,
+      otherPerson: 'Pai',
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Nubank Teste' }))
+    const form = dialog('Editar cartão')
+    fireEvent.click(within(form).getByLabelText(/O Pai usa este cartão/))
+    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    await waitFor(() =>
+      expect(writes()[0]).toMatchObject({
+        table: 'cards',
+        payload: expect.objectContaining({ shared: true }),
+      }),
+    )
+  })
+
   it('novo cartão entra no fim da lista', async () => {
     renderApp('/cartoes?mes=2026-09')
     fireEvent.click(screen.getByRole('button', { name: 'Novo cartão' }))

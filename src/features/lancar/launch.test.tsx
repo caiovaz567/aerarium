@@ -106,6 +106,25 @@ describe('mês sugerido', () => {
     ).toBe('2026-10')
   })
 
+  it('convenção do dono: a fatura é o mês antes do vencimento da conta', () => {
+    const finance = { ...withClosing(5), dueNextMonth: true }
+    const card = finance.cards[0]!
+    const on = (day: string) =>
+      suggestMonth(finance, { openMonth: null, card, today: isoDate(day) })
+    // Closes 05/09, due about 12/09: August's invoice.
+    expect(on('2026-09-05')).toBe('2026-08')
+    // Closes 05/10, due about 12/10: September's.
+    expect(on('2026-09-06')).toBe('2026-09')
+    // Opening October in Meses is an explicit choice.
+    expect(
+      suggestMonth(finance, {
+        openMonth: month('2026-10'),
+        card,
+        today: isoDate('2026-09-06'),
+      }),
+    ).toBe('2026-10')
+  })
+
   it('fora do que existe, fica na ponta mais perto', () => {
     const finance = financeFixture()
     const on = (day: string) =>

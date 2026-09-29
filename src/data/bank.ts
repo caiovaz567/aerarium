@@ -135,6 +135,7 @@ export function importState(finance: Finance): ImportState {
     history: categoryHistory(finance),
     records,
     otherPerson: Boolean(finance.otherPerson),
+    dueNextMonth: finance.dueNextMonth ?? false,
   }
 }
 
@@ -368,6 +369,9 @@ export const bankOps = {
     const totals = new Map(
       result.invoiceTotals.map((item) => [item.invoiceId, item.otherAmount]),
     )
+    const bankTotals = new Map(
+      result.bankTotals.map((item) => [item.invoiceId, item.bankTotal]),
+    )
     return {
       run: async () => {
         if (invoices.length)
@@ -439,6 +443,12 @@ export const bankOps = {
               })
               .eq('id', invoiceId),
           )
+        for (const [invoiceId, bankTotal] of bankTotals)
+          await ok(
+            table('invoices')
+              .update({ bank_total: toDecimal(bankTotal) })
+              .eq('id', invoiceId),
+          )
         if (result.records.length)
           await ok(
             table('bank_records').insert(
@@ -453,11 +463,14 @@ export const bankOps = {
       },
       apply: (f) => ({
         ...f,
-        invoices: [...f.invoices, ...invoices].map((item) =>
-          totals.has(item.id)
+        invoices: [...f.invoices, ...invoices].map((item) => {
+          const next = totals.has(item.id)
             ? { ...item, otherAmount: totals.get(item.id)!, estimated: false }
-            : item,
-        ),
+            : item
+          return bankTotals.has(item.id)
+            ? { ...next, bankTotal: bankTotals.get(item.id)! }
+            : next
+        }),
         plans: [
           ...f.plans.map((item) => {
             const link = result.planLinks.find((row) => row.planId === item.id)

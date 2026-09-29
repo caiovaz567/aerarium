@@ -68,6 +68,7 @@ const invoiceRecord = (row: InvoiceRow) => ({
   other_amount: toDecimal(row.otherAmount),
   estimated: row.estimated,
   note: row.note,
+  bank_total: row.bankTotal == null ? null : toDecimal(row.bankTotal),
 })
 const expenseRecord = (row: ExpenseRow) => ({
   id: row.id,
@@ -278,6 +279,27 @@ export const ops = {
     return {
       run: () => ok(table('bills').insert(billRecord(bill))),
       apply: (f) => ({ ...f, bills: [...f.bills, bill] }),
+    }
+  },
+
+  /**
+   * Fase 13.3: the whole invoice at the bank, typed for a card without Open
+   * Finance (null clears it).
+   */
+  setBankTotal(invoice: InvoiceRow, bankTotal: Cents | null): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('invoices')
+            .update({
+              bank_total: bankTotal === null ? null : toDecimal(bankTotal),
+            })
+            .eq('id', invoice.id),
+        ),
+      apply: (f) => ({
+        ...f,
+        invoices: patch(f.invoices, invoice.id, { bankTotal }),
+      }),
     }
   },
 

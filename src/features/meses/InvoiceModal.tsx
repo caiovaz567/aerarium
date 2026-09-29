@@ -24,6 +24,8 @@ export interface InvoiceChanges {
   readonly estimated: boolean
   readonly note: string | null
   readonly paid: boolean
+  /** Fase 13.3: the whole invoice at the bank, on cards someone else uses. */
+  readonly bankTotal?: Cents | null
 }
 
 /** Invoice summary: what comes by itself, launched expenses and the rest. */
@@ -64,6 +66,11 @@ export function InvoiceModal({
   const [note, setNote] = useState(visibleNote(invoice.note, card) ?? '')
   const [paid, setPaid] = useState(invoice.paid)
   const [error, setError] = useState('')
+  // Fase 13.3: on a card the other person also uses.
+  const shared = Boolean(card.shared && finance.otherPerson)
+  const [bank, setBank] = useState(
+    invoice.bankTotal == null ? '' : formatMoneyInput(invoice.bankTotal),
+  )
 
   const installments = finance.plans
     .filter((plan) => plan.cardId === invoice.cardId)
@@ -107,11 +114,18 @@ export function InvoiceModal({
       otherAmount = read.amount
     }
     const typed = totalMode || otherAmount !== invoice.otherAmount
+    let bankTotal: Cents | null = null
+    if (shared && bank.trim()) {
+      const read = readMoney(bank)
+      if ('error' in read) return setError(read.error)
+      bankTotal = read.amount
+    }
     onSave({
       otherAmount,
       estimated: invoice.estimated && !typed,
       note: note.trim() || null,
       paid,
+      ...(shared && { bankTotal }),
     })
   }
 
@@ -272,6 +286,26 @@ export function InvoiceModal({
             </p>
           )}
 
+        {shared && (
+          <div className="invoice-sec">
+            <small>Com o {finance.otherPerson}</small>
+            <MoneyField
+              label="Total da fatura no banco"
+              value={bank}
+              onChange={setBank}
+              hint={
+                safe(bank) === null
+                  ? `O total com o que é seu e o que é do ${finance.otherPerson}. Com Open Finance, vem sozinho.`
+                  : `Parte do ${finance.otherPerson}: ${formatMoney(
+                      invoiceTotals(
+                        { ...invoice, bankTotal: safe(bank) },
+                        finance,
+                      ).otherShare,
+                    )}`
+              }
+            />
+          </div>
+        )}
         <TextField
           label="Observação (opcional)"
           value={note}

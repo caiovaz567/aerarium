@@ -43,6 +43,11 @@ export interface Invoice {
   readonly paidOn: ISODate | null
   readonly closedTotal: Cents | null
   readonly note: string | null
+  /**
+   * Fase 13.3: the whole invoice at the bank (the owner's use and the other
+   * person's), from Open Finance or typed. Never changes the owner's numbers.
+   */
+  readonly bankTotal?: Cents | null
 }
 
 export interface InvoiceExpense {
@@ -78,14 +83,12 @@ export interface InvoiceContext {
   readonly subscriptions: readonly Subscription[]
   readonly expenses: readonly InvoiceExpense[]
   /**
-   * Fase 13.3: bank records; "bill:ID" ones carry the bank's closed bill
-   * total for the invoice in refId. The other person's part of an invoice is
-   * that total minus the owner's (the owner's "outros" included).
+   * Fase 13.3: cards the other person also uses. On those, their part of an
+   * invoice is its bank total minus the owner's part.
    */
-  readonly bankRecords?: readonly {
-    readonly externalId: string
-    readonly refId?: string | null
-    readonly amount: Cents | null
+  readonly cards?: readonly {
+    readonly id: string
+    readonly shared?: boolean
   }[]
   /**
    * Fase 13.3, profile "Pai": the month's outflows seen as the other person's

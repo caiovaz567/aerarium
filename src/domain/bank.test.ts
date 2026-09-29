@@ -69,6 +69,8 @@ function state(overrides: Partial<ImportState> = {}): ImportState {
     categories,
     history: [],
     records: new Map(),
+    // The owner's convention; everyone else is tested below.
+    dueNextMonth: true,
     ...overrides,
   }
 }
@@ -76,7 +78,7 @@ function state(overrides: Partial<ImportState> = {}): ImportState {
 const account: BankAccount = {
   pluggyAccountId: 'acc',
   cardId: 'card',
-  dueDate: isoDate('2026-09-21'),
+  dueDate: isoDate('2026-10-07'),
   closeDate: null,
 }
 
@@ -128,37 +130,75 @@ describe('textos e datas do banco', () => {
     })
   })
 
-  it('mês da fatura: a do banco, a aberta, depois do fechamento, ou pelo dia de fechamento', () => {
+  it('para todo mundo, a fatura é o mês em que vence', () => {
     const bills: BankBill[] = [
       {
-        id: 'b8',
+        id: 'b9',
         accountId: 'acc',
-        dueDate: isoDate('2026-08-21'),
+        dueDate: isoDate('2026-10-07'),
         total: cents(1),
       },
     ]
     const purchase = tx('t', 'X', 100, '2026-09-10T03:00:00.000Z')
     expect(
-      bankInvoiceMonth({ ...purchase, billId: 'b8' }, account, bills, none),
+      bankInvoiceMonth({ ...purchase, billId: 'b9' }, account, bills, none),
+    ).toBe(oct)
+    expect(bankInvoiceMonth(purchase, account, [], none)).toBe(oct)
+    expect(
+      bankInvoiceMonth(purchase, { ...account, dueDate: null }, [], {
+        closingDay: 5,
+      }),
+    ).toBe(oct)
+  })
+
+  it('mês da fatura: a do banco, a aberta, depois do fechamento, ou pelo dia de fechamento', () => {
+    const bills: BankBill[] = [
+      {
+        id: 'b8',
+        accountId: 'acc',
+        dueDate: isoDate('2026-09-21'),
+        total: cents(1),
+      },
+    ]
+    const purchase = tx('t', 'X', 100, '2026-09-10T03:00:00.000Z')
+    expect(
+      bankInvoiceMonth(
+        { ...purchase, billId: 'b8' },
+        account,
+        bills,
+        none,
+        true,
+      ),
     ).toBe('2026-08')
     // Bill not in the list: the open one.
     expect(
-      bankInvoiceMonth({ ...purchase, billId: 'outra' }, account, bills, none),
+      bankInvoiceMonth(
+        { ...purchase, billId: 'outra' },
+        account,
+        bills,
+        none,
+        true,
+      ),
     ).toBe(sep)
-    expect(bankInvoiceMonth(purchase, account, [], none)).toBe(sep)
+    expect(bankInvoiceMonth(purchase, account, [], none, true)).toBe(sep)
     expect(
       bankInvoiceMonth(
         purchase,
         { ...account, closeDate: isoDate('2026-09-08') },
         [],
         none,
+        true,
       ),
     ).toBe(oct)
     expect(
-      bankInvoiceMonth(purchase, { ...account, dueDate: null }, [], {
-        closingDay: 5,
-      }),
-    ).toBe(oct)
+      bankInvoiceMonth(
+        purchase,
+        { ...account, dueDate: null },
+        [],
+        { closingDay: 5 },
+        true,
+      ),
+    ).toBe(sep)
   })
 })
 
@@ -172,19 +212,28 @@ describe('compra antiga sem a fatura do banco', () => {
   const at = (date: string) => tx('t', 'LOJA', 100, `${date}T15:00:00.000Z`)
 
   it('volta uma fatura por fechamento, em vez de cair toda na aberta', () => {
-    expect(bankInvoiceMonth(at('2026-10-05'), open, [], none)).toBe('2026-11')
-    expect(bankInvoiceMonth(at('2026-09-20'), open, [], none)).toBe(oct)
-    expect(bankInvoiceMonth(at('2026-09-02'), open, [], none)).toBe(sep)
-    expect(bankInvoiceMonth(at('2026-07-15'), open, [], none)).toBe('2026-08')
-    expect(bankInvoiceMonth(at('2020-01-01'), open, [], none)).toBe('2024-10')
+    // The bill due 09/10 is September's (the month before it is due).
+    expect(bankInvoiceMonth(at('2026-10-05'), open, [], none, true)).toBe(oct)
+    expect(bankInvoiceMonth(at('2026-09-20'), open, [], none, true)).toBe(sep)
+    expect(bankInvoiceMonth(at('2026-09-02'), open, [], none, true)).toBe(
+      '2026-08',
+    )
+    expect(bankInvoiceMonth(at('2026-07-15'), open, [], none, true)).toBe(
+      '2026-07',
+    )
+    expect(bankInvoiceMonth(at('2020-01-01'), open, [], none, true)).toBe(
+      '2024-09',
+    )
   })
 
   it('sem o fechamento do banco, conta uma semana antes do vencimento', () => {
     const noClose = { ...open, closeDate: null }
-    expect(bankInvoiceMonth(at('2026-10-03'), noClose, [], none)).toBe(
-      '2026-11',
+    expect(bankInvoiceMonth(at('2026-10-03'), noClose, [], none, true)).toBe(
+      oct,
     )
-    expect(bankInvoiceMonth(at('2026-10-01'), noClose, [], none)).toBe(oct)
+    expect(bankInvoiceMonth(at('2026-10-01'), noClose, [], none, true)).toBe(
+      sep,
+    )
   })
 })
 
@@ -321,12 +370,12 @@ describe('importar compras', () => {
   })
 
   it('parcelada nova vira parcelamento; as próximas parcelas só são reconhecidas', () => {
-    const october: BankAccount = { ...account, dueDate: isoDate('2026-10-21') }
+    const october: BankAccount = { ...account, dueDate: isoDate('2026-11-07') }
     const bills: BankBill[] = [
       {
         id: 'b9',
         accountId: 'acc',
-        dueDate: isoDate('2026-09-21'),
+        dueDate: isoDate('2026-10-21'),
         total: cents(999999),
       },
     ]
@@ -464,7 +513,7 @@ describe('importar compras', () => {
           {
             id: 'bnov',
             accountId: 'acc',
-            dueDate: isoDate('2026-11-21'),
+            dueDate: isoDate('2026-12-21'),
             total: cents(1000),
           },
         ],
@@ -504,9 +553,9 @@ describe('importar compras', () => {
     const result = planBankImport(
       state(),
       {
-        accounts: [{ ...account, dueDate: isoDate('2026-10-21') }],
+        accounts: [{ ...account, dueDate: isoDate('2026-11-07') }],
         transactions: [
-          tx('t1', 'POSTO SHELL', 20000, '2026-09-25T03:00:00.000Z'),
+          tx('t1', 'POSTO SHELL', 20000, '2026-10-10T03:00:00.000Z'),
         ],
         bills: [],
       },
@@ -521,10 +570,10 @@ describe('importar compras', () => {
     const two = planBankImport(
       state(),
       {
-        accounts: [{ ...account, dueDate: isoDate('2026-10-21') }],
+        accounts: [{ ...account, dueDate: isoDate('2026-11-07') }],
         transactions: [
-          tx('a', 'LOJA A', 100, '2026-09-25T03:00:00.000Z'),
-          tx('b', 'LOJA B', 100, '2026-09-26T03:00:00.000Z'),
+          tx('a', 'LOJA A', 100, '2026-10-10T03:00:00.000Z'),
+          tx('b', 'LOJA B', 100, '2026-10-11T03:00:00.000Z'),
         ],
         bills: [],
       },
@@ -538,20 +587,19 @@ describe('total da fatura do banco', () => {
   const bill = (total: number, id = 'b9'): BankBill => ({
     id,
     accountId: 'acc',
-    dueDate: isoDate('2026-09-21'),
+    dueDate: isoDate('2026-10-21'),
     total: cents(total),
   })
 
-  it('guarda o total do banco com a fatura; o "outros" do dono não muda', () => {
+  it('guarda o total do banco na fatura; o "outros" do dono não muda', () => {
     const result = planBankImport(
       state(),
       { accounts: [account], transactions: [], bills: [bill(50000)] },
       ids,
     )
+    expect(result.bankTotals).toEqual([{ invoiceId: 'inv9', bankTotal: 50000 }])
     expect(result.invoiceTotals).toEqual([])
-    expect(result.records).toEqual([
-      { externalId: 'bill:b9', kind: 'bill', refId: 'inv9', amount: 50000 },
-    ])
+    expect(result.records).toEqual([])
     // What the app has of that invoice, for the preview.
     expect(result.billChecks).toEqual([
       {
@@ -565,7 +613,17 @@ describe('total da fatura do banco', () => {
     ])
   })
 
-  it('mesmo total já guardado, fatura paga, sem fatura ou sem cartão: nada', () => {
+  it('mesmo total já guardado, sem fatura ou sem cartão: nada; fatura paga também guarda', () => {
+    const invoice9 = (extra: Partial<ImportState['invoices'][number]>) => [
+      {
+        id: 'inv9',
+        cardId: 'card',
+        month: sep,
+        paid: false,
+        otherAmount: cents(0),
+        ...extra,
+      },
+    ]
     const run = (
       overrides: Partial<ImportState>,
       accounts: BankAccount[] = [account],
@@ -574,27 +632,13 @@ describe('total da fatura do banco', () => {
         state(overrides),
         { accounts, transactions: [], bills: [bill(50000)] },
         ids,
-      ).records
-    expect(
-      run({ records: new Map([['bill:b9', { amount: cents(50000) }]]) }),
-    ).toEqual([])
+      ).bankTotals
+    expect(run({ invoices: invoice9({ bankTotal: cents(50000) }) })).toEqual([])
     // Total changed at the bank: kept again.
     expect(
-      run({ records: new Map([['bill:b9', { amount: cents(40000) }]]) }),
+      run({ invoices: invoice9({ bankTotal: cents(40000) }) }),
     ).toHaveLength(1)
-    expect(
-      run({
-        invoices: [
-          {
-            id: 'inv9',
-            cardId: 'card',
-            month: sep,
-            paid: true,
-            otherAmount: cents(0),
-          },
-        ],
-      }),
-    ).toEqual([])
+    expect(run({ invoices: invoice9({ paid: true }) })).toHaveLength(1)
     expect(run({ invoices: [] })).toEqual([])
     expect(run({}, [{ ...account, cardId: null }])).toEqual([])
   })
