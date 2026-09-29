@@ -95,7 +95,7 @@ export function OtherMonth({
           ))}
         </div>
         {view === 'tipo' && (
-          <OtherByType finance={seen} items={items} onOpen={onOpen} />
+          <OtherByType finance={seen} month={month} onOpen={onOpen} />
         )}
         {view === 'data' && (
           <TimelineView finance={seen} month={month} onOpen={onOpen} />

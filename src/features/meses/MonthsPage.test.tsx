@@ -2,7 +2,8 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeKey } from '../../data/finance'
-import { month, type Month } from '../../domain/months'
+import { cents } from '../../domain/money'
+import { isoDate, month, type Month } from '../../domain/months'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
@@ -504,6 +505,48 @@ describe('Pai usa os cartões', () => {
     expect(within(byType).getByText('Uber')).toBeVisible()
     fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
     expect(heroValue('Saídas')).toBe('R$ 861,17')
+  })
+
+  it('Por tipo do pai: as compras mais novas primeiro, as parcelas depois', () => {
+    const base = withDad()
+    renderApp('/meses/2026-09', undefined, {
+      ...base,
+      expenses: [
+        ...base.expenses,
+        {
+          id: 'e2',
+          invoiceId: 'v9a',
+          description: 'Posto',
+          amount: cents(5000),
+          spentOn: isoDate('2026-09-20'),
+          occurredAt: '2026-09-20T18:13:00.000Z',
+          categoryId: null,
+          forOther: true,
+        },
+      ],
+      plans: base.plans.map((plan) =>
+        plan.id === 'p1' ? { ...plan, forOther: true } : plan,
+      ),
+    })
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Ver gastos de' })).getByRole(
+        'button',
+        { name: 'Pai' },
+      ),
+    )
+    const byType = screen.getByRole('group', { name: 'Por tipo' })
+    fireEvent.click(within(byType).getByRole('button', { name: /^Nubank/ }))
+    expect(
+      within(byType)
+        .getAllByRole('button')
+        .slice(1)
+        .map((row) => text(row.textContent)),
+    ).toEqual([
+      'Posto20/09 15:13 · Nubank TesteR$ 50,00',
+      'Uber03/09 · Nubank TesteR$ 12,00',
+      'Notebookparcela 2/10 · Nubank TesteR$ 120,00',
+    ])
+    localStorage.removeItem('aerarium.perfil')
   })
 
   it('sem outra pessoa, não tem seletor e a visão é sempre a sua', () => {

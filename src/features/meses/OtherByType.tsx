@@ -2,6 +2,13 @@ import { useState } from 'react'
 import type { Finance } from '../../data/finance'
 import type { OutflowItem } from '../../domain/categories'
 import { formatMoney, formatMoneyShort, sumMoney } from '../../domain/money'
+import { dayMonth, type Month } from '../../domain/months'
+import {
+  buildTimeline,
+  timeLabel,
+  timedItems,
+  type TimedItem,
+} from '../../domain/timeline'
 import { CardArt } from '../../ui/CardArt'
 import { GroupHead } from './MonthBlocks'
 import { OutflowRow } from './TimelineView'
@@ -31,19 +38,27 @@ function cardParts(items: readonly OutflowItem[]): string {
 
 /**
  * Fase 13.3, profile of the other person, "Por tipo": their part card by card
- * (tapping a card shows its items), then their installments off the cards.
+ * (tapping a card shows its items, newest first, then the installments),
+ * then their installments off the cards.
  */
 export function OtherByType({
   finance,
-  items,
+  month,
   onOpen,
 }: {
   /** Seen as the other person's (viewAs: 'other'). */
   readonly finance: Finance
-  readonly items: readonly OutflowItem[]
+  readonly month: Month
   readonly onOpen: (item: OutflowItem) => void
 }) {
   const [open, setOpen] = useState<string | null>(null)
+  // Newest first, like "Por data"; what has no date (installments) after.
+  const { dated, fixed } = timedItems(month, finance)
+  const timeline = buildTimeline(dated, fixed)
+  const items: readonly (OutflowItem | TimedItem)[] = [
+    ...timeline.days.flatMap((day) => day.items),
+    ...timeline.fixed,
+  ]
   const cards = finance.cards
     .map((card) => ({
       card,
@@ -51,12 +66,18 @@ export function OtherByType({
     }))
     .filter((item) => item.items.length > 0)
   const loose = items.filter((item) => item.cardId === null)
-  const row = (item: OutflowItem) => (
+  const row = (item: OutflowItem | TimedItem) => (
     <OutflowRow
       key={`${item.source}-${item.id}`}
       finance={finance}
       item={item}
-      time={null}
+      time={
+        'day' in item
+          ? [dayMonth(item.day), item.at && timeLabel(item.at)]
+              .filter(Boolean)
+              .join(' ')
+          : null
+      }
       onOpen={onOpen}
     />
   )
