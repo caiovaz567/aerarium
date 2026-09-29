@@ -690,3 +690,26 @@
   font-size: 15px;
   font-weight: 700;
 }
+.owed-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.owed-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.owed-text small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.owed-text b {
+  font: 800 22px / 1.1 var(--display);
+}
+.owed-block .btn {
+  flex: none;
+}

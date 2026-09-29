@@ -57,7 +57,8 @@ export interface Income {
   readonly month: Month
   readonly description: string
   readonly amount: Cents
-  readonly kind: 'normal' | 'carryover'
+  /** 'from_other': money the other person sent back for their part. */
+  readonly kind: 'normal' | 'carryover' | 'from_other'
   readonly sortOrder: number
 }
 

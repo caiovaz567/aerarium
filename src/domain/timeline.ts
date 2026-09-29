@@ -2,6 +2,7 @@ import {
   groupByCategory,
   monthOutflowItems,
   UNCATEGORIZED,
+  SHARED,
   UNDETAILED,
   type CategoryData,
   type OutflowItem,
@@ -170,7 +171,7 @@ export function matchesFilter(item: OutflowItem, filter: TimelineFilter) {
     if (card !== filter.cardId) return false
   }
   if (filter.categoryId !== null) {
-    if (item.source === 'other') return false
+    if (item.source === 'other' || item.source === 'shared') return false
     if ((item.categoryId ?? UNCATEGORIZED) !== filter.categoryId) return false
   }
   return true
@@ -216,7 +217,7 @@ export function categoryChanges(
   )
   const changes = new Map<string, Cents>()
   for (const group of groupByCategory(monthOutflowItems(target, data))) {
-    if (group.key === UNDETAILED) continue
+    if (group.key === UNDETAILED || group.key === SHARED) continue
     const change = sumMoney([
       group.amount,
       cents(-(before.get(group.key) ?? 0)),

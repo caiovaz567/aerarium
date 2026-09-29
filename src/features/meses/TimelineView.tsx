@@ -14,7 +14,7 @@ import {
 } from '../../domain/timeline'
 import { CardArt } from '../../ui/CardArt'
 import { CategoryBadge } from '../../ui/CategoryBadge'
-import { CardIcon, WalletIcon } from '../../ui/icons'
+import { CardIcon, PeopleIcon, WalletIcon } from '../../ui/icons'
 import { describeOutflow } from './outflowText'
 
 function Row({
@@ -41,6 +41,10 @@ function Row({
         {item.source === 'other' ? (
           <span className="cat-badge round none" aria-hidden="true">
             <CardIcon />
+          </span>
+        ) : item.source === 'shared' ? (
+          <span className="cat-badge round none" aria-hidden="true">
+            <PeopleIcon />
           </span>
         ) : (
           <CategoryBadge category={category} shape="round" />

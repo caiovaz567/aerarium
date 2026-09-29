@@ -385,14 +385,32 @@ describe('Pai usa os cartões', () => {
     }
   }
 
-  it('o seu saldo conta só a sua parte; a do pai aparece no cartão', () => {
+  it('você paga a fatura inteira; o pai te deve a parte dele', async () => {
     renderApp('/meses/2026-09', undefined, withDad())
-    // 873,17 minus Uber 12,00 and "outros" 271,02, both his.
-    expect(heroValue('Saídas')).toBe('R$ 590,15')
+    expect(heroValue('Saídas')).toBe('R$ 873,17')
     const nubank = screen.getByRole('button', { name: /^Nubank Teste/ })
-    expect(text(nubank.textContent)).toContain('R$ 159,90')
+    expect(text(nubank.textContent)).toContain('R$ 442,92')
     expect(text(nubank.textContent)).toContain('Pai R$ 283')
     expect(text(nubank.textContent)).not.toContain('outros')
+    const owed = screen.getByRole('region', { name: 'O que o Pai te deve' })
+    // Uber 12,00 plus "outros" 271,02.
+    expect(text(owed.textContent)).toContain('Pai te deve em SetembroR$ 283,02')
+    fireEvent.click(within(owed).getByRole('button', { name: 'Pai pagou' }))
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'incomes',
+        op: 'insert',
+        payload: expect.objectContaining({
+          amount: '283.02',
+          kind: 'from_other',
+          description: 'Pai pagou',
+        }),
+      }),
+    )
+    expect(heroValue('Entradas')).toBe('R$ 5.383,02')
+    expect(text(owed.textContent)).toContain('R$ 0,00')
+    expect(text(owed.textContent)).toContain('Já devolveu R$ 283,02')
   })
 
   it('na fatura, a compra dele tem a etiqueta; dá pra marcar como sua', async () => {
@@ -418,7 +436,11 @@ describe('Pai usa os cartões', () => {
         payload: expect.objectContaining({ for_other: false }),
       }),
     )
-    expect(heroValue('Saídas')).toBe('R$ 602,15')
+    expect(
+      text(
+        screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,
+      ),
+    ).toContain('R$ 271,02')
   })
 
   it('seletor Eu | Pai: a visão do pai mostra só os gastos dele', () => {
@@ -435,7 +457,7 @@ describe('Pai usa os cartões', () => {
     expect(screen.queryByRole('region', { name: 'Entradas' })).toBeNull()
     expect(localStorage.getItem('aerarium.perfil')).toBe('other')
     fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
-    expect(heroValue('Saídas')).toBe('R$ 590,15')
+    expect(heroValue('Saídas')).toBe('R$ 873,17')
   })
 
   it('sem outra pessoa, não tem seletor e a visão é sempre a sua', () => {

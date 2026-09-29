@@ -123,7 +123,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             <b>Outra pessoa usa seus cartões</b>
             <small>
               {finance.otherPerson
-                ? `As compras de ${finance.otherPerson} e o "outros" das faturas não contam no seu saldo.`
+                ? `As compras de ${finance.otherPerson} e o "outros" das faturas ficam separados. Você paga a fatura e ele te devolve.`
                 : 'Liga pra separar o que é seu do que é de outra pessoa.'}
             </small>
           </label>

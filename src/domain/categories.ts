@@ -337,7 +337,13 @@ export interface CategoryData extends FinancialData {
 }
 
 export type OutflowSource =
-  'bill' | 'expense' | 'installment' | 'subscription' | 'other'
+  | 'bill'
+  | 'expense'
+  | 'installment'
+  | 'subscription'
+  | 'other'
+  /** Fase 13.3: the other person's part of an invoice (sent back later). */
+  | 'shared'
 
 /** One piece of the month's outflows. `id` is the bill, expense, plan,
  * subscription or (for "other") invoice it comes from. */
@@ -385,8 +391,10 @@ export function monthOutflowItems(
       .map((item) => ({ plan, item })),
   )
   // Fase 13.3: what the other person bought is not the owner's outflow.
+  // Loose plans are paid by the owner either way; seen as the other person,
+  // only theirs.
   for (const { plan, item } of schedule.filter(
-    ({ plan }) => plan.cardId === null && theirs(plan.forOther),
+    ({ plan }) => plan.cardId === null && (!asOther || plan.forOther),
   ))
     items.push({
       source: 'installment',
@@ -448,6 +456,15 @@ export function monthOutflowItems(
         amount: rest,
         categoryId: null,
       })
+    // The owner pays the whole invoice: the other person's part is one piece.
+    if (!asOther && totals.otherShare > 0)
+      items.push({
+        source: 'shared',
+        id: invoice.id,
+        cardId: invoice.cardId,
+        amount: totals.otherShare,
+        categoryId: null,
+      })
   }
   return items
 }
@@ -455,6 +472,8 @@ export function monthOutflowItems(
 /** Group key for things without a category, and for invoice "other". */
 export const UNCATEGORIZED = 'sem-categoria'
 export const UNDETAILED = 'fatura-sem-detalhe'
+/** Fase 13.3: the other person's part of the invoices. */
+export const SHARED = 'parte-de-outra-pessoa'
 
 export interface CategoryGroup {
   /** A category id, UNCATEGORIZED or UNDETAILED. */
@@ -476,11 +495,15 @@ export function groupByCategory(
   const groups = new Map<string, OutflowItem[]>()
   for (const item of items) {
     const key =
-      item.source === 'other' ? UNDETAILED : (item.categoryId ?? UNCATEGORIZED)
+      item.source === 'other'
+        ? UNDETAILED
+        : item.source === 'shared'
+          ? SHARED
+          : (item.categoryId ?? UNCATEGORIZED)
     groups.set(key, [...(groups.get(key) ?? []), item])
   }
   const rank = (key: string) =>
-    key === UNDETAILED ? 2 : key === UNCATEGORIZED ? 1 : 0
+    key === SHARED ? 3 : key === UNDETAILED ? 2 : key === UNCATEGORIZED ? 1 : 0
   return [...groups.entries()]
     .map(([key, list]) => {
       const amount = sumMoney(list.map((item) => item.amount))

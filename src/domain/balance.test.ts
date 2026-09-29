@@ -20,6 +20,8 @@ describe('paridade com contas manuais do seed SQL', () => {
         available,
         unpaid,
         committedRatio: outflows / 210000,
+        otherOwed: 0,
+        otherDue: 0,
       })
     },
   )
@@ -48,6 +50,8 @@ describe('paridade com contas manuais do seed SQL', () => {
       available: 0,
       unpaid: 0,
       committedRatio: null,
+      otherOwed: 0,
+      otherDue: 0,
     }))
   it('déficit não inventa renda nem um percentual negativo', () => {
     const data = emptyData({

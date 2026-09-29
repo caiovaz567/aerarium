@@ -4,6 +4,7 @@ import {
   groupByCategory,
   monthOutflowItems,
   UNCATEGORIZED,
+  SHARED,
   UNDETAILED,
   type OutflowItem,
 } from '../../domain/categories'
@@ -16,7 +17,7 @@ import {
 import { monthShort, type Month } from '../../domain/months'
 import { categoryChanges } from '../../domain/timeline'
 import { CategoryBadge } from '../../ui/CategoryBadge'
-import { CardIcon, ChevronDownIcon } from '../../ui/icons'
+import { CardIcon, ChevronDownIcon, PeopleIcon } from '../../ui/icons'
 import { describeOutflow } from './outflowText'
 import { SpendingDonut } from './SpendingDonut'
 
@@ -48,8 +49,10 @@ export function SpendingList({
       ? 'Sem categoria'
       : key === UNDETAILED
         ? 'Outros gastos das faturas'
-        : (finance.categories.find((item) => item.id === key)?.name ??
-          'Sem categoria')
+        : key === SHARED
+          ? `Parte do ${finance.otherPerson ?? 'outro'}`
+          : (finance.categories.find((item) => item.id === key)?.name ??
+            'Sem categoria')
   const compared = categoryChanges(month, finance)
   const total = sumMoney(groups.map((group) => group.amount))
 
@@ -78,6 +81,10 @@ export function SpendingList({
                   // The invoices' undetailed part: a card, not a category.
                   <span className="cat-badge round none" aria-hidden="true">
                     <CardIcon />
+                  </span>
+                ) : group.key === SHARED ? (
+                  <span className="cat-badge round none" aria-hidden="true">
+                    <PeopleIcon />
                   </span>
                 ) : (
                   <CategoryBadge

@@ -119,8 +119,7 @@ export function monthView(finance: Finance, ref: Month) {
         {
           invoice,
           card,
-          // Fase 13.3: the owner's part; the other person's is in the parts.
-          total: invoiceTotals(invoice, finance).mine,
+          total: invoiceTotals(invoice, finance).total,
           note: visibleNote(invoice.note, card),
           parts: compositionParts(invoice, finance),
         },
@@ -132,7 +131,7 @@ export function monthView(finance: Finance, ref: Month) {
         a.card.name.localeCompare(b.card.name),
     )
   const loose: LooseOutflow[] = finance.plans
-    .filter((plan) => plan.cardId === null && !plan.forOther)
+    .filter((plan) => plan.cardId === null)
     .flatMap((plan) => {
       const item = installmentSchedule(plan, finance.payments).find(
         (entry) => entry.month === ref,

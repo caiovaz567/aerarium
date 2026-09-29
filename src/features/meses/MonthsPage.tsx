@@ -20,6 +20,7 @@ import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
 import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
+import { OwedBlock } from './OwedBlock'
 import { ProfileSwitch } from './ProfileSwitch'
 import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
@@ -205,7 +206,7 @@ export function MonthsPage() {
     if (item.source === 'bill') setDialog({ kind: 'bill', id: item.id })
     else if (item.source === 'expense')
       setDialog({ kind: 'expense', id: item.id })
-    else if (item.source === 'other')
+    else if (item.source === 'other' || item.source === 'shared')
       setDialog({ kind: 'invoice', id: item.id })
     else if (item.source === 'installment') editor.plan(item.id)
     else editor.subscription(item.id)
@@ -221,6 +222,21 @@ export function MonthsPage() {
       ) : (
         <>
           <MonthSummary month={selected} balance={view.balance} />
+          {finance.otherPerson && (
+            <OwedBlock
+              finance={finance}
+              month={selected}
+              owed={view.balance.otherOwed}
+              due={view.balance.otherDue}
+              onPaid={(income) => {
+                run(ops.restoreIncome(income))
+                toast(`${income.description}: entrou nas Entradas`, {
+                  label: 'Desfazer',
+                  onClick: () => run(ops.removeIncome(income)),
+                })
+              }}
+            />
+          )}
           <IncomesBlock
             incomes={view.incomes}
             total={view.balance.incomes}

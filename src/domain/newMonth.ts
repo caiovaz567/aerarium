@@ -35,9 +35,7 @@ export function newMonthDraft(options: NewMonthOptions, data: FinancialData) {
   const incomes: Income[] =
     copy && previous
       ? data.incomes
-          .filter(
-            (item) => item.month === previous && item.kind !== 'carryover',
-          )
+          .filter((item) => item.month === previous && item.kind === 'normal')
           .map((item) => ({
             month: target,
             description: advanceCounter(item.description),
