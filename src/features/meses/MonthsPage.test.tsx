@@ -421,12 +421,18 @@ describe('Pai usa os cartões', () => {
     expect(text(owed.textContent)).toContain('Já devolveu R$ 12,00')
   })
 
-  it('na fatura, a compra dele tem a etiqueta; dá pra marcar como sua', async () => {
+  it('na fatura, o que é dele fica à parte, com a divisão; dá pra marcar como sua', async () => {
     renderApp('/meses/2026-09', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
     const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-    const uber = within(invoice).getByRole('button', { name: /^Uber/ })
-    expect(within(uber).getByText('Pai')).toBeVisible()
+    const his = within(invoice).getByText('Do Pai').closest('.invoice-sec')!
+    const uber = within(his as HTMLElement).getByRole('button', {
+      name: /^Uber/,
+    })
+    // 442,92 on the card: 12,00 his, the rest yours.
+    expect(text(invoice.querySelector('.invoice-split')!.textContent)).toBe(
+      'Sua parte R$ 430,92Pai R$ 12,00',
+    )
     fireEvent.click(uber)
     const edit = screen.getByRole('dialog', { name: 'Editar gasto' })
     const who = within(edit).getByRole('group', { name: 'De quem' })

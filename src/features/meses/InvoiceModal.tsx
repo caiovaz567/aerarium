@@ -9,6 +9,7 @@ import {
   setInvoiceTotal,
 } from '../../domain/invoices'
 import {
+  cents,
   formatMoney,
   formatMoneyInput,
   parseMoney,
@@ -92,6 +93,60 @@ export function InvoiceModal({
     (item) => item.invoiceId === invoice.id,
   )
 
+  // Fase 13.3, owner only: what the other person bought is listed apart.
+  const isOther = (forOther: boolean | undefined) =>
+    Boolean(finance.otherPerson && forOther)
+  const mineInstallments = installments.filter(
+    ({ plan }) => !isOther(plan.forOther),
+  )
+  const otherInstallments = installments.filter(({ plan }) =>
+    isOther(plan.forOther),
+  )
+  const mineExpenses = expenses.filter((item) => !isOther(item.forOther))
+  const otherExpenses = expenses.filter((item) => isOther(item.forOther))
+
+  const installmentRow = ({ plan, item }: (typeof installments)[number]) => (
+    <li key={plan.id} className="clickable">
+      <button type="button" onClick={() => onOpenPlan(plan.id)}>
+        <i className="dot installment" />
+        <span>
+          {plan.description}
+          <small>
+            {item.paidOn
+              ? `paga em ${dayMonth(item.paidOn)}`
+              : `parcela ${item.number}/${item.totalInstallments}`}
+          </small>
+        </span>
+        <b>{formatMoney(item.amount)}</b>
+      </button>
+    </li>
+  )
+  const expenseRow = (expense: (typeof expenses)[number]) => (
+    <li key={expense.id} className="clickable">
+      <button type="button" onClick={() => onOpenExpense(expense)}>
+        <i className="dot other" />
+        <span>
+          {expense.description}
+          {isFreshFromBank(expense) && <span className="fresh-pill">novo</span>}
+          <small>
+            {[expense.note, dayMonth(expense.spentOn)]
+              .filter(Boolean)
+              .join(' · ')}
+          </small>
+        </span>
+        <b>{formatMoney(expense.amount)}</b>
+      </button>
+      <button
+        type="button"
+        className="remove"
+        aria-label={`Remover ${expense.description}`}
+        onClick={() => onRemoveExpense(expense)}
+      >
+        <CloseIcon />
+      </button>
+    </li>
+  )
+
   const safe = (text: string) => {
     try {
       return parseMoney(text)
@@ -103,6 +158,17 @@ export function InvoiceModal({
   const typedOther = safe(other) ?? 0
   const shownTotal = typedTotal ?? sumMoney([fixed, typedOther as Cents])
   const impossible = typedTotal !== null && typedTotal < fixed
+  // Yours: the total minus what was marked the other person's.
+  const minePart = cents(
+    Math.max(
+      0,
+      shownTotal -
+        sumMoney([
+          ...otherInstallments.map(({ item }) => item.amount),
+          ...otherExpenses.map((item) => item.amount),
+        ]),
+    ),
+  )
 
   const save = () => {
     let otherAmount: Cents
@@ -167,26 +233,11 @@ export function InvoiceModal({
           </div>
         </div>
 
-        {installments.length + subscriptions.length > 0 ? (
+        {mineInstallments.length + subscriptions.length > 0 ? (
           <div className="invoice-sec">
             <small>Já entram sozinhas</small>
             <ul className="invoice-list">
-              {installments.map(({ plan, item }) => (
-                <li key={plan.id} className="clickable">
-                  <button type="button" onClick={() => onOpenPlan(plan.id)}>
-                    <i className="dot installment" />
-                    <span>
-                      {plan.description}
-                      <small>
-                        {item.paidOn
-                          ? `paga em ${dayMonth(item.paidOn)}`
-                          : `parcela ${item.number}/${item.totalInstallments}`}
-                      </small>
-                    </span>
-                    <b>{formatMoney(item.amount)}</b>
-                  </button>
-                </li>
-              ))}
+              {mineInstallments.map(installmentRow)}
               {subscriptions.map((item) => (
                 <li key={item.id} className="clickable">
                   <button
@@ -210,42 +261,19 @@ export function InvoiceModal({
           </p>
         )}
 
-        {expenses.length > 0 && (
+        {mineExpenses.length > 0 && (
           <div className="invoice-sec">
             <small>Gastos lançados</small>
+            <ul className="invoice-list">{mineExpenses.map(expenseRow)}</ul>
+          </div>
+        )}
+
+        {otherInstallments.length + otherExpenses.length > 0 && (
+          <div className="invoice-sec">
+            <small>Do {finance.otherPerson}</small>
             <ul className="invoice-list">
-              {expenses.map((expense) => (
-                <li key={expense.id} className="clickable">
-                  <button type="button" onClick={() => onOpenExpense(expense)}>
-                    <i className="dot other" />
-                    <span>
-                      {expense.description}
-                      {isFreshFromBank(expense) && (
-                        <span className="fresh-pill">novo</span>
-                      )}
-                      {expense.forOther && finance.otherPerson && (
-                        <span className="other-pill">
-                          {finance.otherPerson}
-                        </span>
-                      )}
-                      <small>
-                        {[expense.note, dayMonth(expense.spentOn)]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </small>
-                    </span>
-                    <b>{formatMoney(expense.amount)}</b>
-                  </button>
-                  <button
-                    type="button"
-                    className="remove"
-                    aria-label={`Remover ${expense.description}`}
-                    onClick={() => onRemoveExpense(expense)}
-                  >
-                    <CloseIcon />
-                  </button>
-                </li>
-              ))}
+              {otherInstallments.map(installmentRow)}
+              {otherExpenses.map(expenseRow)}
             </ul>
           </div>
         )}
@@ -283,6 +311,16 @@ export function InvoiceModal({
           <span>Total da fatura</span>
           <b className={impossible ? 'bad' : ''}>{formatMoney(shownTotal)}</b>
         </div>
+        {finance.otherPerson && parts.otherShare > 0 && (
+          <p className="invoice-split">
+            <span>
+              Sua parte <b>{formatMoney(minePart)}</b>
+            </span>
+            <span>
+              {finance.otherPerson} <b>{formatMoney(parts.otherShare)}</b>
+            </span>
+          </p>
+        )}
         {invoice.paid &&
           invoice.closedTotal !== null &&
           invoice.closedTotal !== parts.calculatedTotal && (

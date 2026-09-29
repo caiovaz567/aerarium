@@ -600,6 +600,21 @@
 .invoice-sum b.bad {
   color: var(--neg);
 }
+/* Owner only: how the invoice splits between the owner and the other person. */
+.invoice-split {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: -4px 0 0;
+  padding: 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.invoice-split b {
+  color: var(--ink);
+  font-weight: 700;
+}
 
 .skel {
   height: 120px;
