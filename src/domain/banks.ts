@@ -5,27 +5,39 @@ import { normalizeText } from './categories'
 // from its name; "none" means the person chose no logo.
 
 export const BANKS = [
-  { key: 'nubank', name: 'Nubank', words: ['nubank', 'nu'] },
-  { key: 'itau', name: 'Itaú', words: ['itau', 'personnalite'] },
-  { key: 'santander', name: 'Santander', words: ['santander'] },
-  { key: 'bradesco', name: 'Bradesco', words: ['bradesco'] },
+  { key: 'nubank', name: 'Nubank', color: '#820AD1', words: ['nubank', 'nu'] },
+  {
+    key: 'itau',
+    name: 'Itaú',
+    color: '#EC7000',
+    words: ['itau', 'personnalite'],
+  },
+  {
+    key: 'santander',
+    name: 'Santander',
+    color: '#CC0000',
+    words: ['santander'],
+  },
+  { key: 'bradesco', name: 'Bradesco', color: '#CC092F', words: ['bradesco'] },
   {
     key: 'bb',
     name: 'Banco do Brasil',
+    color: '#F5C400',
     words: ['bb', 'banco do brasil', 'ourocard', 'smiles'],
   },
-  { key: 'caixa', name: 'Caixa', words: ['caixa'] },
-  { key: 'inter', name: 'Inter', words: ['inter'] },
+  { key: 'caixa', name: 'Caixa', color: '#005CA9', words: ['caixa'] },
+  { key: 'inter', name: 'Inter', color: '#FF7A00', words: ['inter'] },
   {
     key: 'mercadopago',
     name: 'Mercado Pago',
+    color: '#009EE3',
     words: ['mercado pago', 'mercadopago', 'mp'],
   },
-  { key: 'c6', name: 'C6 Bank', words: ['c6'] },
-  { key: 'btg', name: 'BTG Pactual', words: ['btg'] },
-  { key: 'picpay', name: 'PicPay', words: ['picpay'] },
-  { key: 'digio', name: 'Digio', words: ['digio'] },
-  { key: 'revolut', name: 'Revolut', words: ['revolut'] },
+  { key: 'c6', name: 'C6 Bank', color: '#2B2B2B', words: ['c6'] },
+  { key: 'btg', name: 'BTG Pactual', color: '#0B2D5B', words: ['btg'] },
+  { key: 'picpay', name: 'PicPay', color: '#11C76F', words: ['picpay'] },
+  { key: 'digio', name: 'Digio', color: '#202E55', words: ['digio'] },
+  { key: 'revolut', name: 'Revolut', color: '#191C1F', words: ['revolut'] },
 ] as const
 
 export type BankKey = (typeof BANKS)[number]['key']
@@ -61,4 +73,9 @@ export function cardFinal(number: string | null | undefined): string | null {
 
 export function bankName(key: BankKey): string {
   return BANKS.find((bank) => bank.key === key)!.name
+}
+
+/** The bank's own color: a card with a bank takes it (the user's choice). */
+export function bankColor(key: BankKey): string {
+  return BANKS.find((bank) => bank.key === key)!.color
 }

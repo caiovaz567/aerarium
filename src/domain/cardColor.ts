@@ -1,4 +1,7 @@
-// Card colors, same rules as v1. Never a bank logo, only a color.
+import { bankColor, cardBank } from './banks'
+
+// Card colors, same rules as v1. Fase 13.1: a card with a bank (chosen or
+// guessed) takes the bank's color; only cards without a logo pick one.
 
 const BRAND: readonly (readonly [RegExp, string])[] = [
   [/nu ?bank|^nu\b/, '#820AD1'],
@@ -54,7 +57,10 @@ export function autoColor(name: string): string {
 export function cardColor(card: {
   readonly name: string
   readonly color: string | null
+  readonly bank?: string | null
 }): string {
+  const bank = cardBank(card)
+  if (bank) return bankColor(bank)
   return card.color ?? autoColor(card.name)
 }
 

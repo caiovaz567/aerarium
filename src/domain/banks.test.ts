@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  bankColor,
   bankName,
   BANKS,
   cardBank,
@@ -42,6 +43,7 @@ describe('logo do banco', () => {
 
   it('nomes e chaves', () => {
     expect(bankName('bb')).toBe('Banco do Brasil')
+    expect(bankColor('nubank')).toBe('#820AD1')
     expect(isBankKey('nubank')).toBe(true)
     expect(isBankKey(null)).toBe(false)
     expect(new Set(BANKS.map((bank) => bank.key)).size).toBe(BANKS.length)

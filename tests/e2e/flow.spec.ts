@@ -136,12 +136,15 @@ test('lançar um Uber de R$ 12 no cartão em menos de 5 segundos e desfazer', as
   await expect(nubank).toContainText('2 gastos R$ 24')
 })
 
-test('cartão: dia de fechamento e cor ficam gravados', async ({ page }) => {
+test('cartão: fechamento, vencimento e banco ficam gravados', async ({
+  page,
+}) => {
   await page.goto('/cartoes?mes=2026-09')
   await page.getByRole('button', { name: 'Editar Nubank Teste' }).click()
   const dialog = page.getByRole('dialog', { name: 'Editar cartão' })
   await dialog.getByLabel('Dia de fechamento (opcional)').fill('5')
-  await dialog.getByRole('radio', { name: 'Cor #11C76F' }).check()
+  await dialog.getByLabel('Dia de vencimento (opcional)').fill('12')
+  await dialog.getByRole('radio', { name: 'Itaú' }).check()
 
   await dialog.getByRole('button', { name: 'Salvar' }).click()
   await saved(page)
@@ -151,7 +154,10 @@ test('cartão: dia de fechamento e cor ficam gravados', async ({ page }) => {
   await expect(dialog.getByLabel('Dia de fechamento (opcional)')).toHaveValue(
     '5',
   )
-  await expect(dialog.getByRole('radio', { name: 'Cor #11C76F' })).toBeChecked()
+  await expect(dialog.getByLabel('Dia de vencimento (opcional)')).toHaveValue(
+    '12',
+  )
+  await expect(dialog.getByRole('radio', { name: 'Itaú' })).toBeChecked()
   await dialog.getByRole('button', { name: 'Cancelar' }).click()
 
   // With closing day 5, Lançar suggests the month after this one when today is later.

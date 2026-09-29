@@ -102,13 +102,19 @@ describe('Assinaturas', () => {
 })
 
 describe('Editar cartão', () => {
-  it('muda o nome e o dia de fechamento; a primeira cor é a do banco', async () => {
+  it('muda o nome e o dia de fechamento; com banco a cor vem dele', async () => {
     renderApp('/cartoes?mes=2026-09')
     fireEvent.click(screen.getByRole('button', { name: 'Editar Nubank Teste' }))
     const form = dialog('Editar cartão')
+    // A bank brings its color; colors only show without a logo.
+    expect(
+      within(form).queryByRole('radio', { name: 'Cor do banco' }),
+    ).toBeNull()
+    fireEvent.click(within(form).getByRole('radio', { name: 'Sem logo' }))
     expect(
       within(form).getByRole('radio', { name: 'Cor do banco' }),
     ).toBeChecked()
+    fireEvent.click(within(form).getByRole('radio', { name: 'Nubank' }))
     type(form, 'Nome do cartão', 'Nubank Roxinho')
     type(form, 'Dia de fechamento (opcional)', '5')
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))

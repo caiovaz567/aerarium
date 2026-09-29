@@ -122,27 +122,29 @@ export function CardModal({
             </label>
           </div>
         </fieldset>
-        <fieldset className="field">
-          <legend>Cor</legend>
-          <div className="swatches">
-            {swatches.map((item, index) => (
-              <label
-                className="swatch"
-                key={item}
-                title={index === 0 ? 'Cor do banco' : item}
-              >
-                <input
-                  type="radio"
-                  name="cor"
-                  checked={selected.toLowerCase() === item.toLowerCase()}
-                  onChange={() => setColor(index === 0 ? null : item)}
-                  aria-label={index === 0 ? 'Cor do banco' : `Cor ${item}`}
-                />
-                <i style={{ background: item }} />
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        {shownBank === NO_BANK && (
+          <fieldset className="field">
+            <legend>Cor</legend>
+            <div className="swatches">
+              {swatches.map((item, index) => (
+                <label
+                  className="swatch"
+                  key={item}
+                  title={index === 0 ? 'Cor do banco' : item}
+                >
+                  <input
+                    type="radio"
+                    name="cor"
+                    checked={selected.toLowerCase() === item.toLowerCase()}
+                    onChange={() => setColor(index === 0 ? null : item)}
+                    aria-label={index === 0 ? 'Cor do banco' : `Cor ${item}`}
+                  />
+                  <i style={{ background: item }} />
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         <div className="field">
           <label htmlFor={closingId}>Dia de fechamento (opcional)</label>
           <input

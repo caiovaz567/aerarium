@@ -36,7 +36,7 @@ test('modais de cartão e de parcelamento cabem na tela', async ({
   await page.goto('/cartoes?mes=2026-09')
   await page.getByRole('button', { name: 'Editar Nubank Teste' }).click()
   const card = page.getByRole('dialog', { name: 'Editar cartão' })
-  await expect(card.getByRole('radio', { name: 'Cor do banco' })).toBeChecked()
+  await expect(card.getByRole('radio', { name: 'Nubank' })).toBeChecked()
   await noSideScroll(page, card)
   await page.screenshot({ path: testInfo.outputPath('cartao-editar.png') })
   await card.getByRole('button', { name: 'Cancelar' }).click()

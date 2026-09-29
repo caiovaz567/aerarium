@@ -35,8 +35,15 @@ describe('cor do cartão', () => {
   })
 
   it('cor escolhida vence a automática', () => {
-    expect(cardColor({ name: 'NuBank', color: '#123456' })).toBe('#123456')
-    expect(cardColor({ name: 'NuBank', color: null })).toBe('#820AD1')
+    // With a bank, the bank's color wins; without a logo, the chosen one.
+    expect(cardColor({ name: 'NuBank', color: '#123456' })).toBe('#820AD1')
+    expect(cardColor({ name: 'Loja', color: null, bank: 'itau' })).toBe(
+      '#EC7000',
+    )
+    expect(cardColor({ name: 'NuBank', color: '#123456', bank: 'none' })).toBe(
+      '#123456',
+    )
+    expect(cardColor({ name: 'Loja X', color: '#123456' })).toBe('#123456')
   })
 
   it('texto escuro só em cores claras', () => {
