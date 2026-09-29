@@ -235,6 +235,10 @@ test('categoria: lançar com sugestão, renomear, e tudo fica gravado', async ({
   await form.getByRole('button', { name: 'Pronto' }).click()
   await saved(page)
   await page.goto('/meses/2026-09')
+  await page
+    .getByRole('region', { name: 'Saídas' })
+    .getByRole('button', { name: 'Por categoria' })
+    .click()
   await expect(block.getByRole('button', { name: /^Remédios/ })).toContainText(
     'R$ 30,00',
   )
