@@ -10,3 +10,4 @@ aerarium-backup-*.json
 .env*
 supabase/.temp/
 supabase/.branches/
+.claude/
