@@ -44,8 +44,7 @@ export function CardArt({
   const color = cardColor(card)
   const big = size === 'lg'
   const bank = cardBank(card)
-  if (bank && !big) return <BankLogo bank={bank} className={size} />
-  return (
+  const art = (
     <span
       className={`card-art ${size}`}
       style={{ '--cc': color, '--cc-ink': inkFor(color) } as CSSProperties}
@@ -63,4 +62,7 @@ export function CardArt({
       )}
     </span>
   )
+  if (bank && !big)
+    return <BankLogo bank={bank} className={size} fallback={art} />
+  return art
 }

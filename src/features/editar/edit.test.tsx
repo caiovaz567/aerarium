@@ -387,3 +387,13 @@ describe('Excel', () => {
     ])
   })
 })
+
+describe('logo que não carrega', () => {
+  it('volta pro desenho do cartão em vez de imagem quebrada', () => {
+    renderApp('/cartoes?mes=2026-09')
+    const region = screen.getByRole('region', { name: 'Nubank Teste' })
+    fireEvent.error(region.querySelector('.bank-logo')!)
+    expect(region.querySelector('.bank-logo')).toBeNull()
+    expect(region.querySelector('.card-art')).not.toBeNull()
+  })
+})
