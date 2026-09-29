@@ -1,3 +1,4 @@
+import { chargedIn } from './cardDates'
 import { installmentSchedule } from './installments'
 import { invoiceTotals } from './invoices'
 import { cents, nonNegative, sumMoney, type Cents } from './money'
@@ -412,7 +413,10 @@ export function monthOutflowItems(
         })),
       ...data.subscriptions
         .filter(
-          (item) => item.cardId === invoice.cardId && item.active && !asOther,
+          (item) =>
+            item.cardId === invoice.cardId &&
+            chargedIn(item, invoice.month) &&
+            !asOther,
         )
         .map((item) => ({
           source: 'subscription' as const,

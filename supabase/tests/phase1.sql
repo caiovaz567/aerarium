@@ -146,6 +146,13 @@ select pg_temp.expect_error($q$update public.cards set due_day = 32$q$, '23514',
 update public.bank_accounts set credit_limit = 5000, available_limit = 3200.50, limit_at = now() where id = 'b0000000-0000-4000-8000-000000000001';
 select pg_temp.assert_true((select available_limit = 3200.50 from public.bank_accounts where id = 'b0000000-0000-4000-8000-000000000001'), 'Conta do banco guarda o limite');
 select pg_temp.expect_error($q$update public.bank_accounts set credit_limit = -1$q$, '23514', 'Limite nao e negativo');
+-- A subscription counts in the invoices from its first month on.
+update public.subscriptions set started_on = '2099-01-15', first_month = '2099-01-01' where active and card_id is not null;
+select pg_temp.assert_true((select bool_and(subscriptions_amount = 0) from public.v_invoice_totals), 'Assinatura so conta a partir do primeiro mes');
+select pg_temp.expect_error($q$update public.subscriptions set first_month = '2099-01-05'$q$, '23514', 'Primeiro mes da assinatura e o dia 1');
+select pg_temp.expect_error($q$update public.subscriptions set started_on = null$q$, '23514', 'Primeiro mes precisa da data de inicio');
+update public.subscriptions set started_on = null, first_month = null;
+select pg_temp.assert_true((select bool_or(subscriptions_amount > 0) from public.v_invoice_totals), 'Sem data, a assinatura conta em todos os meses');
 -- Fase 13.3: purchases of someone else who uses the cards are not the owner's.
 update public.invoice_expenses set for_other = true where id = (select id from public.invoice_expenses where invoice_id = (select invoice_id from public.v_invoice_totals where not paid and expenses_amount > 0 order by month limit 1) order by id limit 1);
 select pg_temp.assert_true((select bool_and(mine = total - other_share and other_share > 0) from public.v_invoice_totals where expenses_amount > 0 and not paid and invoice_id in (select invoice_id from public.invoice_expenses where for_other)), 'Parte de outra pessoa sai da fatura do dono');

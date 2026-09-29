@@ -1,9 +1,11 @@
 import { useId, useState, type FormEvent } from 'react'
 import { editOps } from '../../data/editOps'
 import type { Finance, SubscriptionRow } from '../../data/finance'
-import { useFinanceOp } from '../../data/useFinance'
+import { today, useFinanceOp } from '../../data/useFinance'
+import { subscriptionFirstMonth } from '../../domain/cardDates'
 import { normalizeText } from '../../domain/categories'
 import { formatMoneyInput } from '../../domain/money'
+import { isoDate, monthLabel, type ISODate } from '../../domain/months'
 import { CategoryPicker } from '../../ui/CategoryPicker'
 import { ArmedButton, MoneyField, TextField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
@@ -22,7 +24,7 @@ export function SubscriptionModal({
 }) {
   const run = useFinanceOp()
   const toast = useToast()
-  const ids = { day: useId(), card: useId() }
+  const ids = { day: useId(), card: useId(), start: useId() }
   const [name, setName] = useState(subscription?.name ?? '')
   const [day, setDay] = useState(String(subscription?.chargeDay ?? ''))
   const [value, setValue] = useState(
@@ -30,6 +32,10 @@ export function SubscriptionModal({
   )
   const [cardId, setCardId] = useState(subscription?.cardId ?? '')
   const [note, setNote] = useState(subscription?.note ?? '')
+  // A new one starts today; an old one without a date counts in every month.
+  const [start, setStart] = useState<string>(
+    subscription ? (subscription.startedOn ?? '') : today(),
+  )
   // A new one starts in "Assinaturas" when the person has that category.
   const [categoryId, setCategoryId] = useState(
     subscription
@@ -40,6 +46,18 @@ export function SubscriptionModal({
   )
   const [error, setError] = useState('')
 
+  const card = finance.cards.find((item) => item.id === cardId) ?? null
+  const startedOn = (() => {
+    try {
+      return start ? isoDate(start) : null
+    } catch {
+      return null
+    }
+  })()
+  const firstMonth = (on: ISODate | null) =>
+    subscriptionFirstMonth(on, card, finance.dueNextMonth ?? false)
+  const shown = firstMonth(startedOn)
+
   const submit = (event: FormEvent) => {
     event.preventDefault()
     if (!name.trim()) return setError('Escreve o nome da assinatura.')
@@ -49,6 +67,7 @@ export function SubscriptionModal({
     const read = readMoney(value)
     if ('error' in read || read.amount <= 0)
       return setError('Esse valor não deu certo. Exemplo: 23,90')
+    if (start && !startedOn) return setError('Escolhe a data em que começou.')
     const row: SubscriptionRow = {
       id: subscription?.id ?? crypto.randomUUID(),
       cardId: cardId || null,
@@ -58,6 +77,8 @@ export function SubscriptionModal({
       note: note.trim() || null,
       active: subscription?.active ?? true,
       categoryId,
+      startedOn,
+      firstMonth: shown,
     }
     run(
       subscription
@@ -121,6 +142,23 @@ export function SubscriptionModal({
             ))}
           </select>
           <small>A assinatura entra na conta da fatura desse cartão.</small>
+        </div>
+        <div className="field">
+          <label htmlFor={ids.start}>Começou em</label>
+          <input
+            id={ids.start}
+            type="date"
+            value={start}
+            onChange={(event) => setStart(event.target.value)}
+            aria-describedby={`${ids.start}-dica`}
+          />
+          <small id={`${ids.start}-dica`}>
+            {shown
+              ? card
+                ? `Entra na fatura de ${monthLabel(shown)} em diante.`
+                : `Começa em ${monthLabel(shown)}.`
+              : 'Sem data, conta em todos os meses.'}
+          </small>
         </div>
         <CategoryPicker
           categories={finance.categories}

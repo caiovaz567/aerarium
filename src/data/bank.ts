@@ -8,6 +8,7 @@ import {
   type ImportResult,
   type ImportState,
 } from '../domain/bank'
+import { movedSubscriptions } from '../domain/cardDates'
 import { cents, fromDecimal, toDecimal, type Cents } from '../domain/money'
 import { isoDate, type ISODate } from '../domain/months'
 import { categoryHistory } from './categoryOps'
@@ -293,6 +294,18 @@ export const bankOps = {
       importInput(finance, data).accounts,
     )
     if (!changes.length) return null
+    // The subscriptions with a start date follow the new closing days.
+    const moved = changes.flatMap((change) =>
+      movedSubscriptions(
+        finance.subscriptions,
+        {
+          id: change.cardId,
+          closingDay: change.closingDay,
+          dueDay: change.dueDay,
+        },
+        finance.dueNextMonth ?? false,
+      ),
+    )
     return {
       run: async () => {
         for (const change of changes)
@@ -304,6 +317,12 @@ export const bankOps = {
               })
               .eq('id', change.cardId),
           )
+        for (const item of moved)
+          await ok(
+            table('subscriptions')
+              .update({ first_month: monthDate(item.firstMonth!) })
+              .eq('id', item.id),
+          )
       },
       apply: (f) => ({
         ...f,
@@ -313,6 +332,9 @@ export const bankOps = {
             ? { ...card, closingDay: change.closingDay, dueDay: change.dueDay }
             : card
         }),
+        subscriptions: f.subscriptions.map(
+          (item) => moved.find((row) => row.id === item.id) ?? item,
+        ),
       }),
     }
   },

@@ -1,3 +1,4 @@
+import { chargedIn } from './cardDates'
 import { installmentSchedule } from './installments'
 import { cents, formatMoney, nonNegative, sumMoney, type Cents } from './money'
 import { isoDate, month, type ISODate, type Month } from './months'
@@ -19,7 +20,7 @@ export function fixedCardAmounts(
     ),
     subscriptionsAmount: sumMoney(
       context.subscriptions
-        .filter((item) => item.cardId === cardId && item.active)
+        .filter((item) => item.cardId === cardId && chargedIn(item, target))
         .map((item) => nonNegative(item.amount)),
     ),
   }

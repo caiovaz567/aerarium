@@ -1,7 +1,7 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { financeKey } from '../../data/finance'
-import { isoDate } from '../../domain/months'
+import { isoDate, month } from '../../domain/months'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
@@ -73,6 +73,13 @@ describe('Assinaturas', () => {
     fireEvent.change(within(form).getByLabelText('Cartão'), {
       target: { value: 'c1' },
     })
+    // Starts today, in this month's invoice (the card has no closing day).
+    expect(within(form).getByLabelText('Começou em')).toHaveValue('2026-09-15')
+    expect(form).toHaveTextContent(
+      'Entra na fatura de Setembro 2026 em diante.',
+    )
+    type(form, 'Começou em', '2026-10-02')
+    expect(form).toHaveTextContent('Entra na fatura de Outubro 2026 em diante.')
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
     await settle()
     expect(within(list()).getByText('Netflix')).toBeVisible()
@@ -85,9 +92,19 @@ describe('Assinaturas', () => {
           charge_day: 20,
           amount: '55.90',
           card_id: 'c1',
+          started_on: '2026-10-02',
+          first_month: '2026-10-01',
         }),
       }),
     )
+  })
+
+  it('assinatura antiga sem data conta em todos os meses', () => {
+    renderApp('/assinaturas')
+    fireEvent.click(within(list()).getByText('Streaming'))
+    const form = dialog('Editar assinatura')
+    expect(within(form).getByLabelText('Começou em')).toHaveValue('')
+    expect(form).toHaveTextContent('Sem data, conta em todos os meses.')
   })
 
   it('lixeira exclui com Desfazer', async () => {
@@ -129,6 +146,31 @@ describe('Editar cartão', () => {
           closing_day: 5,
           color: null,
         }),
+      }),
+    )
+  })
+
+  it('com o fechamento, a assinatura que começou depois vai pra fatura seguinte', async () => {
+    const finance = financeFixture()
+    renderApp('/cartoes?mes=2026-09', undefined, {
+      ...finance,
+      subscriptions: finance.subscriptions.map((item) => ({
+        ...item,
+        startedOn: isoDate('2026-09-29'),
+        firstMonth: month('2026-09'),
+      })),
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Nubank Teste' }))
+    const form = dialog('Editar cartão')
+    type(form, 'Dia de fechamento (opcional)', '25')
+    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    await waitFor(() =>
+      expect(writes()[1]).toMatchObject({
+        table: 'subscriptions',
+        op: 'update',
+        payload: { first_month: '2026-10-01' },
+        filters: [['id', 's1']],
       }),
     )
   })

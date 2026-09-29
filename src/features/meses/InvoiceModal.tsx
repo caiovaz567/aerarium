@@ -1,3 +1,4 @@
+import { chargedIn } from '../../domain/cardDates'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import type { Card, ExpenseRow, Finance, InvoiceRow } from '../../data/finance'
@@ -85,7 +86,7 @@ export function InvoiceModal({
         .map((item) => ({ plan, item })),
     )
   const subscriptions = finance.subscriptions.filter(
-    (item) => item.cardId === invoice.cardId && item.active,
+    (item) => item.cardId === invoice.cardId && chargedIn(item, invoice.month),
   )
   const expenses = finance.expenses.filter(
     (item) => item.invoiceId === invoice.id,

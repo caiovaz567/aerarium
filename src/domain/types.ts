@@ -31,6 +31,10 @@ export interface Subscription {
   readonly amount: Cents
   readonly active: boolean
   readonly categoryId?: string | null
+  /** When it started (optional; without it, it counts in every month). */
+  readonly startedOn?: ISODate | null
+  /** The first invoice month it is in, from startedOn and the card's closing. */
+  readonly firstMonth?: Month | null
 }
 
 export interface Invoice {

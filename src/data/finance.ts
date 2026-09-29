@@ -185,7 +185,7 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'subscriptions',
-      'id,card_id,name,amount::text,charge_day,note,active,category_id',
+      'id,card_id,name,amount::text,charge_day,note,active,category_id,started_on,first_month',
     ),
     select(
       'bank_accounts',
@@ -312,6 +312,8 @@ export async function loadFinance(): Promise<Finance> {
       note: (row.note as string | null) ?? null,
       active: Boolean(row.active),
       categoryId: category(row.category_id),
+      startedOn: row.started_on ? isoDate(text(row.started_on)) : null,
+      firstMonth: row.first_month ? monthOfDate(row.first_month) : null,
     })),
     bankAccounts: bankAccounts.map((row) => ({
       id: text(row.id),

@@ -65,7 +65,7 @@ export function CardModal({
         card?.sortOrder ??
         Math.max(0, ...finance.cards.map((item) => item.sortOrder)) + 1,
     }
-    run(card ? editOps.updateCard(next) : editOps.addCard(next))
+    run(card ? editOps.updateCard(next, finance) : editOps.addCard(next))
     onClose()
     toast(card ? 'Salvo' : `${next.name} criado`)
   }

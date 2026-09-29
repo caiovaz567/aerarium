@@ -1,3 +1,4 @@
+import { movedSubscriptions } from '../domain/cardDates'
 import { toDecimal } from '../domain/money'
 import type { ISODate, Month } from '../domain/months'
 import type {
@@ -29,6 +30,8 @@ const subscriptionRecord = (row: SubscriptionRow) => ({
   note: row.note,
   active: row.active,
   category_id: row.categoryId ?? null,
+  started_on: row.startedOn ?? null,
+  first_month: row.firstMonth ? monthDate(row.firstMonth) : null,
 })
 
 const cardRecord = (card: Card) => ({
@@ -99,11 +102,36 @@ export const editOps = {
     }
   },
 
-  updateCard(card: Card): FinanceOp {
+  /**
+   * New closing or due days also move the first month of the card's
+   * subscriptions that have a start date.
+   */
+  updateCard(card: Card, finance?: Finance): FinanceOp {
     const { id, ...record } = cardRecord(card)
+    const moved = finance
+      ? movedSubscriptions(
+          finance.subscriptions,
+          card,
+          finance.dueNextMonth ?? false,
+        )
+      : []
     return {
-      run: () => ok(table('cards').update(record).eq('id', id)),
-      apply: (f) => ({ ...f, cards: patch(f.cards, card.id, card) }),
+      run: async () => {
+        await ok(table('cards').update(record).eq('id', id))
+        for (const item of moved)
+          await ok(
+            table('subscriptions')
+              .update({ first_month: monthDate(item.firstMonth!) })
+              .eq('id', item.id),
+          )
+      },
+      apply: (f) => ({
+        ...f,
+        cards: patch(f.cards, card.id, card),
+        subscriptions: f.subscriptions.map(
+          (item) => moved.find((row) => row.id === item.id) ?? item,
+        ),
+      }),
     }
   },
 

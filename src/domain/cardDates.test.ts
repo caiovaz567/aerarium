@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
   bestPurchaseDay,
+  chargedIn,
   daysBetween,
   dueDate,
   dueText,
   invoiceMonthForCard,
   limitUse,
+  movedSubscriptions,
+  subscriptionFirstMonth,
 } from './cardDates'
+import { fixedCardAmounts } from './invoices'
 import { cents } from './money'
 import { isoDate, month } from './months'
 
@@ -75,5 +79,67 @@ describe('datas do cartão', () => {
     // No due day: a week after closing (28 + 7 is next month).
     expect(card(28, null)).toBe('2026-09')
     expect(card(10)).toBe('2026-09')
+  })
+})
+
+describe('assinatura com data de início', () => {
+  const revolut = { id: 'rev', closingDay: 25, dueDay: 5 }
+  const sub = (startedOn: string | null, firstMonth: string | null) => ({
+    id: 's',
+    cardId: 'rev',
+    amount: cents(2990),
+    active: true,
+    startedOn: startedOn ? isoDate(startedOn) : null,
+    firstMonth: firstMonth ? month(firstMonth) : null,
+  })
+
+  it('começou depois do fechamento: entra na fatura seguinte', () => {
+    expect(subscriptionFirstMonth(isoDate('2026-09-29'), revolut)).toBe(
+      '2026-10',
+    )
+    expect(subscriptionFirstMonth(isoDate('2026-09-20'), revolut)).toBe(
+      '2026-09',
+    )
+    // The owner's convention (a bill due the month after it closes).
+    expect(subscriptionFirstMonth(isoDate('2026-09-29'), revolut, true)).toBe(
+      '2026-10',
+    )
+    // Off a card: its own month. No date: every month.
+    expect(subscriptionFirstMonth(isoDate('2026-09-29'), null)).toBe('2026-09')
+    expect(subscriptionFirstMonth(null, revolut)).toBeNull()
+  })
+
+  it('só conta a partir do primeiro mês; sem data, em todos', () => {
+    const started = sub('2026-09-29', '2026-10')
+    expect(chargedIn(started, month('2026-09'))).toBe(false)
+    expect(chargedIn(started, month('2026-10'))).toBe(true)
+    expect(chargedIn(sub(null, null), month('2020-01'))).toBe(true)
+    expect(chargedIn({ ...started, active: false }, month('2026-11'))).toBe(
+      false,
+    )
+    const context = {
+      plans: [],
+      payments: [],
+      expenses: [],
+      subscriptions: [started],
+    }
+    expect(
+      fixedCardAmounts('rev', month('2026-09'), context).subscriptionsAmount,
+    ).toBe(0)
+    expect(
+      fixedCardAmounts('rev', month('2026-10'), context).subscriptionsAmount,
+    ).toBe(2990)
+  })
+
+  it('mudar o fechamento do cartão move o primeiro mês', () => {
+    // Saved before the card had a closing day: its own month.
+    const saved = sub('2026-09-29', '2026-09')
+    const others = [sub(null, null), { ...saved, id: 'outro', cardId: 'nu' }]
+    expect(movedSubscriptions([saved, ...others], revolut)).toEqual([
+      { ...saved, firstMonth: '2026-10' },
+    ])
+    expect(
+      movedSubscriptions([{ ...saved, firstMonth: month('2026-10') }], revolut),
+    ).toEqual([])
   })
 })

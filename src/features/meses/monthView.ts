@@ -1,3 +1,4 @@
+import { chargedIn } from '../../domain/cardDates'
 import { monthBalance } from '../../domain/balance'
 import {
   installmentSchedule,
@@ -51,7 +52,7 @@ export function compositionParts(
         .map((item) => ({ name: plan.description, amount: item.amount })),
     )
   const subscriptions = finance.subscriptions.filter(
-    (item) => item.cardId === invoice.cardId && item.active,
+    (item) => item.cardId === invoice.cardId && chargedIn(item, invoice.month),
   )
   const expenses = finance.expenses.filter(
     (item) => item.invoiceId === invoice.id && !item.forOther,

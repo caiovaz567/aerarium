@@ -1,5 +1,6 @@
 import { cardFinal } from '../../domain/banks'
 import {
+  chargedIn,
   bestPurchaseDay,
   dueDate,
   dueText,
@@ -152,7 +153,7 @@ export function monthDetail(
             amount: item.amount,
           })
     const subscriptions = finance.subscriptions.filter(
-      (item) => item.cardId === cardId && item.active,
+      (item) => item.cardId === cardId && chargedIn(item, point.month),
     )
     if (subscriptions.length)
       items.push({
@@ -261,7 +262,7 @@ export function cardsView(finance: Finance, target: Month) {
       .filter((plan) => plan.cardId === card.id)
       .flatMap((plan) => planLine(plan, target, finance) ?? [])
     const subscriptions = finance.subscriptions.filter(
-      (item) => item.cardId === card.id && item.active,
+      (item) => item.cardId === card.id && chargedIn(item, target),
     )
     const total = totals?.total ?? cents(0)
     const installments = sumMoney(plans.map((item) => item.amount))

@@ -4,9 +4,11 @@ import {
   addMonths,
   daysInMonth,
   isoDate,
+  monthOf,
   type ISODate,
   type Month,
 } from './months'
+import type { Subscription } from './types'
 
 // Fase 13.2: the dates of a card's invoice, like a bank app shows them. For
 // everyone, an invoice is due in its own month. Only the owner (dueNextMonth,
@@ -70,4 +72,42 @@ export function invoiceMonthForCard(
   return dueDay > card.closingDay && dueDay <= 31
     ? addMonths(closes, -1)
     : closes
+}
+
+type CardDays = {
+  readonly closingDay: number | null
+  readonly dueDay?: number | null
+}
+
+/**
+ * The first month a subscription is charged in: a start after the card's
+ * closing goes to the next invoice, like a purchase. Off a card, its own month.
+ */
+export function subscriptionFirstMonth(
+  startedOn: ISODate | null | undefined,
+  card: CardDays | null,
+  nextMonth = false,
+): Month | null {
+  if (!startedOn) return null
+  return card
+    ? invoiceMonthForCard(startedOn, card, nextMonth)
+    : monthOf(startedOn)
+}
+
+/** Whether a subscription is charged in `target` (active and already started). */
+export function chargedIn(item: Subscription, target: Month): boolean {
+  return item.active && (!item.firstMonth || item.firstMonth <= target)
+}
+
+/** A card's subscriptions whose first month changes with its closing and due days. */
+export function movedSubscriptions<T extends Subscription>(
+  subscriptions: readonly T[],
+  card: CardDays & { readonly id: string },
+  nextMonth = false,
+): T[] {
+  return subscriptions.flatMap((item) => {
+    if (item.cardId !== card.id || !item.startedOn) return []
+    const firstMonth = subscriptionFirstMonth(item.startedOn, card, nextMonth)
+    return firstMonth === item.firstMonth ? [] : [{ ...item, firstMonth }]
+  })
 }
