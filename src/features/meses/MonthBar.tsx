@@ -15,12 +15,15 @@ export function MonthBar({
   pathFor,
   onOpenList,
   onCreateNext,
+  canCreate = true,
 }: {
   readonly selected: Month
   readonly months: readonly Month[]
   readonly pathFor: (month: Month) => string
   readonly onOpenList: () => void
   readonly onCreateNext: () => void
+  /** False at the end of the forecasts: the next month to create is not this one's. */
+  readonly canCreate?: boolean
 }) {
   const index = months.indexOf(selected)
   const previous = months[index - 1]
@@ -65,7 +68,7 @@ export function MonthBar({
         >
           <ChevronRightIcon />
         </Link>
-      ) : (
+      ) : canCreate ? (
         <button
           type="button"
           className="icon-button plus"
@@ -73,6 +76,15 @@ export function MonthBar({
           onClick={onCreateNext}
         >
           <PlusIcon />
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="icon-button"
+          aria-label="Próximo mês"
+          disabled
+        >
+          <ChevronRightIcon />
         </button>
       )}
     </StickyBar>

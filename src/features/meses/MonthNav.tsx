@@ -11,16 +11,19 @@ import { buildNewMonth } from './monthView'
 
 /**
  * Month bar shared by Meses and Cartões,
- * with the month list, "create next month" and "delete month".
+ * with the month list, "create next month" and "delete month". Meses also
+ * goes on past the last month, as forecasts, up to `forecastUntil`.
  */
 export function MonthNav({
   finance,
   selected,
   pathFor,
+  forecastUntil = null,
 }: {
   readonly finance: Finance
   readonly selected: Month
   readonly pathFor: (month: Month) => string
+  readonly forecastUntil?: Month | null
 }) {
   const navigate = useNavigate()
   const run = useFinanceOp()
@@ -30,6 +33,11 @@ export function MonthNav({
   const refs = finance.months.map((item) => item.ref)
   const last = refs[refs.length - 1]!
   const next = addMonths(last, 1)
+  const ahead: Month[] = []
+  if (forecastUntil)
+    for (let ref = next; ref <= forecastUntil; ref = addMonths(ref, 1))
+      ahead.push(ref)
+  const forecast = selected > last
 
   const create = (options: { copy: boolean; carryover: boolean }) => {
     run(ops.createMonth(buildNewMonth(finance, next, last, options)))
@@ -57,16 +65,18 @@ export function MonthNav({
     <>
       <MonthBar
         selected={selected}
-        months={refs}
+        months={[...refs, ...ahead]}
         pathFor={pathFor}
         onOpenList={() => setDialog('list')}
         onCreateNext={() => setDialog('new')}
+        canCreate={!forecast}
       />
       {dialog === 'list' && (
         <MonthListModal
           finance={finance}
           selected={selected}
           next={next}
+          canDelete={!forecast}
           onClose={close}
           onPick={(ref) => {
             close()

@@ -296,9 +296,28 @@ describe('Resumo da fatura', () => {
 })
 
 describe('Criar e excluir mês', () => {
+  it('outubro ainda não criado aparece como previsão, só pra ver', () => {
+    renderApp('/meses/2026-10')
+    expect(screen.getByRole('region', { name: 'Previsão' })).toBeVisible()
+    // As if created: salary copied and September's leftover carried.
+    expect(heroValue('Entradas')).toBe('R$ 9.226,83')
+    expect(
+      within(block('Entradas')).getByText('Sobrou do mês passado'),
+    ).toBeVisible()
+    expect(document.querySelector('.forecast-view')).toHaveAttribute('inert')
+    // Past the last installment (Notebook 10/10 in May 2027), no more months.
+    renderApp('/meses/2027-05')
+    expect(
+      screen.getAllByRole('button', { name: 'Próximo mês' }).at(-1),
+    ).toBeDisabled()
+    expect(
+      screen.queryByRole('button', { name: /^Criar Maio/ }),
+    ).not.toBeInTheDocument()
+  })
+
   it('cria outubro copiando setembro e levando a sobra', async () => {
-    renderApp('/meses/2026-09')
-    fireEvent.click(screen.getByRole('button', { name: 'Criar próximo mês' }))
+    renderApp('/meses/2026-10')
+    fireEvent.click(screen.getByRole('button', { name: 'Criar Outubro 2026' }))
     const dialog = screen.getByRole('dialog', { name: 'Criar Outubro 2026' })
     expect(
       text(within(dialog).getByText(/Levar a sobra de Setembro/).textContent),

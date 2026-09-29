@@ -728,3 +728,32 @@
 .owed-block .btn {
   flex: none;
 }
+
+/* A month not created yet, shown as a forecast (read only). */
+.forecast-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border: 1px dashed var(--accent);
+  border-radius: 16px;
+  background: var(--accent-soft);
+}
+.forecast-note p {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 14px;
+}
+.forecast-note b {
+  color: var(--accent);
+}
+.forecast-view .hero {
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 14px,
+    rgb(255 255 255 / 0.04) 14px 28px
+  );
+}

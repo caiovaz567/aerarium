@@ -12,6 +12,7 @@ import type { OutflowItem } from '../../domain/categories'
 import { ops } from '../../data/financeOps'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
 import { monthLabel, monthName, type Month } from '../../domain/months'
+import { addMonths } from '../../domain/months'
 import { EmptyState } from '../../ui/EmptyState'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
@@ -26,6 +27,7 @@ import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
 import { MonthSummary } from './MonthSummary'
+import { forecastFinance, forecastUntil } from './forecast'
 import {
   buildNewMonth,
   defaultMonth,
@@ -128,7 +130,11 @@ export function MonthsPage() {
       </>
     )
 
-  if (!selected || !refs.includes(selected))
+  // Past the last month: a forecast, as if it had been created (not saved).
+  const until = forecastUntil(finance)
+  const forecast =
+    selected !== null && selected > last && until !== null && selected <= until
+  if (!selected || (!refs.includes(selected) && !forecast))
     return (
       <Navigate
         to={monthPath(defaultMonth(finance, currentMonth()) ?? last)}
@@ -136,7 +142,8 @@ export function MonthsPage() {
       />
     )
 
-  const view = monthView(finance, selected)
+  const shown = forecast ? forecastFinance(finance, selected) : finance
+  const view = monthView(shown, selected)
 
   const deleteIncome = (income: IncomeRow) => {
     run(ops.removeIncome(income))
@@ -216,64 +223,93 @@ export function MonthsPage() {
     <>
       <h2 className="visually-hidden">Meses</h2>
       {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
-      <MonthNav finance={finance} selected={selected} pathFor={monthPath} />
-      {profile === 'other' ? (
-        <OtherMonth finance={finance} month={selected} onOpen={openOutflow} />
-      ) : (
-        <>
-          <MonthSummary month={selected} balance={view.balance} />
-          {finance.otherPerson && (
-            <OwedBlock
-              finance={finance}
-              month={selected}
-              owed={view.balance.otherOwed}
-              due={view.balance.otherDue}
-              onPaid={(income) => {
-                run(ops.restoreIncome(income))
-                toast(`${income.description}: parte dele acertada`, {
-                  label: 'Desfazer',
-                  onClick: () => run(ops.removeIncome(income)),
-                })
+      <MonthNav
+        finance={finance}
+        selected={selected}
+        pathFor={monthPath}
+        forecastUntil={until}
+      />
+      {forecast && (
+        <section className="forecast-note" aria-label="Previsão">
+          <p>
+            <b>Previsão.</b> {monthName(selected)} ainda não foi criado: aqui
+            estão as parcelas, as assinaturas e o que se repete do último mês.
+          </p>
+          {selected === addMonths(last, 1) && (
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() =>
+                setDialog({ kind: 'new', target: selected, previous: last })
+              }
+            >
+              Criar {monthLabel(selected)}
+            </button>
+          )}
+        </section>
+      )}
+      {newMonthDialog}
+      <div inert={forecast} className={forecast ? 'forecast-view' : undefined}>
+        {profile === 'other' ? (
+          <OtherMonth finance={shown} month={selected} onOpen={openOutflow} />
+        ) : (
+          <>
+            <MonthSummary month={selected} balance={view.balance} />
+            {finance.otherPerson && (
+              <OwedBlock
+                finance={shown}
+                month={selected}
+                owed={view.balance.otherOwed}
+                due={view.balance.otherDue}
+                onPaid={(income) => {
+                  run(ops.restoreIncome(income))
+                  toast(`${income.description}: parte dele acertada`, {
+                    label: 'Desfazer',
+                    onClick: () => run(ops.removeIncome(income)),
+                  })
+                }}
+              />
+            )}
+            <IncomesBlock
+              incomes={view.incomes}
+              total={view.balance.incomes}
+              carryHint={view.carryHint}
+              onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
+              onDelete={deleteIncome}
+              onUseCarry={(hint) => {
+                run(
+                  ops.updateIncome(hint.income, {
+                    description: hint.income.description,
+                    amount: hint.available,
+                  }),
+                )
+                toast(`Sobra de ${monthName(hint.previous)} colocada`)
               }}
             />
-          )}
-          <IncomesBlock
-            incomes={view.incomes}
-            total={view.balance.incomes}
-            carryHint={view.carryHint}
-            onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
-            onDelete={deleteIncome}
-            onUseCarry={(hint) => {
-              run(
-                ops.updateIncome(hint.income, {
-                  description: hint.income.description,
-                  amount: hint.available,
-                }),
-              )
-              toast(`Sobra de ${monthName(hint.previous)} colocada`)
-            }}
-          />
-          <OutflowViews
-            finance={finance}
-            month={selected}
-            onOpen={openOutflow}
-            view={view}
-            categories={finance.categories}
-            onInvoice={(item) =>
-              setDialog({ kind: 'invoice', id: item.invoice.id })
-            }
-            onInvoicePaid={(item, paid) =>
-              run(ops.invoicePaid(item.invoice, paid, today()))
-            }
-            onInvoiceDelete={deleteInvoice}
-            onLoosePaid={loosePaid}
-            onLooseOpen={(item) => editor.plan(item.plan.id)}
-            onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
-            onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
-            onBillDelete={deleteBill}
-          />
-        </>
-      )}
+            <OutflowViews
+              finance={shown}
+              month={selected}
+              onOpen={openOutflow}
+              view={view}
+              categories={finance.categories}
+              onInvoice={(item) =>
+                setDialog({ kind: 'invoice', id: item.invoice.id })
+              }
+              onInvoicePaid={(item, paid) =>
+                run(ops.invoicePaid(item.invoice, paid, today()))
+              }
+              onInvoiceDelete={deleteInvoice}
+              onLoosePaid={loosePaid}
+              onLooseOpen={(item) => editor.plan(item.plan.id)}
+              onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
+              onBillPaid={(item, paid) =>
+                run(ops.billPaid(item, paid, today()))
+              }
+              onBillDelete={deleteBill}
+            />
+          </>
+        )}
+      </div>
 
       {income && (
         <IncomeModal

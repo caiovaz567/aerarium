@@ -10,6 +10,7 @@ export function MonthListModal({
   finance,
   selected,
   next,
+  canDelete = true,
   onPick,
   onCreate,
   onDelete,
@@ -18,6 +19,8 @@ export function MonthListModal({
   readonly finance: Finance
   readonly selected: Month
   readonly next: Month
+  /** False on a forecast month (there is nothing to delete). */
+  readonly canDelete?: boolean
   readonly onPick: (month: Month) => void
   readonly onCreate: () => void
   readonly onDelete: () => void
@@ -30,7 +33,7 @@ export function MonthListModal({
       onClose={onClose}
       actions={
         <>
-          {months.length > 1 && (
+          {canDelete && months.length > 1 && (
             <ArmedButton onConfirm={onDelete}>
               {`Excluir ${monthLabel(selected)}`}
             </ArmedButton>

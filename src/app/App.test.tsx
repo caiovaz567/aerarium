@@ -87,16 +87,16 @@ describe('esqueleto', () => {
     ).toBeInTheDocument()
   })
 
-  it('barra de meses anda só entre meses que existem, com + no último', () => {
+  it('barra de meses: os que existem, depois a previsão até a última parcela', () => {
     renderApp('/meses/2026-09')
     fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
     expect(screen.getByText('Agosto')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeDisabled()
     fireEvent.click(screen.getByRole('link', { name: 'Próximo mês' }))
     expect(screen.getByText('Setembro')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: 'Criar próximo mês' }),
-    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('link', { name: 'Próximo mês' }))
+    expect(screen.getByText('Outubro')).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Previsão' })).toBeVisible()
   })
 
   it('botão de lançar abre o modal; Esc fecha e devolve o foco', () => {

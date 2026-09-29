@@ -68,7 +68,10 @@ test('"Sei o total" e a sobra do mês anterior ficam gravados', async ({
 test('criar outubro, recarregar, excluir e desfazer', async ({ page }) => {
   await page.goto('/meses/2026-09')
   const available = spaced(await page.locator('.hero-num').textContent())!
-  await page.getByRole('button', { name: 'Criar próximo mês' }).click()
+  // October shows as a forecast first, with the button to create it.
+  await page.getByRole('link', { name: 'Próximo mês' }).click()
+  await expect(page.getByRole('region', { name: 'Previsão' })).toBeVisible()
+  await page.getByRole('button', { name: 'Criar Outubro 2026' }).click()
   await page
     .getByRole('dialog', { name: 'Criar Outubro 2026' })
     .getByRole('button', { name: 'Criar mês' })
