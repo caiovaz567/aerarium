@@ -427,6 +427,19 @@ body.has-stuck .app-header.scrolled {
   color: var(--ink);
   font-size: 16px;
 }
+/* iPhone gives date inputs a width of their own, wider than the field. */
+.field input[type='datetime-local'],
+.field input[type='date'] {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+.field input::-webkit-date-and-time-value {
+  text-align: left;
+}
 /* A bank purchase's name: shown, not typed. */
 .field .bank-name {
   margin: 0;
