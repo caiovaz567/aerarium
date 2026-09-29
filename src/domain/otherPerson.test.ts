@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { emptyData, invoice, plan } from './__fixtures__/seed'
 import { monthBalance } from './balance'
-import { groupByCategory, monthOutflowItems, SHARED } from './categories'
+import { monthOutflowItems } from './categories'
 import { invoiceTotals } from './invoices'
 import { cents, sumMoney } from './money'
 import { isoDate, month } from './months'
@@ -60,49 +60,37 @@ describe('gastos de quem usa o cartão junto', () => {
     expect(invoiceTotals(paid, data(true)).mine).toBe(0)
   })
 
-  it('você paga a fatura inteira; o saldo conta tudo e mostra o que o pai deve', () => {
-    // 210 of the invoice + 100 (his, outside) + 7 (yours, outside).
+  it('o saldo conta só a sua parte; o que o pai deve é um lembrete à parte', () => {
+    // 132 of the invoice (210 minus 78 of his) + 7 (yours, outside).
     expect(monthBalance(sep, data(true))).toMatchObject({
-      outflows: 31700,
-      available: 468300,
+      incomes: 500000,
+      outflows: 13900,
+      available: 486100,
       otherOwed: 17800,
       otherDue: 17800,
     })
-    const paidBack = {
+    const paidBack = (...amounts: number[]) => ({
       ...data(true),
       incomes: [
         ...data(true).incomes,
-        {
+        ...amounts.map((amount, index) => ({
           month: sep,
           description: 'Pai pagou',
-          amount: cents(5000),
+          amount: cents(amount),
           kind: 'from_other' as const,
-          sortOrder: 1,
-        },
+          sortOrder: index + 1,
+        })),
       ],
-    }
-    expect(monthBalance(sep, paidBack)).toMatchObject({
-      incomes: 505000,
+    })
+    // What he sends back settles his part; it is not your income.
+    expect(monthBalance(sep, paidBack(5000))).toMatchObject({
+      incomes: 500000,
       otherDue: 12800,
     })
-    expect(
-      monthBalance(sep, {
-        ...paidBack,
-        incomes: [
-          ...paidBack.incomes,
-          {
-            month: sep,
-            description: 'Pai pagou',
-            amount: cents(20000),
-            kind: 'from_other' as const,
-            sortOrder: 2,
-          },
-        ],
-      }).otherDue,
-    ).toBe(0)
+    expect(monthBalance(sep, paidBack(5000, 20000)).otherDue).toBe(0)
   })
 
-  it('as saídas somam o mesmo que o saldo: as suas e a parte do pai num pedaço', () => {
+  it('as suas saídas somam o mesmo que o saldo, sem nada do pai', () => {
     const items = monthOutflowItems(sep, {
       ...data(true),
       bills: [],
@@ -116,21 +104,13 @@ describe('gastos de quem usa o cartão junto', () => {
         },
       ],
     })
-    expect(items.map((item) => [item.source, item.id])).toEqual([
-      ['installment', 'pai-fora'],
-      ['installment', 'meu-fora'],
-      ['installment', 'meu'],
-      ['subscription', 'sub'],
-      ['expense', 'gasto-meu'],
-      ['shared', 'invoice'],
+    expect(items.map((item) => item.id)).toEqual([
+      'meu-fora',
+      'meu',
+      'sub',
+      'gasto-meu',
     ])
-    expect(sumMoney(items.map((item) => item.amount))).toBe(31700)
-    expect(items.find((item) => item.source === 'shared')?.amount).toBe(7800) // By category, the other person's part is its own group, last.
-    const groups = groupByCategory(items)
-    expect(groups[groups.length - 1]).toMatchObject({
-      key: SHARED,
-      amount: 7800,
-    })
+    expect(sumMoney(items.map((item) => item.amount))).toBe(13900)
   })
 
   it('vistas pelo pai: as compras e parcelas dele e o "outros"', () => {

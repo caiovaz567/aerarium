@@ -206,7 +206,7 @@ export function MonthsPage() {
     if (item.source === 'bill') setDialog({ kind: 'bill', id: item.id })
     else if (item.source === 'expense')
       setDialog({ kind: 'expense', id: item.id })
-    else if (item.source === 'other' || item.source === 'shared')
+    else if (item.source === 'other')
       setDialog({ kind: 'invoice', id: item.id })
     else if (item.source === 'installment') editor.plan(item.id)
     else editor.subscription(item.id)
@@ -230,7 +230,7 @@ export function MonthsPage() {
               due={view.balance.otherDue}
               onPaid={(income) => {
                 run(ops.restoreIncome(income))
-                toast(`${income.description}: entrou nas Entradas`, {
+                toast(`${income.description}: parte dele acertada`, {
                   label: 'Desfazer',
                   onClick: () => run(ops.removeIncome(income)),
                 })

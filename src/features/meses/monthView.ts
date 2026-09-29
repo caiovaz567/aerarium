@@ -109,7 +109,10 @@ export interface CarryHint {
 
 export function monthView(finance: Finance, ref: Month) {
   const balance = monthBalance(ref, finance)
-  const incomes = finance.incomes.filter((item) => item.month === ref)
+  // What the other person sends back is shown in the reminder, not here.
+  const incomes = finance.incomes.filter(
+    (item) => item.month === ref && item.kind !== 'from_other',
+  )
   const cards: CardOutflow[] = finance.invoices
     .filter((item) => item.month === ref)
     .flatMap((invoice) => {
@@ -119,7 +122,8 @@ export function monthView(finance: Finance, ref: Month) {
         {
           invoice,
           card,
-          total: invoiceTotals(invoice, finance).total,
+          // Fase 13.3: the owner's part; the other person's is in the parts.
+          total: invoiceTotals(invoice, finance).mine,
           note: visibleNote(invoice.note, card),
           parts: compositionParts(invoice, finance),
         },
@@ -131,7 +135,7 @@ export function monthView(finance: Finance, ref: Month) {
         a.card.name.localeCompare(b.card.name),
     )
   const loose: LooseOutflow[] = finance.plans
-    .filter((plan) => plan.cardId === null)
+    .filter((plan) => plan.cardId === null && !plan.forOther)
     .flatMap((plan) => {
       const item = installmentSchedule(plan, finance.payments).find(
         (entry) => entry.month === ref,

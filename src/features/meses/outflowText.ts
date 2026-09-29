@@ -50,11 +50,6 @@ export function describeOutflow(finance: Finance, item: OutflowItem) {
         detail: `assinatura · ${onCard}`,
       }
     }
-    case 'shared':
-      return {
-        title: `Parte do ${finance.otherPerson ?? 'outro'}`,
-        detail: `${onCard} · ele te devolve`,
-      }
     case 'other':
       return {
         title: `Fatura ${card?.name ?? ''}`.trim(),

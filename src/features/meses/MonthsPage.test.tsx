@@ -385,11 +385,12 @@ describe('Pai usa os cartões', () => {
     }
   }
 
-  it('você paga a fatura inteira; o pai te deve a parte dele', async () => {
+  it('a sua visão só tem o que é seu; o pai te deve a parte dele', async () => {
     renderApp('/meses/2026-09', undefined, withDad())
-    expect(heroValue('Saídas')).toBe('R$ 873,17')
+    // 873,17 minus Uber 12,00 and "outros" 271,02, both his.
+    expect(heroValue('Saídas')).toBe('R$ 590,15')
     const nubank = screen.getByRole('button', { name: /^Nubank Teste/ })
-    expect(text(nubank.textContent)).toContain('R$ 442,92')
+    expect(text(nubank.textContent)).toContain('R$ 159,90')
     expect(text(nubank.textContent)).toContain('Pai R$ 283')
     expect(text(nubank.textContent)).not.toContain('outros')
     const owed = screen.getByRole('region', { name: 'O que o Pai te deve' })
@@ -408,7 +409,9 @@ describe('Pai usa os cartões', () => {
         }),
       }),
     )
-    expect(heroValue('Entradas')).toBe('R$ 5.383,02')
+    // Settles his part; it is not your income.
+    expect(heroValue('Entradas')).toBe('R$ 5.100,00')
+    expect(screen.queryByText('Pai pagou', { selector: 'span' })).toBeNull()
     expect(text(owed.textContent)).toContain('R$ 0,00')
     expect(text(owed.textContent)).toContain('Já devolveu R$ 283,02')
   })
@@ -457,7 +460,7 @@ describe('Pai usa os cartões', () => {
     expect(screen.queryByRole('region', { name: 'Entradas' })).toBeNull()
     expect(localStorage.getItem('aerarium.perfil')).toBe('other')
     fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
-    expect(heroValue('Saídas')).toBe('R$ 873,17')
+    expect(heroValue('Saídas')).toBe('R$ 590,15')
   })
 
   it('sem outra pessoa, não tem seletor e a visão é sempre a sua', () => {
