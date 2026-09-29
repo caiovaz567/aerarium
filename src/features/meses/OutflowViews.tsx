@@ -74,7 +74,27 @@ export function OutflowViews({
         ))}
       </div>
       {view === 'data' && (
-        <TimelineView finance={finance} month={month} onOpen={onOpen} />
+        <TimelineView
+          finance={finance}
+          month={month}
+          onOpen={onOpen}
+          paidOf={(item) =>
+            item.source === 'bill'
+              ? (summary.bills.find((bill) => bill.id === item.id)?.paid ??
+                null)
+              : item.source === 'installment' && item.cardId === null
+                ? (summary.loose.find((loose) => loose.plan.id === item.id)
+                    ?.paid ?? null)
+                : null
+          }
+          onPaid={(item, paid) => {
+            const bill = summary.bills.find((row) => row.id === item.id)
+            if (item.source === 'bill' && bill) byType.onBillPaid(bill, paid)
+            const loose = summary.loose.find((row) => row.plan.id === item.id)
+            if (item.source === 'installment' && loose)
+              byType.onLoosePaid(loose, paid)
+          }}
+        />
       )}
       {view === 'tipo' && <OutflowsByType {...byType} />}
       {view === 'categoria' && (

@@ -199,3 +199,28 @@
   font-weight: 700;
   vertical-align: 2px;
 }
+
+/* Paid circle at the start of bills and loose plans (asked by the user). */
+.timeline-list li.with-check {
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+.timeline-list li.with-check .timeline-row {
+  flex: 1;
+  min-width: 0;
+  padding-left: 10px;
+}
+.timeline-list li.with-check .check {
+  width: 34px;
+  height: 34px;
+  margin-left: 0;
+}
+.timeline-list li.with-check .check-space {
+  width: 34px;
+}
+.timeline-list li.paid .timeline-value {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}

@@ -129,6 +129,37 @@ describe('Por data', () => {
     expect(rows(day('Fixos do mês'))).toHaveLength(6)
   })
 
+  it('conta e parcela fora do cartão têm o círculo de pago no começo', async () => {
+    renderApp('/meses/2026-09')
+    const fixed = day('Fixos do mês')
+    const light = within(fixed).getByRole('button', {
+      name: 'Marcar como pago: Conta de luz',
+    })
+    fireEvent.click(light)
+    await settle()
+    expect(fake.current!.calls).toContainEqual(
+      expect.objectContaining({
+        table: 'bills',
+        op: 'update',
+        payload: expect.objectContaining({ paid: true }),
+      }),
+    )
+    expect(
+      within(day('Fixos do mês')).getByRole('button', {
+        name: 'Pago: Conta de luz',
+      }),
+    ).toBeVisible()
+    expect(
+      within(fixed).getByRole('button', {
+        name: 'Marcar como pago: Dentista',
+      }),
+    ).toBeVisible()
+    // Card purchases are paid with the invoice, not here.
+    expect(
+      within(day('qui, 3 set')).queryByRole('button', { name: /pago/i }),
+    ).toBeNull()
+  })
+
   it('tocar num item abre ele pra editar', () => {
     renderApp('/meses/2026-09')
     fireEvent.click(

@@ -14,25 +14,45 @@ import {
 } from '../../domain/timeline'
 import { CardArt } from '../../ui/CardArt'
 import { CategoryBadge } from '../../ui/CategoryBadge'
+import { CheckButton } from '../../ui/controls'
 import { CardIcon, WalletIcon } from '../../ui/icons'
 import { describeOutflow } from './outflowText'
+
+/** Paid state of a row: true/false for bills and loose plans, null otherwise. */
+export type PaidOf = (item: OutflowItem) => boolean | null
 
 function Row({
   finance,
   item,
   time,
   onOpen,
+  paidOf,
+  onPaid,
 }: {
   readonly finance: Finance
   readonly item: OutflowItem
   readonly time: string | null
   readonly onOpen: (item: OutflowItem) => void
+  readonly paidOf?: PaidOf
+  readonly onPaid?: (item: OutflowItem, paid: boolean) => void
 }) {
   const text = describeOutflow(finance, item)
   const category =
     finance.categories.find((row) => row.id === item.categoryId) ?? null
+  const paid = paidOf?.(item) ?? null
   return (
-    <li>
+    <li className={onPaid ? `with-check${paid ? ' paid' : ''}` : undefined}>
+      {onPaid &&
+        (paid === null ? (
+          // Card purchases are paid with their invoice ("Por tipo").
+          <span className="check-space" />
+        ) : (
+          <CheckButton
+            checked={paid}
+            label={text.title}
+            onChange={(next) => onPaid(item, next)}
+          />
+        ))}
       <button
         type="button"
         className="timeline-row"
@@ -72,10 +92,15 @@ export function TimelineView({
   finance,
   month,
   onOpen,
+  paidOf,
+  onPaid,
 }: {
   readonly finance: Finance
   readonly month: Month
   readonly onOpen: (item: OutflowItem) => void
+  /** Adds the paid circle at the start of bills and loose plans. */
+  readonly paidOf?: PaidOf
+  readonly onPaid?: (item: OutflowItem, paid: boolean) => void
 }) {
   const [cardFilter, setCard] = useState<string | null>(null)
   const all = timedItems(month, finance)
@@ -166,6 +191,8 @@ export function TimelineView({
                 item={item}
                 time={item.at ? timeLabel(item.at) : null}
                 onOpen={onOpen}
+                paidOf={paidOf}
+                onPaid={onPaid}
               />
             ))}
           </ul>
@@ -188,6 +215,8 @@ export function TimelineView({
                 item={item}
                 time={null}
                 onOpen={onOpen}
+                paidOf={paidOf}
+                onPaid={onPaid}
               />
             ))}
           </ul>
