@@ -172,6 +172,14 @@
 .rows .row:first-child {
   border-top: 0;
 }
+/* Profile "Pai", "Por tipo": a card opens its items below it. */
+.row.other-card {
+  flex-wrap: wrap;
+}
+.row.other-card > .timeline-list {
+  flex-basis: 100%;
+  margin: 0 0 6px;
+}
 .row-main {
   display: flex;
   flex: 1;

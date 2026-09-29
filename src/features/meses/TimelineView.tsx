@@ -21,7 +21,8 @@ import { describeOutflow } from './outflowText'
 /** Paid state of a row: true/false for bills and loose plans, null otherwise. */
 export type PaidOf = (item: OutflowItem) => boolean | null
 
-function Row({
+/** One outflow: category, name, time and card, value. Tapping opens it. */
+export function OutflowRow({
   finance,
   item,
   time,
@@ -185,7 +186,7 @@ export function TimelineView({
           </h3>
           <ul className="timeline-list">
             {entry.items.map((item: TimedItem) => (
-              <Row
+              <OutflowRow
                 key={`${item.source}-${item.id}`}
                 finance={finance}
                 item={item}
@@ -209,7 +210,7 @@ export function TimelineView({
           </h3>
           <ul className="timeline-list">
             {fixed.map((item) => (
-              <Row
+              <OutflowRow
                 key={`${item.source}-${item.id}`}
                 finance={finance}
                 item={item}

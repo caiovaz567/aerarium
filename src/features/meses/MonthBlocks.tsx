@@ -68,7 +68,7 @@ export function IncomesBlock({
   )
 }
 
-function GroupHead({ title, total }: { title: string; total: Cents }) {
+export function GroupHead({ title, total }: { title: string; total: Cents }) {
   return (
     <div className="grp-h">
       <span>{title}</span>

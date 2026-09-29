@@ -4,10 +4,17 @@ import { monthOutflowItems, type OutflowItem } from '../../domain/categories'
 import { cents, formatMoney, sumMoney } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
+import { OtherByType } from './OtherByType'
 import { SpendingList } from './SpendingBlock'
 import { TimelineView } from './TimelineView'
 
-type View = 'data' | 'categoria'
+type View = 'tipo' | 'data' | 'categoria'
+// Like the owner's Saídas: "Por tipo" first, and it always opens there.
+const VIEWS: [View, string][] = [
+  ['tipo', 'Por tipo'],
+  ['data', 'Por data'],
+  ['categoria', 'Por categoria'],
+]
 
 /**
  * Fase 13.3, profile of the other person ("Pai"): what they spent on the
@@ -22,7 +29,7 @@ export function OtherMonth({
   readonly month: Month
   readonly onOpen: (item: OutflowItem) => void
 }) {
-  const [view, setView] = useState<View>('data')
+  const [view, setView] = useState<View>('tipo')
   const seen: Finance = { ...finance, viewAs: 'other' }
   const items = monthOutflowItems(month, seen)
   const total = sumMoney(items.map((item) => item.amount))
@@ -76,24 +83,24 @@ export function OtherMonth({
           role="group"
           aria-label={`Ver compras do ${name}`}
         >
-          <button
-            type="button"
-            aria-pressed={view === 'data'}
-            onClick={() => setView('data')}
-          >
-            Por data
-          </button>
-          <button
-            type="button"
-            aria-pressed={view === 'categoria'}
-            onClick={() => setView('categoria')}
-          >
-            Por categoria
-          </button>
+          {VIEWS.map(([key, label]) => (
+            <button
+              type="button"
+              key={key}
+              aria-pressed={view === key}
+              onClick={() => setView(key)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        {view === 'data' ? (
+        {view === 'tipo' && (
+          <OtherByType finance={seen} items={items} onOpen={onOpen} />
+        )}
+        {view === 'data' && (
           <TimelineView finance={seen} month={month} onOpen={onOpen} />
-        ) : (
+        )}
+        {view === 'categoria' && (
           <SpendingList finance={seen} month={month} onOpen={onOpen} />
         )}
       </section>

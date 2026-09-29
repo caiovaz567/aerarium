@@ -488,6 +488,20 @@ describe('Pai usa os cartões', () => {
     expect(screen.queryByRole('region', { name: 'Resumo do mês' })).toBeNull()
     expect(screen.queryByRole('region', { name: 'Entradas' })).toBeNull()
     expect(localStorage.getItem('aerarium.perfil')).toBe('other')
+    // Same three views as yours, "Por tipo" first: his part card by card.
+    const views = screen.getByRole('group', { name: 'Ver compras do Pai' })
+    expect(
+      within(views)
+        .getAllByRole('button')
+        .map((item) => item.textContent),
+    ).toEqual(['Por tipo', 'Por data', 'Por categoria'])
+    const byType = screen.getByRole('group', { name: 'Por tipo' })
+    const card = within(byType).getByRole('button', { name: /^Nubank Teste/ })
+    expect(text(card.textContent)).toBe('Nubank TesteR$ 12,001 compra R$ 12')
+    expect(within(byType).queryByText('Uber')).toBeNull()
+    fireEvent.click(card)
+    expect(card).toHaveAttribute('aria-expanded', 'true')
+    expect(within(byType).getByText('Uber')).toBeVisible()
     fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
     expect(heroValue('Saídas')).toBe('R$ 861,17')
   })
