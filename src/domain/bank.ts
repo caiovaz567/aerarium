@@ -5,6 +5,7 @@ import {
   type CategorizedText,
 } from './categories'
 import { invoiceMonthForCard } from './cardDates'
+import { installmentSchedule } from './installments'
 import { fixedCardAmounts } from './invoices'
 import { cents, formatMoney, sumMoney, type Cents } from './money'
 import {
@@ -428,14 +429,19 @@ export function planBankImport(
             Math.abs(monthsBetween(item.firstMonth, firstMonth)) <= 1),
       )
       if (!plan) {
-        // Made by hand before: same card, count and value, first month ±1.
+        // Made by hand before, on the same card with the same value: either
+        // the same count starting within a month, or it has an installment
+        // on this very bill (count or start typed a little differently).
         plan = plans.find(
           (item) =>
             !item.externalKey &&
             item.cardId === cardId &&
-            item.totalInstallments === total &&
             close(item.installmentAmount, transaction.amount, 0.01, 10) &&
-            Math.abs(monthsBetween(item.firstMonth, firstMonth)) <= 1,
+            ((item.totalInstallments === total &&
+              Math.abs(monthsBetween(item.firstMonth, firstMonth)) <= 1) ||
+              installmentSchedule(item, state.payments).some(
+                (entry) => entry.month === target,
+              )),
         )
         if (plan) {
           result.planLinks.push({ planId: plan.id, externalKey: key })

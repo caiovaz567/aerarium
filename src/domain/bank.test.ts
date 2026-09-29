@@ -366,6 +366,39 @@ describe('importar compras', () => {
     ])
   })
 
+  it('parcelamento na mão com número ou início diferente, mas com parcela nessa fatura e mesmo valor, é ligado', () => {
+    const handMade = {
+      id: 'meu',
+      cardId: 'card',
+      description: 'Geladeira',
+      installmentAmount: cents(19831),
+      finalAdjustment: cents(0),
+      totalInstallments: 10,
+      firstMonth: month('2026-05'),
+    }
+    const charge = tx(
+      'g',
+      'LOJA PARC 04/12',
+      19831,
+      '2026-09-01T15:00:00.000Z',
+      {
+        installmentNumber: 4,
+        totalInstallments: 12,
+      },
+    )
+    const input = { accounts: [account], transactions: [charge], bills: [] }
+    const linked = planBankImport(state({ plans: [handMade] }), input, ids)
+    expect(linked.plans).toEqual([])
+    expect(linked.planLinks[0]?.planId).toBe('meu')
+    // Already over before this bill: a different purchase.
+    const ended = planBankImport(
+      state({ plans: [{ ...handMade, totalInstallments: 3 }] }),
+      input,
+      ids,
+    )
+    expect(ended.plans).toHaveLength(1)
+  })
+
   it('parcelamento feito na mão (mesmo cartão, número e valor) é ligado', () => {
     const result = planBankImport(
       state({
