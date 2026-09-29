@@ -586,8 +586,8 @@ a.row-main {
 .bank-logo.on-card {
   position: absolute;
   top: 9%;
-  left: 7%;
-  width: 17%;
+  right: 7%;
+  width: 13%;
   height: auto;
   aspect-ratio: 1;
   box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
