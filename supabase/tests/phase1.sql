@@ -139,6 +139,10 @@ select pg_temp.expect_error($q$insert into public.bank_accounts (pluggy_account_
 update public.invoice_expenses set note = 'Presente' where id = (select id from public.invoice_expenses order by id limit 1);
 select pg_temp.assert_true((select count(*) = 1 from public.invoice_expenses where note = 'Presente'), 'Gasto guarda uma descricao propria');
 select pg_temp.expect_error($q$update public.invoice_expenses set note = repeat('a', 201)$q$, '23514', 'Descricao do gasto tem limite');
+update public.cards set bank = 'nubank', due_day = 10 where id = '20000000-0000-4000-8000-000000000002';
+select pg_temp.assert_true((select bank = 'nubank' and due_day = 10 from public.cards where id = '20000000-0000-4000-8000-000000000002'), 'Cartao guarda banco e vencimento');
+select pg_temp.expect_error($q$update public.cards set bank = 'Banco!'$q$, '23514', 'Banco do cartao e uma chave simples');
+select pg_temp.expect_error($q$update public.cards set due_day = 32$q$, '23514', 'Vencimento entre 1 e 31');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);

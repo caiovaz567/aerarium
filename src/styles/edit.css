@@ -116,6 +116,48 @@
   outline-offset: 4px;
 }
 
+/* Fase 13.1: bank logos to pick from, like the color swatches. */
+.bank-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.bank-option {
+  position: relative;
+  display: flex;
+  cursor: pointer;
+}
+.bank-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.bank-option .bank-logo {
+  width: 38px;
+  height: 38px;
+}
+.bank-option.none span {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px dashed var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.bank-option input:checked + * {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 4px var(--accent);
+}
+.bank-option input:focus-visible + * {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
 /* Plan editor: payment history and registering a payment */
 .history {
   display: flex;

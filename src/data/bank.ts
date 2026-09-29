@@ -1,4 +1,5 @@
 import {
+  cardDaysFromBank,
   guessCard,
   planBankImport,
   type BankAccount,
@@ -181,6 +182,37 @@ export const bankOps = {
           ),
         ),
       apply: (f) => ({ ...f, bankAccounts: [...f.bankAccounts, ...rows] }),
+    }
+  },
+
+  /** Closing and due days from the bank, only where the card has none. */
+  fillCardDays(finance: Finance, data: BankData): FinanceOp | null {
+    const changes = cardDaysFromBank(
+      finance.cards,
+      importInput(finance, data).accounts,
+    )
+    if (!changes.length) return null
+    return {
+      run: async () => {
+        for (const change of changes)
+          await ok(
+            table('cards')
+              .update({
+                closing_day: change.closingDay,
+                due_day: change.dueDay,
+              })
+              .eq('id', change.cardId),
+          )
+      },
+      apply: (f) => ({
+        ...f,
+        cards: f.cards.map((card) => {
+          const change = changes.find((item) => item.cardId === card.id)
+          return change
+            ? { ...card, closingDay: change.closingDay, dueDay: change.dueDay }
+            : card
+        }),
+      }),
     }
   },
 

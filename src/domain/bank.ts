@@ -476,6 +476,31 @@ export function planBankImport(
  * The app card whose name shares the most words with the bank's card name
  * ("SANTANDER UNIQUE VISA INFINITE" → "Santander Unique"). Null when none do.
  */
+/**
+ * Closing and due days the bank tells, for cards that do not have them yet
+ * (what the person typed is never replaced).
+ */
+export function cardDaysFromBank(
+  cards: readonly {
+    readonly id: string
+    readonly closingDay: number | null
+    readonly dueDay?: number | null
+  }[],
+  accounts: readonly BankAccount[],
+): { cardId: string; closingDay: number | null; dueDay: number | null }[] {
+  const day = (date: ISODate | null) =>
+    date ? Number(date.slice(8, 10)) : null
+  return cards.flatMap((card) => {
+    const account = accounts.find((item) => item.cardId === card.id)
+    if (!account) return []
+    const closingDay = card.closingDay ?? day(account.closeDate)
+    const dueDay = card.dueDay ?? day(account.dueDate)
+    return closingDay === card.closingDay && dueDay === (card.dueDay ?? null)
+      ? []
+      : [{ cardId: card.id, closingDay, dueDay }]
+  })
+}
+
 export function guessCard(
   bankName: string,
   cards: readonly { readonly id: string; readonly name: string }[],

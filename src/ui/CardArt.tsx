@@ -1,9 +1,12 @@
 import type { CSSProperties, PointerEvent } from 'react'
+import { cardBank } from '../domain/banks'
 import { cardColor, inkFor } from '../domain/cardColor'
+import { BankLogo } from './BankLogo'
 
 interface CardLook {
   readonly name: string
   readonly color: string | null
+  readonly bank?: string | null
 }
 
 /** On a mouse, the big card tilts in 3D following the pointer (7.4 item 12). */
@@ -28,7 +31,8 @@ function untilt(event: PointerEvent<HTMLSpanElement>) {
 
 /**
  * Card picture: color gradient and a gold chip; the large one also shows the
- * name and the contactless symbol. Never a bank logo (7.3).
+ * name and the contactless symbol. Fase 13.1 (the user's choice): with a known
+ * bank, small pictures are the bank's logo and the large card carries it.
  */
 export function CardArt({
   card,
@@ -39,6 +43,8 @@ export function CardArt({
 }) {
   const color = cardColor(card)
   const big = size === 'lg'
+  const bank = cardBank(card)
+  if (bank && !big) return <BankLogo bank={bank} className={size} />
   return (
     <span
       className={`card-art ${size}`}
@@ -50,6 +56,7 @@ export function CardArt({
       <i className="chip" />
       {big && (
         <>
+          {bank && <BankLogo bank={bank} className="on-card" />}
           <i className="waves" />
           <b>{card.name}</b>
         </>

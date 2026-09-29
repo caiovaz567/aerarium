@@ -36,6 +36,8 @@ const cardRecord = (card: Card) => ({
   name: card.name,
   color: card.color,
   closing_day: card.closingDay,
+  due_day: card.dueDay ?? null,
+  bank: card.bank ?? null,
   sort_order: card.sortOrder,
 })
 

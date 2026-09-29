@@ -73,6 +73,11 @@ export function useBankSync() {
       run(add)
       finance = add.apply(finance)
     }
+    const days = bankOps.fillCardDays(finance, data)
+    if (days) {
+      run(days)
+      finance = days.apply(finance)
+    }
     markSynced()
     return {
       data,

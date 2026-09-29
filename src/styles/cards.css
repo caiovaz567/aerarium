@@ -91,6 +91,7 @@ a.row-main {
   overflow-wrap: anywhere;
 }
 .card-title small {
+  display: block;
   color: var(--muted);
   font-size: 12.5px;
 }
@@ -567,4 +568,35 @@ a.row-main {
   .chart-strip {
     margin-inline: -16px;
   }
+}
+
+/* Fase 13.1: bank logo tiles (rounded corners are in the image). */
+.bank-logo {
+  display: block;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 23%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 18%);
+}
+.bank-logo.xs {
+  width: 30px;
+  height: 30px;
+}
+.bank-logo.on-card {
+  position: absolute;
+  top: 9%;
+  left: 7%;
+  width: 17%;
+  height: auto;
+  aspect-ratio: 1;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+}
+.filter-chip .bank-logo.xs {
+  width: 24px;
+  height: 24px;
+}
+.invoice-top .bank-logo {
+  width: 44px;
+  height: 44px;
 }

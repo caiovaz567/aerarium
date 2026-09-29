@@ -19,6 +19,10 @@ export interface Card {
   readonly name: string
   readonly color: string | null
   readonly closingDay: number | null
+  /** Fase 13.1: invoice due day, when known. */
+  readonly dueDay?: number | null
+  /** Fase 13.1: bank for the logo; null = guessed from the name, 'none' = no logo. */
+  readonly bank?: string | null
   readonly sortOrder: number
 }
 export interface MonthEntry {
@@ -131,7 +135,7 @@ export async function loadFinance(): Promise<Finance> {
     bankAccounts,
     bankRecords,
   ] = await Promise.all([
-    select('cards', 'id,name,color,closing_day,sort_order'),
+    select('cards', 'id,name,color,closing_day,due_day,bank,sort_order'),
     select('categories', 'id,name,color,icon,sort_order'),
     select('months', 'id,ref'),
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
@@ -175,6 +179,8 @@ export async function loadFinance(): Promise<Finance> {
         name: text(row.name),
         color: (row.color as string | null) ?? null,
         closingDay: (row.closing_day as number | null) ?? null,
+        dueDay: (row.due_day as number | null) ?? null,
+        bank: (row.bank as string | null) ?? null,
         sortOrder: Number(row.sort_order),
       }))
       .sort(

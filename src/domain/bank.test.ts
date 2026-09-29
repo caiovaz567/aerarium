@@ -3,6 +3,7 @@ import {
   bankInvoiceMonth,
   bankMoment,
   bankText,
+  cardDaysFromBank,
   guessCard,
   planBankImport,
   purchaseText,
@@ -691,5 +692,36 @@ describe('palpite de cartão', () => {
     ['Dinners Elo Grafite', null],
   ])('"%s" → %s', (name, id) => {
     expect(guessCard(name, cards)).toBe(id)
+  })
+})
+
+describe('dias do cartão pelo banco', () => {
+  it('preenche fechamento e vencimento que faltam, sem trocar o que foi digitado', () => {
+    const bank = (cardId: string | null): BankAccount => ({
+      pluggyAccountId: `acc-${cardId}`,
+      cardId,
+      dueDate: isoDate('2026-10-09'),
+      closeDate: isoDate('2026-10-02'),
+    })
+    expect(
+      cardDaysFromBank(
+        [
+          { id: 'vazio', closingDay: null },
+          { id: 'digitado', closingDay: 5, dueDay: 12 },
+          { id: 'metade', closingDay: 5, dueDay: null },
+          { id: 'sem-banco', closingDay: null, dueDay: null },
+        ],
+        [bank('vazio'), bank('digitado'), bank('metade'), bank(null)],
+      ),
+    ).toEqual([
+      { cardId: 'vazio', closingDay: 2, dueDay: 9 },
+      { cardId: 'metade', closingDay: 5, dueDay: 9 },
+    ])
+    expect(
+      cardDaysFromBank(
+        [{ id: 'c', closingDay: null }],
+        [{ ...bank('c'), dueDate: null, closeDate: null }],
+      ),
+    ).toEqual([])
   })
 })

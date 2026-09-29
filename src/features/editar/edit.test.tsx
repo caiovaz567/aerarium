@@ -127,6 +127,51 @@ describe('Editar cartão', () => {
     )
   })
 
+  it('logo do banco: palpite pelo nome, troca, "Sem logo" e vencimento', async () => {
+    renderApp('/cartoes?mes=2026-09')
+    const logo = () =>
+      screen
+        .getByRole('region', { name: 'Nubank Teste' })
+        .querySelector('.bank-logo')
+    expect(logo()).toHaveAttribute('src', '/banks/nubank.png')
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Nubank Teste' }))
+    const form = dialog('Editar cartão')
+    expect(within(form).getByRole('radio', { name: 'Nubank' })).toBeChecked()
+    fireEvent.click(within(form).getByRole('radio', { name: 'Itaú' }))
+    type(form, 'Dia de vencimento (opcional)', '40')
+    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
+    expect(within(form).getByRole('alert')).toHaveTextContent(
+      'O dia de vencimento precisa ser de 1 a 31.',
+    )
+    type(form, 'Dia de vencimento (opcional)', '12')
+    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    expect(logo()).toHaveAttribute('src', '/banks/itau.png')
+    expect(
+      screen.getByRole('region', { name: 'Nubank Teste' }),
+    ).toHaveTextContent('vence dia 12')
+    await waitFor(() =>
+      expect(writes()[0]).toMatchObject({
+        table: 'cards',
+        op: 'update',
+        payload: expect.objectContaining({ bank: 'itau', due_day: 12 }),
+      }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar Nubank Teste' }))
+    const again = dialog('Editar cartão')
+    fireEvent.click(within(again).getByRole('radio', { name: 'Sem logo' }))
+    type(again, 'Dia de fechamento (opcional)', '33')
+    fireEvent.click(within(again).getByRole('button', { name: 'Salvar' }))
+    expect(within(again).getByRole('alert')).toHaveTextContent(
+      'O dia de fechamento precisa ser de 1 a 31.',
+    )
+    type(again, 'Dia de fechamento (opcional)', '')
+    fireEvent.click(within(again).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    expect(logo()).toBeNull()
+  })
+
   it('novo cartão entra no fim da lista', async () => {
     renderApp('/cartoes?mes=2026-09')
     fireEvent.click(screen.getByRole('button', { name: 'Novo cartão' }))

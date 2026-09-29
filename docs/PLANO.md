@@ -10,7 +10,7 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 
 ## Pendências em aberto (antes de continuar)
 
-- [ ] Dono roda no desenvolvimento: `npm run supabase -- db push` (migration `20260928000100_expense_note.sql`) e `npm run db:test`. Depois: `npm run e2e`.
+- [x] Dono roda no desenvolvimento: `npm run supabase -- db push` (migration `20260928000100_expense_note.sql`) e `npm run db:test`. Depois: `npm run e2e`. (29/09/2026)
 - [ ] Dono testa o nome do banco + descrição (commit `6c892ad`, branch `novidades`).
 - [ ] Migration `expense_note` na produção **antes** de publicar (o dono roda: vincular prod, `db push --dry-run`, `db push`, voltar para dev).
 - [ ] Primeira importação real em Ajustes → Bancos conectados (com prévia).

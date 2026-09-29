@@ -29,6 +29,7 @@
     "db:seed": "node scripts/database.mjs seed",
     "e2e:user": "node scripts/e2e-user.mjs",
     "icons": "node scripts/make-icons.mjs",
+    "banks": "node scripts/make-bank-logos.mjs",
     "import:backup": "tsx scripts/import-backup.ts",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",

@@ -2,14 +2,16 @@ import { useId, useState, type FormEvent } from 'react'
 import { cardSnapshot, editOps } from '../../data/editOps'
 import type { Card, Finance } from '../../data/finance'
 import { today, useFinanceOp } from '../../data/useFinance'
+import { BANKS, cardBank, NO_BANK } from '../../domain/banks'
 import { autoColor, CARD_PALETTE } from '../../domain/cardColor'
+import { BankLogo } from '../../ui/BankLogo'
 import { CardArt } from '../../ui/CardArt'
 import { ArmedButton, TextField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 
 /**
- * New or edit card: preview, name, color and closing day.
+ * New or edit card: preview, name, bank (logo), color, closing and due day.
  * Card photos were removed at the user's request after phase 8.
  */
 export function CardModal({
@@ -24,9 +26,14 @@ export function CardModal({
   const run = useFinanceOp()
   const toast = useToast()
   const closingId = useId()
+  const dueId = useId()
   const [name, setName] = useState(card?.name ?? '')
   const [color, setColor] = useState<string | null>(card?.color ?? null)
   const [closing, setClosing] = useState(String(card?.closingDay ?? ''))
+  const [due, setDue] = useState(String(card?.dueDay ?? ''))
+  // null: follows the name until the person picks one.
+  const [bankChoice, setBankChoice] = useState(card?.bank ?? null)
+  const shownBank = cardBank({ name, bank: bankChoice }) ?? NO_BANK
   const [error, setError] = useState('')
 
   const bank = autoColor(name)
@@ -42,13 +49,18 @@ export function CardModal({
     if (!trimmed) return setError('Escreve o nome do cartão.')
     if (trimmed.length > 60) return setError('O nome pode ter até 60 letras.')
     const day = closing ? Number(closing) : null
-    if (day !== null && !(Number.isInteger(day) && day >= 1 && day <= 31))
+    if (day !== null && !(day >= 1 && day <= 31))
       return setError('O dia de fechamento precisa ser de 1 a 31.')
+    const dueDay = due ? Number(due) : null
+    if (dueDay !== null && !(dueDay >= 1 && dueDay <= 31))
+      return setError('O dia de vencimento precisa ser de 1 a 31.')
     const next: Card = {
       id: card?.id ?? crypto.randomUUID(),
       name: trimmed,
       color,
       closingDay: day,
+      dueDay,
+      bank: bankChoice,
       sortOrder:
         card?.sortOrder ??
         Math.max(0, ...finance.cards.map((item) => item.sortOrder)) + 1,
@@ -72,7 +84,10 @@ export function CardModal({
     <Modal title={card ? 'Editar cartão' : 'Novo cartão'} onClose={onClose}>
       <form className="modal-form" onSubmit={submit} noValidate>
         <div className="card-edit">
-          <CardArt card={{ name: name || 'Seu cartão', color }} size="lg" />
+          <CardArt
+            card={{ name: name || 'Seu cartão', color, bank: bankChoice }}
+            size="lg"
+          />
         </div>
         <TextField
           label="Nome do cartão"
@@ -80,6 +95,33 @@ export function CardModal({
           onChange={setName}
           placeholder="Ex.: NuBank"
         />
+        <fieldset className="field">
+          <legend>Banco</legend>
+          <div className="bank-options">
+            {BANKS.map((item) => (
+              <label className="bank-option" key={item.key} title={item.name}>
+                <input
+                  type="radio"
+                  name="banco"
+                  checked={shownBank === item.key}
+                  onChange={() => setBankChoice(item.key)}
+                  aria-label={item.name}
+                />
+                <BankLogo bank={item.key} />
+              </label>
+            ))}
+            <label className="bank-option none" title="Sem logo">
+              <input
+                type="radio"
+                name="banco"
+                checked={shownBank === NO_BANK}
+                onChange={() => setBankChoice(NO_BANK)}
+                aria-label="Sem logo"
+              />
+              <span>Sem logo</span>
+            </label>
+          </div>
+        </fieldset>
         <fieldset className="field">
           <legend>Cor</legend>
           <div className="swatches">
@@ -116,6 +158,19 @@ export function CardModal({
           <small>
             Gastos lançados depois desse dia já vão pra fatura do mês seguinte.
           </small>
+        </div>
+        <div className="field">
+          <label htmlFor={dueId}>Dia de vencimento (opcional)</label>
+          <input
+            id={dueId}
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="Ex.: 12"
+            value={due}
+            onChange={(event) =>
+              setDue(event.target.value.replace(/\D/g, '').slice(0, 2))
+            }
+          />
         </div>
         <p className="form-error" role="alert">
           {error}

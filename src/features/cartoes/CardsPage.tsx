@@ -1,3 +1,4 @@
+import { cardFinal } from '../../domain/banks'
 import { useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { currentMonth, parseMonth } from '../../app/paths'
@@ -54,11 +55,14 @@ function StackBar({
 function CardSection({
   block,
   month,
+  final,
   onEdit,
   children,
 }: {
   readonly block: CardBlock
   readonly month: Month
+  /** Last 4 digits, from the bank (Open Finance). */
+  readonly final: string | null
   readonly onEdit: () => void
   readonly children: ReactNode
 }) {
@@ -84,6 +88,16 @@ function CardSection({
         <Link className="card-title" to={`/cartoes/${card.id}`}>
           <b>{card.name}</b>
           <small className={invoice?.paid ? 'ok' : ''}>{status}</small>
+          {(final || card.dueDay) && (
+            <small>
+              {[
+                final && `final ${final}`,
+                card.dueDay && `vence dia ${card.dueDay}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </small>
+          )}
         </Link>
         {invoice && <span className="sum">{formatMoney(block.total)}</span>}
         <button
@@ -244,6 +258,10 @@ export function CardsPage() {
           key={block.card.id}
           block={block}
           month={selected}
+          final={cardFinal(
+            finance.bankAccounts.find((item) => item.cardId === block.card.id)
+              ?.number,
+          )}
           onEdit={() => editor.card(block.card.id)}
         >
           {(block.plans.length > 0 || block.subscriptionNames.length > 0) && (
