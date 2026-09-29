@@ -95,3 +95,15 @@ export function dateBR(value: ISODate): string {
   const date = isoDate(value)
   return `${date.slice(8, 10)}/${date.slice(5, 7)}/${date.slice(0, 4)}`
 }
+
+/**
+ * "2026-09-29" → "29/09/2026" and "2026-09-29T14:42" → "29/09/2026 14:42".
+ * Anything else (empty, half typed) shows as is.
+ */
+export function brazilianDate(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(value)
+  if (!match) return value
+  const [, year, month, day, hour, minute] = match
+  const date = `${day}/${month}/${year}`
+  return hour ? `${date} ${hour}:${minute}` : date
+}

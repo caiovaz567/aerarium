@@ -66,7 +66,7 @@ Só para a conta do dono. Compras dos cartões chegam do banco pelo Meu Pluggy (
 
 ## Regras de interface (critério de aceite)
 
-Celular primeiro (conferir em 390×844). Nada pula de lugar ao trocar de mês ou filtrar. Nada importante cortado com "…". Ícones em SVG. Modais no centro. Barras fixas ao rolar. Lixeira com Desfazer. Sem rolagem lateral da página. Textos em pt-BR, tom casual, sem travessão ou hífen como pontuação. Acessibilidade AA (axe nos testes), foco visível, `prefers-reduced-motion`.
+Celular primeiro (conferir em 390×844). Nada pula de lugar ao trocar de mês ou filtrar. Nada importante cortado com "…". Ícones em SVG. Modais no centro. Barras fixas ao rolar. Lixeira com Desfazer. Sem rolagem lateral da página. Textos em pt-BR, tom casual, sem travessão ou hífen como pontuação. Todo campo de data usa `DateInput` (`src/ui`): seletor do aparelho, mas a data sempre aparece dd/mm/aaaa e hora em 24h, qualquer que seja o idioma do aparelho. Acessibilidade AA (axe nos testes), foco visível, `prefers-reduced-motion`.
 
 ## Pendências e próximos passos
 

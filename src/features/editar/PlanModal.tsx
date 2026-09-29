@@ -17,6 +17,7 @@ import {
 } from '../../domain/months'
 import { keptAdjustment, planEditError } from '../../domain/planEdit'
 import { ArmedButton, MoneyField, TextField, WhoField } from '../../ui/controls'
+import { DateInput } from '../../ui/DateInput'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
@@ -259,11 +260,10 @@ export function PlanModal({
               <div className="register">
                 <div className="field">
                   <label htmlFor={ids.date}>Quando você pagou</label>
-                  <input
+                  <DateInput
                     id={ids.date}
-                    type="date"
                     value={payDate}
-                    onChange={(event) => setPayDate(event.target.value)}
+                    onChange={setPayDate}
                   />
                 </div>
                 <div className="field">

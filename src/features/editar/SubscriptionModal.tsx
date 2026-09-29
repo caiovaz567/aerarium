@@ -8,6 +8,7 @@ import { formatMoneyInput } from '../../domain/money'
 import { isoDate, monthLabel, type ISODate } from '../../domain/months'
 import { CategoryPicker } from '../../ui/CategoryPicker'
 import { ArmedButton, MoneyField, TextField } from '../../ui/controls'
+import { DateInput } from '../../ui/DateInput'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
@@ -145,12 +146,11 @@ export function SubscriptionModal({
         </div>
         <div className="field">
           <label htmlFor={ids.start}>Começou em</label>
-          <input
+          <DateInput
             id={ids.start}
-            type="date"
             value={start}
-            onChange={(event) => setStart(event.target.value)}
-            aria-describedby={`${ids.start}-dica`}
+            onChange={setStart}
+            describedBy={`${ids.start}-dica`}
           />
           <small id={`${ids.start}-dica`}>
             {shown

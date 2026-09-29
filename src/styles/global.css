@@ -443,6 +443,46 @@ body.has-stuck .app-header.scrolled {
 .field input::-webkit-date-and-time-value {
   text-align: left;
 }
+/* The device writes dates its own way (09/29/2026 02:42 PM); the field keeps
+   the picker and hides that text under the Brazilian one (29/09/2026 14:42). */
+.date-input {
+  position: relative;
+}
+.date-input input {
+  color: transparent;
+  cursor: pointer;
+}
+.date-input input::-webkit-datetime-edit {
+  color: transparent;
+}
+.date-input input::selection,
+.date-input input::-webkit-datetime-edit-fields-wrapper *::selection {
+  background: transparent;
+}
+.date-input input::-webkit-datetime-edit-fields-wrapper *:focus {
+  background: transparent;
+}
+.date-text {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  color: var(--ink);
+  font-size: 16px;
+  pointer-events: none;
+}
+.date-text.empty {
+  color: var(--muted);
+}
+/* The calendar icon follows the theme (dark on light, light on dark). */
+:root[data-theme='dark'] .date-input input {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .date-input input {
+    color-scheme: dark;
+  }
+}
 /* A bank purchase's name: shown, not typed. */
 .field .bank-name {
   margin: 0;
