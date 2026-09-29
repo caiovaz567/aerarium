@@ -170,9 +170,7 @@ describe('tela do cartão', () => {
     renderApp('/cartoes/c1')
     expect(
       spaced(screen.getByRole('region', { name: 'Fatura atual' }).textContent),
-    ).toBe(
-      'Nubank TesteVencimentosem diacoloca em EditarFatura de setembroR$ 442,92A pagar',
-    )
+    ).toBe('Nubank TesteVencimentosem diaFatura de setembroR$ 442,92A pagar')
     // No closing or due day yet: a hint instead of the dates; no limit.
     expect(screen.getByText(/Coloca o dia de fechamento/)).toBeVisible()
     expect(screen.queryByRole('region', { name: 'Limite' })).toBeNull()

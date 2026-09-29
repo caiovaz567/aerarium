@@ -192,9 +192,7 @@ export function CardPage() {
           <div>
             <small>Vencimento</small>
             <b>{view.due ? shortDate(view.due) : 'sem dia'}</b>
-            <small>
-              {view.dueText ?? (view.due ? '' : 'coloca em Editar')}
-            </small>
+            {view.dueText && <small>{view.dueText}</small>}
           </div>
           <div>
             <small>Fatura de {monthName(now).toLowerCase()}</small>
