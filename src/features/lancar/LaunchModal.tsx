@@ -3,7 +3,7 @@ import type { Finance } from '../../data/finance'
 import { today as todayDate, useFinanceOp } from '../../data/useFinance'
 import { monthLabel, monthOf, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
-import { CheckField } from '../../ui/controls'
+import { CheckField, WhoField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
@@ -67,6 +67,7 @@ export function LaunchModal({
   const [description, setDescription] = useState('')
   const [where, setWhere] = useState(() => rememberedWhere(finance))
   const [paid, setPaid] = useState(true)
+  const [forOther, setForOther] = useState(false)
   // Follows the card's closing day until the person picks a month themselves.
   const [pickedMonth, setPickedMonth] = useState<Month | null>(null)
   // Follows the suggestion from the description until the person picks one.
@@ -86,6 +87,12 @@ export function LaunchModal({
     today: day,
   })
   const target = pickedMonth ?? suggested
+  // Fase 13.3, owner only: card purchases and plans can be the other person's
+  // (a Pix bill cannot).
+  const canMarkOther =
+    Boolean(finance.otherPerson) &&
+    usesCard &&
+    (where !== NO_CARD || kind === 'parcelado')
   const categoryId = pickedCategory
     ? pickedCategory.id
     : suggestCategory(description, finance.categories, categoryHistory(finance))
@@ -132,6 +139,7 @@ export function LaunchModal({
         today: day,
         categoryId: usesCard ? categoryId : null,
         occurredAt,
+        forOther: canMarkOther && forOther,
       })
     } catch (reason) {
       return setError((reason as Error).message)
@@ -254,6 +262,14 @@ export function LaunchModal({
               </label>
             </div>
           </fieldset>
+        )}
+
+        {canMarkOther && (
+          <WhoField
+            other={finance.otherPerson!}
+            forOther={forOther}
+            onChange={setForOther}
+          />
         )}
 
         {usesCard && finance.categories.length > 0 && (

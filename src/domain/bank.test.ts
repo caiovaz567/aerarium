@@ -898,7 +898,7 @@ describe('começar do zero no dia da primeira importação', () => {
     expect(result.records.map((item) => item.externalId)).toEqual(['nova'])
   })
 
-  it('o "outros" da fatura aberta naquele dia fica; das seguintes, zera', () => {
+  it('usuário normal: o "outros" da fatura aberta naquele dia fica; das seguintes, zera', () => {
     const typed = (id: string, when: string) => ({
       id,
       cardId: 'card',
@@ -908,6 +908,7 @@ describe('começar do zero no dia da primeira importação', () => {
     })
     const result = planBankImport(
       state({
+        dueNextMonth: false,
         records: new Map([['start:2026-09-10', { amount: null }]]),
         months: [
           { id: 'm9', ref: sep },
@@ -924,6 +925,46 @@ describe('começar do zero no dia da primeira importação', () => {
       ids,
     )
     expect(result.invoiceTotals).toEqual([
+      { invoiceId: 'inv11', otherAmount: 0 },
+    ])
+  })
+
+  it('na convenção do dono, a fatura do mês seguinte ao começo já zera', () => {
+    const typed = (id: string, when: string) => ({
+      id,
+      cardId: 'card',
+      month: month(when),
+      paid: false,
+      otherAmount: cents(5000),
+    })
+    const result = planBankImport(
+      state({
+        records: new Map([['start:2026-09-10', { amount: null }]]),
+        months: [
+          { id: 'm9', ref: sep },
+          { id: 'm10', ref: oct },
+          { id: 'm11', ref: month('2026-11') },
+        ],
+        invoices: [
+          typed('inv9', '2026-09'),
+          typed('inv10', '2026-10'),
+          typed('inv11', '2026-11'),
+        ],
+      }),
+      {
+        accounts: [{ ...account, dueDate: null }],
+        transactions: [
+          at('set', '2026-09-12'),
+          at('out', '2026-10-12'),
+          at('nov', '2026-11-12'),
+        ],
+        bills: [],
+      },
+      ids,
+    )
+    // September still holds purchases from before the start in "outros".
+    expect(result.invoiceTotals).toEqual([
+      { invoiceId: 'inv10', otherAmount: 0 },
       { invoiceId: 'inv11', otherAmount: 0 },
     ])
   })

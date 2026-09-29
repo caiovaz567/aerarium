@@ -99,6 +99,8 @@ export interface LaunchInput {
   readonly categoryId?: string | null
   /** Fase 12: when it happened (ISO instant); its day wins over `today`. */
   readonly occurredAt?: string | null
+  /** Fase 13.3, owner only: a card purchase or a plan of the other person. */
+  readonly forOther?: boolean
 }
 
 export interface Launch {
@@ -137,6 +139,7 @@ export function buildLaunch(
       firstMonth: input.month,
       note: null,
       categoryId: input.categoryId ?? null,
+      ...(input.forOther && { forOther: true }),
     }
     return {
       op: ops.restorePlan(plan, []),
@@ -251,6 +254,7 @@ export function buildLaunch(
     spentOn: day,
     categoryId: input.categoryId ?? null,
     occurredAt,
+    ...(input.forOther && { forOther: true }),
   }
   const message = `${formatMoney(input.amount)} na fatura ${card.name}${invoice.paid ? ' (ela já estava paga)' : ''}`
   if (created)

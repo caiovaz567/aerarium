@@ -591,7 +591,10 @@ export function planBankImport(
   // "outros" typed by hand would count them twice, so it goes to zero, once.
   // Starting from zero, the invoice open that day still holds purchases from
   // before in "outros": only invoices whose whole cycle came after are zeroed.
-  const cleanFrom = start ? addMonths(monthOf(start), 2) : null
+  // The owner names an invoice a month before it is due, so one month sooner.
+  const cleanFrom = start
+    ? addMonths(monthOf(start), state.dueNextMonth ? 1 : 2)
+    : null
   for (const invoice of invoices) {
     if (!touched.has(invoice.id) || invoice.otherAmount <= 0) continue
     if (cleanFrom && invoice.month < cleanFrom) continue

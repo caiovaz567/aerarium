@@ -250,6 +250,17 @@ describe('o que cada lançamento grava', () => {
     })
   })
 
+  it('do pai: o gasto e o parcelado vão marcados dele', () => {
+    const expense = buildLaunch(finance, { ...base, forOther: true }, ids)
+    expect(expense.op.apply(finance).expenses.at(-1)?.forOther).toBe(true)
+    const plan = buildLaunch(
+      finance,
+      { ...base, kind: 'parcelado', installments: 3, forOther: true },
+      ids,
+    )
+    expect(plan.op.apply(finance).plans.at(-1)?.forOther).toBe(true)
+  })
+
   it('parcelado pode começar no mês que vem, sem criar mês', () => {
     const launch = buildLaunch(
       finance,
@@ -338,6 +349,40 @@ describe('modal Lançar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
     await waitFor(() => expect(writes()[1]).toMatchObject({ op: 'delete' }))
     expect(localStorage.getItem('aerarium.lancar.onde')).toBe('c1')
+  })
+
+  it('com o pai ligado: compra no cartão e parcelado podem ser dele; Pix não', async () => {
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: 'Pai',
+    })
+    const dialog = open()
+    fireEvent.change(within(dialog).getByLabelText('Valor'), {
+      target: { value: '30,00' },
+    })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Pai' }))
+    fireEvent.click(within(dialog).getByRole('radio', { name: /Pix/ }))
+    expect(within(dialog).queryByRole('button', { name: 'Pai' })).toBeNull()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Parcelado' }))
+    expect(within(dialog).getByRole('button', { name: 'Pai' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Gasto' }))
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Nubank Teste' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Lançar' }))
+    await settle()
+    await waitFor(() =>
+      expect(writes()[0]).toMatchObject({
+        table: 'invoice_expenses',
+        payload: expect.objectContaining({ amount: '30.00', for_other: true }),
+      }),
+    )
+  })
+
+  it('usuário normal não vê "De quem"', () => {
+    renderApp('/meses/2026-09')
+    expect(within(open()).queryByText('De quem')).toBeNull()
   })
 
   it('sem valor, avisa; parcelado pede de 2 a 120 vezes e mostra a prévia', () => {
