@@ -39,11 +39,11 @@ test('Por data: dias, fixos, filtros e resumo, sem rolagem lateral', async ({
     .analyze()
   expect(result.violations.map((item) => item.id)).toEqual([])
 
-  // Remembered on this device.
+  // Meses always opens "Por tipo".
   await page.reload()
   await expect(
     page
       .getByRole('region', { name: 'Saídas' })
-      .getByRole('button', { name: 'Por data' }),
+      .getByRole('button', { name: 'Por tipo' }),
   ).toHaveAttribute('aria-pressed', 'true')
 })

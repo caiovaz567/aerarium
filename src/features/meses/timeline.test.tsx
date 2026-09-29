@@ -22,15 +22,17 @@ vi.mock('../../data/finance', async (original) => ({
 
 beforeEach(() => {
   fake.current = fakeSupabase()
-  localStorage.setItem('aerarium.meses.visao', 'data')
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2026-09-15T12:00:00-03:00'))
 })
 afterEach(() => vi.useRealTimers())
 
+// Meses opens "Por tipo"; these tests look at "Por data".
 function renderApp(...args: Parameters<typeof render>) {
   const result = render(...args)
   fake.latest = () => result.client.getQueryData(financeKey('u1'))
+  const byDate = screen.queryByRole('button', { name: 'Por data' })
+  if (byDate) fireEvent.click(byDate)
   return result
 }
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
@@ -43,13 +45,16 @@ const rows = (scope: HTMLElement) =>
     .map((item) => spaced(item.textContent))
 
 describe('Por data', () => {
-  it('abre na última visão usada; muda e lembra', () => {
-    renderApp('/meses/2026-09')
+  it('abre sempre em "Por tipo", o primeiro; "Por data" fica no meio', () => {
+    render('/meses/2026-09')
     expect(
-      within(saidas()).getByRole('button', { name: 'Por data' }),
+      within(saidas()).getByRole('button', { name: 'Por tipo' }),
     ).toHaveAttribute('aria-pressed', 'true')
-    fireEvent.click(within(saidas()).getByRole('button', { name: 'Por tipo' }))
-    expect(localStorage.getItem('aerarium.meses.visao')).toBe('tipo')
+    expect(
+      within(screen.getByRole('group', { name: 'Ver saídas' }))
+        .getAllByRole('button')
+        .map((item) => item.textContent),
+    ).toEqual(['Por tipo', 'Por data', 'Por categoria'])
     expect(within(saidas()).getByText('Cartões')).toBeVisible()
   })
 

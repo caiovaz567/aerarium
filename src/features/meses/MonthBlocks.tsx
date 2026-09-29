@@ -97,7 +97,7 @@ export function OutflowsByType({
     readonly paidCount: number
     readonly outflowCount: number
     readonly subtotals: { cards: Cents; loose: Cents; bills: Cents }
-    readonly balance: { readonly outflows: Cents }
+    readonly balance: { readonly outflows: Cents; readonly unpaid: Cents }
   }
   readonly categories: readonly Category[]
   readonly onInvoice: (item: CardOutflow) => void

@@ -9,23 +9,10 @@ import { TimelineView } from './TimelineView'
 
 type View = 'data' | 'tipo' | 'categoria'
 const VIEWS: [View, string][] = [
-  ['data', 'Por data'],
   ['tipo', 'Por tipo'],
+  ['data', 'Por data'],
   ['categoria', 'Por categoria'],
 ]
-/** The last view used, per device (a convenience; the default is "Por data"). */
-const KEY = 'aerarium.meses.visao'
-
-function remembered(): View {
-  try {
-    const saved = localStorage.getItem(KEY)
-    if (saved === 'data' || saved === 'tipo' || saved === 'categoria')
-      return saved
-  } catch {
-    /* private mode */
-  }
-  return 'data'
-}
 
 /**
  * Fase 12: Saídas with three ways to see them (by date, by type, by category).
@@ -42,15 +29,8 @@ export function OutflowViews({
   /** Opens an item from the date and category views. */
   readonly onOpen: (item: OutflowItem) => void
 } & ComponentProps<typeof OutflowsByType>) {
-  const [view, setView] = useState<View>(remembered)
-  const choose = (next: View) => {
-    setView(next)
-    try {
-      localStorage.setItem(KEY, next)
-    } catch {
-      /* private mode: not remembered */
-    }
-  }
+  // Always opens "Por tipo" (the owner's choice, 29/09/2026).
+  const [view, setView] = useState<View>('tipo')
   const { view: summary } = byType
   return (
     <section className="block" aria-labelledby="saidas">
@@ -59,7 +39,15 @@ export function OutflowViews({
         <span className="meta">
           {summary.paidCount} de {summary.outflowCount} pagas
         </span>
-        <span className="sum neg">{formatMoney(summary.balance.outflows)}</span>
+        {/* What is still to pay: it goes down as each one is marked paid
+            (the owner's choice, 29/09/2026). The month's total and Disponível
+            stay in the summary above. */}
+        <span
+          className={summary.balance.unpaid > 0 ? 'sum neg' : 'sum'}
+          aria-label={`Falta pagar ${formatMoney(summary.balance.unpaid)}`}
+        >
+          {formatMoney(summary.balance.unpaid)}
+        </span>
       </div>
       <div className="segmented views" role="group" aria-label="Ver saídas">
         {VIEWS.map(([key, label]) => (
@@ -67,7 +55,7 @@ export function OutflowViews({
             type="button"
             key={key}
             aria-pressed={view === key}
-            onClick={() => choose(key)}
+            onClick={() => setView(key)}
           >
             {label}
           </button>

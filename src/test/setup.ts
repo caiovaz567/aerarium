@@ -4,12 +4,10 @@ import { afterEach, beforeEach } from 'vitest'
 
 afterEach(cleanup)
 
-// Every test starts the same way. Meses opens "Por tipo" (cards, installments,
-// bills), which most tests were written for; the date view tests pick theirs.
+// Every test starts the same way.
 beforeEach(() => {
   if (typeof localStorage === 'undefined') return
   localStorage.clear()
-  localStorage.setItem('aerarium.meses.visao', 'tipo')
 })
 
 // jsdom lacks these browser APIs used by the layout.

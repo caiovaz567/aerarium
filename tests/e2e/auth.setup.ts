@@ -15,10 +15,5 @@ setup('preparar e entrar com a conta de teste', async ({ page }) => {
   await page.getByLabel('Senha', { exact: true }).fill(password!)
   await page.getByRole('button', { name: 'Entrar', exact: true }).click()
   await expect(page).toHaveURL(/\/meses\/\d{4}-\d{2}$/)
-  // Meses opens "Por tipo" (what most checks were written for); the date view
-  // tests choose theirs.
-  await page.evaluate(() =>
-    localStorage.setItem('aerarium.meses.visao', 'tipo'),
-  )
   await page.context().storageState({ path: SESSION })
 })

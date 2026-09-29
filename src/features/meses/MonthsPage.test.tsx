@@ -117,6 +117,11 @@ describe('Meses: mudanças', () => {
       screen.getByRole('button', { name: 'Pago: Conta de luz' }),
     ).toHaveAttribute('aria-pressed', 'true')
     expect(heroValue('Falta pagar')).toBe('R$ 592,92')
+    // Saídas goes down with what was paid; the month's total and Disponível do not.
+    expect(
+      within(block('Saídas')).getByLabelText(/^Falta pagar/),
+    ).toHaveTextContent(/R\$\s592,92/)
+    expect(heroValue('Saídas')).toBe('R$ 873,17')
     await waitFor(() =>
       expect(writes()[0]).toMatchObject({
         table: 'bills',

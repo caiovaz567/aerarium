@@ -27,9 +27,13 @@ beforeEach(() => {
 })
 afterEach(() => vi.useRealTimers())
 
+// Meses opens "Por tipo"; the category tests pick theirs.
+let view: string | null = null
 function renderApp(...args: Parameters<typeof render>) {
   const result = render(...args)
   fake.latest = () => result.client.getQueryData(financeKey('u1'))
+  const button = view && screen.queryByRole('button', { name: view })
+  if (button) fireEvent.click(button)
   return result
 }
 const cached = (client: ReturnType<typeof renderApp>['client']) =>
@@ -45,7 +49,12 @@ const rows = () =>
     .map((row) => spaced(row.textContent))
 
 describe('Saídas por categoria', () => {
-  beforeEach(() => localStorage.setItem('aerarium.meses.visao', 'categoria'))
+  beforeEach(() => {
+    view = 'Por categoria'
+  })
+  afterEach(() => {
+    view = null
+  })
 
   it('setembro por categoria, somando as saídas do mês (R$ 873,17)', () => {
     renderApp('/meses/2026-09')
