@@ -148,9 +148,8 @@ export function importSummary(result: ImportResult) {
     plans: result.plans.length,
     matched: result.links.length + result.planLinks.length,
     subscriptions: count('subscription'),
-    bills: result.records.filter(
-      (item) => item.kind === 'bill' && item.externalId.startsWith('bill:'),
-    ).length,
+    // Closed bills whose total came from the bank.
+    bills: result.bankTotals.length,
   }
 }
 

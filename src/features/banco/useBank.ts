@@ -93,7 +93,13 @@ export function useBankSync() {
 
   const save = useCallback(
     (result: ImportResult) => {
-      if (result.records.length) run(bankOps.apply(result))
+      // Bank totals come without records: they count as something to save.
+      if (
+        result.records.length ||
+        result.bankTotals.length ||
+        result.invoiceTotals.length
+      )
+        run(bankOps.apply(result))
     },
     [run],
   )

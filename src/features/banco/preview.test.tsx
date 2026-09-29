@@ -5,6 +5,7 @@ import { cents } from '../../domain/money'
 import { isoDate, month } from '../../domain/months'
 import { financeFixture } from '../../test/financeFixture'
 import { PreviewCards } from './PreviewCards'
+import { importMessage } from './useBank'
 
 const sep = month('2026-09')
 const result: ImportResult = {
@@ -95,5 +96,21 @@ describe('prévia da primeira importação', () => {
     )
     expect(within(card).getAllByText('Pai')).toHaveLength(2)
     expect(within(card).getByText(/5x · desde set/)).toBeInTheDocument()
+  })
+})
+
+describe('aviso depois da busca', () => {
+  it('só com o total de faturas fechadas, ainda tem o que salvar e avisar', () => {
+    const onlyTotals: ImportResult = {
+      ...result,
+      expenses: [],
+      plans: [],
+      billChecks: [],
+      bankTotals: [{ invoiceId: 'i', bankTotal: cents(100) }],
+    }
+    expect(importMessage(onlyTotals)).toBe('1 fatura fechada.')
+    expect(importMessage({ ...onlyTotals, bankTotals: [] })).toBe(
+      'Nada novo no banco.',
+    )
   })
 })
