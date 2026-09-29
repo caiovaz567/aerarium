@@ -3,9 +3,11 @@ import { bankOps } from '../../data/bank'
 import type { Finance } from '../../data/finance'
 import { useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
-import { BankIcon, RefreshIcon } from '../../ui/icons'
+import { settingsOps } from '../../data/settingsOps'
+import { BankIcon, PeopleIcon, RefreshIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
+import { PreviewCards } from './PreviewCards'
 import { importMessage, lastSync, useBankEnabled, useBankSync } from './useBank'
 
 const when = (date: Date | null) =>
@@ -18,6 +20,31 @@ const when = (date: Date | null) =>
         minute: '2-digit',
       }).format(date)
     : 'nunca'
+
+/** Name of the other person, saved when the field loses focus. */
+function OtherName({
+  name,
+  onSave,
+}: {
+  readonly name: string
+  readonly onSave: (name: string) => void
+}) {
+  const [draft, setDraft] = useState(name)
+  return (
+    <input
+      className="other-name"
+      aria-label="Nome de quem usa seus cartões"
+      maxLength={30}
+      value={draft}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        const clean = draft.trim()
+        if (clean && clean !== name) onSave(clean)
+        else setDraft(name)
+      }}
+    />
+  )
+}
 
 /**
  * Open Finance in Ajustes (only for the app's owner): each bank card and the
@@ -88,6 +115,36 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             </select>
           </li>
         ))}
+        <li className="settings-row">
+          <span className="settings-icon accent" aria-hidden="true">
+            <PeopleIcon />
+          </span>
+          <label className="settings-text" htmlFor="outra-pessoa">
+            <b>Outra pessoa usa seus cartões</b>
+            <small>
+              {finance.otherPerson
+                ? `As compras de ${finance.otherPerson} e o "outros" das faturas não contam no seu saldo.`
+                : 'Liga pra separar o que é seu do que é de outra pessoa.'}
+            </small>
+          </label>
+          {finance.otherPerson && (
+            <OtherName
+              name={finance.otherPerson}
+              onSave={(name) => run(settingsOps.setOtherPerson(name))}
+            />
+          )}
+          <input
+            id="outra-pessoa"
+            type="checkbox"
+            className="switch"
+            checked={Boolean(finance.otherPerson)}
+            onChange={(event) =>
+              run(
+                settingsOps.setOtherPerson(event.target.checked ? 'Pai' : null),
+              )
+            }
+          />
+        </li>
         <li>
           <button
             type="button"
@@ -122,6 +179,8 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
               As compras entram nas faturas abertas com a categoria sugerida.
               Nas faturas abertas que receberem compras, o "outros" digitado vai
               pra zero, pra não contar duas vezes. Faturas já pagas não mudam.
+              {finance.otherPerson &&
+                ` O que você não tinha lançado entra como do ${finance.otherPerson}; dá pra trocar depois.`}
             </p>
             {preview.notices.length > 0 && (
               <ul className="bank-notices">
@@ -130,6 +189,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
                 ))}
               </ul>
             )}
+            <PreviewCards finance={finance} result={preview} />
             <div className="modal-actions">
               <span className="spacer" />
               <button

@@ -40,12 +40,29 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
   ])
   if (invoice.paid && (invoice.closedTotal === null || invoice.paidOn === null))
     throw new RangeError('Fatura paga precisa de total congelado e data.')
+  const total = invoice.paid
+    ? nonNegative(invoice.closedTotal!)
+    : calculatedTotal
+  // Fase 13.3: what the other person bought; the owner's part is the rest.
+  const otherShare = sumMoney([
+    ...context.plans
+      .filter((plan) => plan.cardId === invoice.cardId && plan.forOther)
+      .flatMap((plan) => installmentSchedule(plan, context.payments))
+      .filter((item) => item.month === invoice.month)
+      .map((item) => item.amount),
+    ...context.expenses
+      .filter((item) => item.invoiceId === invoice.id && item.forOther)
+      .map((item) => nonNegative(item.amount)),
+    context.restIsOther ? otherAmount : cents(0),
+  ])
   return {
     ...fixed,
     expensesAmount,
     otherAmount,
     calculatedTotal,
-    total: invoice.paid ? nonNegative(invoice.closedTotal!) : calculatedTotal,
+    total,
+    otherShare,
+    mine: cents(Math.max(0, total - otherShare)),
   }
 }
 

@@ -41,6 +41,13 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 - Logo pela marca (Netflix, Spotify, ChatGPT, iCloud...) de uma biblioteca aberta de ícones de marcas (ex.: Simple Icons, pelo jsDelivr), escolhida pelo nome; sem marca, fica o ícone da categoria.
 - Assinaturas ganham o resumo do Finzey: total mensal, quantas ativas, projeção de 12 meses.
 
+### 13.3 O pai usa os mesmos cartões (só para o dono)
+
+- [x] Base (29/09/2026, branch `novidades`): "de quem" em gastos e parcelamentos, "outros" é do pai, saldo só com a parte do dono, importação separando sozinha, prévia por cartão, compra antiga sem fatura do banco vai pra fatura certa.
+- [ ] Tela "Chegou do banco" ao abrir o app: compras novas por dia, marcar Meu ou Pai (junta com a 14.1).
+- [ ] Seletor de perfil Eu | Pai no topo (só para o dono): a visão do Pai mostra os gastos dele nos cartões, por data, categoria e cartão.
+- [ ] Depois, se o dono quiser: mandar as compras do pai para a conta dele no Aerarium (escrita no servidor, com cuidado). Nunca guardar e-mail ou id do pai no Git.
+
 ## Fase 14: revisar em vez de lançar
 
 ### 14.1 "Chegou do banco" (fila de revisão)

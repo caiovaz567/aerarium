@@ -7,6 +7,7 @@ import {
   CheckField,
   MoneyField,
   TextField,
+  WhoField,
 } from '../../ui/controls'
 import { CategoryPicker } from '../../ui/CategoryPicker'
 import { WhenField } from '../../ui/WhenField'
@@ -180,12 +181,15 @@ export function BillModal({
 export function ExpenseModal({
   expense,
   categories,
+  otherPerson = null,
   onClose,
   onSave,
   onDelete,
 }: {
   readonly expense: ExpenseRow
   readonly categories: readonly Category[]
+  /** Fase 13.3: who else uses the cards, if anyone. */
+  readonly otherPerson?: string | null
   readonly onClose: () => void
   readonly onSave: (changes: {
     description: string
@@ -193,9 +197,11 @@ export function ExpenseModal({
     categoryId: string | null
     occurredAt: string | null
     note?: string | null
+    forOther?: boolean
   }) => void
   readonly onDelete: () => void
 }) {
+  const [forOther, setForOther] = useState(expense.forOther ?? false)
   // A purchase from the bank keeps the bank's name; the person adds a note.
   const fromBank = Boolean(expense.externalId)
   const [description, setDescription] = useState(expense.description)
@@ -231,6 +237,7 @@ export function ExpenseModal({
           categoryId,
           occurredAt,
           ...(fromBank && { note: note.trim().slice(0, 200) || null }),
+          ...(otherPerson && { forOther }),
         })
       }}
     >
@@ -253,6 +260,13 @@ export function ExpenseModal({
           value={description}
           onChange={setDescription}
           placeholder="Ex.: Uber"
+        />
+      )}
+      {otherPerson && (
+        <WhoField
+          other={otherPerson}
+          forOther={forOther}
+          onChange={setForOther}
         />
       )}
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />

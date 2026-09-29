@@ -277,6 +277,7 @@ export function MonthsPage() {
         <ExpenseModal
           expense={expense}
           categories={finance.categories}
+          otherPerson={finance.otherPerson}
           onClose={close}
           onDelete={() => {
             close()

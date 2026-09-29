@@ -13,6 +13,8 @@ export interface InstallmentPlan {
   readonly firstMonth: Month
   /** Fase 11: optional spending category. */
   readonly categoryId?: string | null
+  /** Fase 13.3: bought by the other person who uses the cards. */
+  readonly forOther?: boolean
 }
 
 export interface InstallmentPayment {
@@ -47,6 +49,8 @@ export interface InvoiceExpense {
   readonly invoiceId: string
   readonly amount: Cents
   readonly categoryId?: string | null
+  /** Fase 13.3: bought by the other person who uses the cards. */
+  readonly forOther?: boolean
 }
 
 export interface Income {
@@ -72,6 +76,11 @@ export interface InvoiceContext {
   readonly payments: readonly InstallmentPayment[]
   readonly subscriptions: readonly Subscription[]
   readonly expenses: readonly InvoiceExpense[]
+  /**
+   * Fase 13.3 (the owner's choice): someone else uses the cards and the
+   * undetailed rest of every invoice ("outros") is theirs.
+   */
+  readonly restIsOther?: boolean
 }
 
 export interface FinancialData extends InvoiceContext {

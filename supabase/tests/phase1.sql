@@ -146,6 +146,13 @@ select pg_temp.expect_error($q$update public.cards set due_day = 32$q$, '23514',
 update public.bank_accounts set credit_limit = 5000, available_limit = 3200.50, limit_at = now() where id = 'b0000000-0000-4000-8000-000000000001';
 select pg_temp.assert_true((select available_limit = 3200.50 from public.bank_accounts where id = 'b0000000-0000-4000-8000-000000000001'), 'Conta do banco guarda o limite');
 select pg_temp.expect_error($q$update public.bank_accounts set credit_limit = -1$q$, '23514', 'Limite nao e negativo');
+-- Fase 13.3: purchases of someone else who uses the cards are not the owner's.
+update public.invoice_expenses set for_other = true where id = (select id from public.invoice_expenses where invoice_id = (select invoice_id from public.v_invoice_totals where not paid and expenses_amount > 0 order by month limit 1) order by id limit 1);
+select pg_temp.assert_true((select bool_and(mine = total - other_share and other_share > 0) from public.v_invoice_totals where expenses_amount > 0 and not paid and invoice_id in (select invoice_id from public.invoice_expenses where for_other)), 'Parte de outra pessoa sai da fatura do dono');
+insert into public.user_settings (other_person) values ('Pai');
+select pg_temp.assert_true((select bool_and(other_share >= other_amount) from public.v_invoice_totals), 'Com outra pessoa, o outros da fatura e dela');
+select pg_temp.assert_true((select bool_and(v.outflows = coalesce((select sum(t.mine) from public.v_invoice_totals t where t.month_id = v.month_id), 0) + coalesce((select sum(amount) from public.bills b where b.month_id = v.month_id), 0) + coalesce((select sum(amount) from public.v_installment_schedule s where s.card_id is null and not s.for_other and s.month = v.ref), 0)) from public.v_month_summary v), 'Saidas do mes contam so a parte do dono');
+select pg_temp.expect_error($q$update public.user_settings set other_person = '   '$q$, '23514', 'Nome da outra pessoa nao e vazio');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
@@ -158,6 +165,8 @@ do $$ declare t text; n bigint; begin
     execute format('with changed as (delete from public.%I returning id) select count(*) from changed', t) into n;
     perform pg_temp.assert_true(n = 0, 'B nao apaga A: ' || t);
   end loop;
+  select count(*) from public.user_settings into n;
+  perform pg_temp.assert_true(n = 0, 'B nao le A: user_settings');
   foreach t in array array['v_installment_schedule','v_invoice_totals','v_month_summary'] loop
     execute format('select count(*) from public.%I', t) into n;
     perform pg_temp.assert_true(n = 0, 'View respeita RLS: ' || t);

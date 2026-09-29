@@ -731,3 +731,73 @@ a.row-main {
   width: 44px;
   height: 44px;
 }
+
+/* First import preview: one collapsible block per card. */
+.preview-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+}
+.preview-card summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.preview-card summary::-webkit-details-marker {
+  display: none;
+}
+.preview-card summary > span {
+  flex: 1;
+  min-width: 0;
+}
+.preview-card summary b,
+.preview-card summary small,
+.preview-card li small {
+  display: block;
+}
+.preview-card summary small,
+.preview-card li small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.preview-card h4 {
+  margin: 10px 12px 4px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.preview-card ul {
+  margin: 0;
+  padding: 0 12px 8px;
+  list-style: none;
+}
+.preview-card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+.preview-card li > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.preview-card li b {
+  white-space: nowrap;
+}
+.bill-check {
+  margin: 0 12px 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 13px;
+}
+.bill-check.over {
+  background: var(--warn-soft);
+  color: var(--warn);
+}

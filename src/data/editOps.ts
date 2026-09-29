@@ -194,6 +194,7 @@ export const editOps = {
               first_month: monthDate(plan.firstMonth),
               note: plan.note,
               category_id: plan.categoryId ?? null,
+              for_other: plan.forOther ?? false,
             })
             .eq('id', plan.id),
         ),

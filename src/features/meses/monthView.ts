@@ -42,8 +42,9 @@ export function compositionParts(
   invoice: InvoiceRow,
   finance: Finance,
 ): string[] {
+  // Fase 13.3: the owner's parts; the other person's show as one piece.
   const installments = finance.plans
-    .filter((plan) => plan.cardId === invoice.cardId)
+    .filter((plan) => plan.cardId === invoice.cardId && !plan.forOther)
     .flatMap((plan) =>
       installmentSchedule(plan, finance.payments)
         .filter((item) => item.month === invoice.month)
@@ -53,8 +54,9 @@ export function compositionParts(
     (item) => item.cardId === invoice.cardId && item.active,
   )
   const expenses = finance.expenses.filter(
-    (item) => item.invoiceId === invoice.id,
+    (item) => item.invoiceId === invoice.id && !item.forOther,
   )
+  const otherShare = invoiceTotals(invoice, finance).otherShare
   const group = (
     items: readonly { name: string; amount: Cents }[],
     many: (count: number) => string,
@@ -75,8 +77,11 @@ export function compositionParts(
       expenses.map((item) => ({ name: item.description, amount: item.amount })),
       (count) => `${count} gastos`,
     ),
-    ...(!invoice.estimated && invoice.otherAmount > 0
+    ...(!invoice.estimated && invoice.otherAmount > 0 && !finance.restIsOther
       ? [`outros ${formatMoneyShort(invoice.otherAmount)}`]
+      : []),
+    ...(otherShare > 0 && finance.otherPerson
+      ? [`${finance.otherPerson} ${formatMoneyShort(otherShare)}`]
       : []),
   ]
 }
@@ -114,7 +119,8 @@ export function monthView(finance: Finance, ref: Month) {
         {
           invoice,
           card,
-          total: invoiceTotals(invoice, finance).total,
+          // Fase 13.3: the owner's part; the other person's is in the parts.
+          total: invoiceTotals(invoice, finance).mine,
           note: visibleNote(invoice.note, card),
           parts: compositionParts(invoice, finance),
         },
@@ -126,7 +132,7 @@ export function monthView(finance: Finance, ref: Month) {
         a.card.name.localeCompare(b.card.name),
     )
   const loose: LooseOutflow[] = finance.plans
-    .filter((plan) => plan.cardId === null)
+    .filter((plan) => plan.cardId === null && !plan.forOther)
     .flatMap((plan) => {
       const item = installmentSchedule(plan, finance.payments).find(
         (entry) => entry.month === ref,

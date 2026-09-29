@@ -33,6 +33,8 @@ Vite + React 19 + TypeScript estrito, React Router, TanStack Query (um cache `['
 - **Saídas do mês em pedaços** (`monthOutflowItems`): somam exatamente as saídas; a parte sem detalhe de cada fatura fica em "Outros gastos das faturas".
 - **Por data**: gastos e contas com hora exata (`occurred_at`, fuso de São Paulo) agrupados por dia; o resto em "Fixos do mês". Comparação por categoria com o mês anterior quando muda R$ 20 ou mais.
 
+- **Outra pessoa usa os cartões** (Fase 13.3, só o dono do Open Finance vê a opção, em Ajustes → Bancos conectados; `user_settings.other_person`, ex.: "Pai"): gastos e parcelamentos marcados `for_other` e o "outros" de toda fatura são dela. A fatura continua com o total do banco; o saldo, as Saídas e o total dos cartões em Meses contam só a parte do dono (`invoiceTotals().mine`, `v_invoice_totals.mine`). Na importação: a primeira vez, o que o dono não tinha lançado à mão é da outra pessoa; depois, a última escolha pela mesma loja decide, e loja nova segue a maioria do cartão. "De quem" aparece na edição do gasto e do parcelamento.
+
 ## Banco (Supabase)
 
 Tabelas, todas com `user_id` e RLS "cada um só o seu": `cards`, `months`, `incomes`, `bills`, `invoices`, `invoice_expenses`, `installment_plans`, `installment_payments`, `subscriptions`, `categories`. FKs compostas `(id, user_id)` impedem apontar para dado de outra pessoa. Views `v_installment_schedule`, `v_invoice_totals`, `v_month_summary` (security invoker). Triggers guardam identidade, datas de pagamento, cronograma, congelamento e o dia do gasto a partir da hora. Apagar a conta apaga tudo em cascata.

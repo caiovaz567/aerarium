@@ -203,6 +203,11 @@ export function InvoiceModal({
                       {isFreshFromBank(expense) && (
                         <span className="fresh-pill">novo</span>
                       )}
+                      {expense.forOther && finance.otherPerson && (
+                        <span className="other-pill">
+                          {finance.otherPerson}
+                        </span>
+                      )}
                       <small>
                         {[expense.note, dayMonth(expense.spentOn)]
                           .filter(Boolean)

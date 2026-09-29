@@ -378,8 +378,9 @@ export function monthOutflowItems(
       .filter((item) => item.month === target)
       .map((item) => ({ plan, item })),
   )
+  // Fase 13.3: what the other person bought is not the owner's outflow.
   for (const { plan, item } of schedule.filter(
-    ({ plan }) => plan.cardId === null,
+    ({ plan }) => plan.cardId === null && !plan.forOther,
   ))
     items.push({
       source: 'installment',
@@ -392,7 +393,7 @@ export function monthOutflowItems(
   for (const invoice of data.invoices.filter((item) => item.month === target)) {
     const parts: OutflowItem[] = [
       ...schedule
-        .filter(({ plan }) => plan.cardId === invoice.cardId)
+        .filter(({ plan }) => plan.cardId === invoice.cardId && !plan.forOther)
         .map(({ plan, item }) => ({
           source: 'installment' as const,
           id: plan.id,
@@ -411,7 +412,7 @@ export function monthOutflowItems(
           categoryId: category(item.categoryId),
         })),
       ...data.expenses
-        .filter((item) => item.invoiceId === invoice.id)
+        .filter((item) => item.invoiceId === invoice.id && !item.forOther)
         .map((item) => ({
           source: 'expense' as const,
           id: item.id,
@@ -421,10 +422,7 @@ export function monthOutflowItems(
         })),
     ]
     const itemized = sumMoney(parts.map((item) => item.amount))
-    const rest = sumMoney([
-      invoiceTotals(invoice, data).total,
-      cents(-itemized),
-    ])
+    const rest = sumMoney([invoiceTotals(invoice, data).mine, cents(-itemized)])
     items.push(...parts)
     if (rest !== 0)
       items.push({

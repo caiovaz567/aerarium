@@ -16,7 +16,7 @@ import {
   type Month,
 } from '../../domain/months'
 import { keptAdjustment, planEditError } from '../../domain/planEdit'
-import { ArmedButton, MoneyField, TextField } from '../../ui/controls'
+import { ArmedButton, MoneyField, TextField, WhoField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
@@ -49,6 +49,7 @@ export function PlanModal({
   )
   const [note, setNote] = useState(plan?.note ?? '')
   const [categoryId, setCategoryId] = useState(plan?.categoryId ?? null)
+  const [forOther, setForOther] = useState(plan?.forOther ?? false)
   const [value, setValue] = useState(
     plan ? formatMoneyInput(plan.installmentAmount) : '',
   )
@@ -91,6 +92,7 @@ export function PlanModal({
       firstMonth: first,
       note: note.trim() || null,
       categoryId,
+      forOther,
     }
     const next: PlanRow = {
       ...draft,
@@ -180,6 +182,13 @@ export function PlanModal({
           value={categoryId}
           onChange={setCategoryId}
         />
+        {finance.otherPerson && (
+          <WhoField
+            other={finance.otherPerson}
+            forOther={forOther}
+            onChange={setForOther}
+          />
+        )}
         <TextField
           label="Observação (opcional)"
           value={note}

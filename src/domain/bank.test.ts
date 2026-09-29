@@ -162,6 +162,32 @@ describe('textos e datas do banco', () => {
   })
 })
 
+describe('compra antiga sem a fatura do banco', () => {
+  const open: BankAccount = {
+    pluggyAccountId: 'acc',
+    cardId: 'card',
+    dueDate: isoDate('2026-10-09'),
+    closeDate: isoDate('2026-10-02'),
+  }
+  const at = (date: string) => tx('t', 'LOJA', 100, `${date}T15:00:00.000Z`)
+
+  it('volta uma fatura por fechamento, em vez de cair toda na aberta', () => {
+    expect(bankInvoiceMonth(at('2026-10-05'), open, [], none)).toBe('2026-11')
+    expect(bankInvoiceMonth(at('2026-09-20'), open, [], none)).toBe(oct)
+    expect(bankInvoiceMonth(at('2026-09-02'), open, [], none)).toBe(sep)
+    expect(bankInvoiceMonth(at('2026-07-15'), open, [], none)).toBe('2026-08')
+    expect(bankInvoiceMonth(at('2020-01-01'), open, [], none)).toBe('2024-10')
+  })
+
+  it('sem o fechamento do banco, conta uma semana antes do vencimento', () => {
+    const noClose = { ...open, closeDate: null }
+    expect(bankInvoiceMonth(at('2026-10-03'), noClose, [], none)).toBe(
+      '2026-11',
+    )
+    expect(bankInvoiceMonth(at('2026-10-01'), noClose, [], none)).toBe(oct)
+  })
+})
+
 describe('importar compras', () => {
   it('compra nova entra na fatura aberta, com categoria sugerida e o id do banco', () => {
     const result = planBankImport(
@@ -530,7 +556,17 @@ describe('total da fatura do banco', () => {
     ])
     expect(spaced(result.notices[0])).toMatch(
       /^A fatura de Setembro 2026 veio R\$ 10,00 no banco, menos que parcelas, assinaturas e gastos juntos \(R\$ 67,90\)\.$/,
-    )
+    ) // Where the difference comes from, for the preview.
+    expect(result.billChecks).toEqual([
+      {
+        cardId: 'card',
+        month: sep,
+        bank: 1000,
+        installments: 0,
+        subscriptions: 5590,
+        purchases: 1200,
+      },
+    ])
   })
 
   it('já aplicada com o mesmo total, fatura paga, sem fatura ou sem cartão: nada', () => {
@@ -740,5 +776,88 @@ describe('dias do cartão pelo banco', () => {
         [{ ...bank('c'), dueDate: null, closeDate: null }],
       ),
     ).toEqual([])
+  })
+})
+
+describe('de quem é a compra do banco', () => {
+  const buy = (id: string, text: string, day = '2026-09-10') =>
+    tx(id, text, 1500 + id.length, `${day}T15:00:00.000Z`)
+  const input = (...transactions: BankTransaction[]) => ({
+    accounts: [account],
+    transactions,
+    bills: [],
+  })
+
+  it('sem a outra pessoa, tudo é do dono', () => {
+    const result = planBankImport(state(), input(buy('a', 'PADARIA')), ids)
+    expect(result.expenses[0]?.forOther).toBe(false)
+  })
+
+  it('na primeira importação, o que não foi lançado na mão é da outra pessoa', () => {
+    const result = planBankImport(
+      state({ otherPerson: true }),
+      input(
+        buy('a', 'PADARIA'),
+        tx('p', 'LOJA PARC 01/03', 3000, '2026-09-10T15:00:00.000Z', {
+          installmentNumber: 1,
+          totalInstallments: 3,
+        }),
+      ),
+      ids,
+    )
+    expect(result.expenses[0]?.forOther).toBe(true)
+    expect(result.plans[0]?.forOther).toBe(true)
+  })
+
+  it('depois, a loja decide; loja nova segue a maioria do cartão', () => {
+    const mine = (description: string, forOther: boolean, id: string) => ({
+      id,
+      invoiceId: 'inv9',
+      description,
+      amount: cents(100),
+      spentOn: isoDate('2026-09-01'),
+      externalId: `x-${id}`,
+      forOther,
+    })
+    const later = state({
+      otherPerson: true,
+      records: new Map([['x-1', { amount: null }]]),
+      expenses: [
+        mine('IFD*IFOOD.COM AGENCIA', false, '1'),
+        mine('POSTO SHELL 123', true, '2'),
+        mine('POSTO SHELL 999', true, '3'),
+        mine('UBER *TRIP', false, '4'),
+      ],
+    })
+    const result = planBankImport(
+      later,
+      input(
+        buy('a', 'IFD*IFOOD.COM AGENCIA'),
+        buy('b', 'POSTO SHELL 555'),
+        buy('c', 'POSTO IPIRANGA'),
+        buy('d', 'LOJA NOVA'),
+        buy('e', 'LOJA NOVA'),
+      ),
+      ids,
+    )
+    expect(result.expenses.map((item) => item.forOther)).toEqual([
+      false, // same store, the owner's
+      true, // same store, other numbers
+      true, // same first word ("posto")
+      true, // new store: most bank purchases on the card were the other's
+      true, // same new store, now known
+    ])
+  })
+
+  it('cartão sem compras do banco ainda: do dono', () => {
+    const result = planBankImport(
+      state({
+        otherPerson: true,
+        records: new Map([['x', { amount: null }]]),
+      }),
+      input(buy('a', 'AB')),
+      ids,
+    )
+    expect(result.expenses[0]?.forOther).toBe(false)
   })
 })

@@ -1,7 +1,7 @@
 /** A stand-in for the Supabase client that records writes and always succeeds (or fails on demand). */
 export interface Call {
   table: string
-  op: 'insert' | 'update' | 'delete' | 'select'
+  op: 'insert' | 'update' | 'upsert' | 'delete' | 'select'
   payload?: unknown
   filters: [string, unknown][]
 }
@@ -14,6 +14,11 @@ export function fakeSupabase() {
     const chain = {
       insert(payload: unknown) {
         call.op = 'insert'
+        call.payload = payload
+        return chain
+      },
+      upsert(payload: unknown) {
+        call.op = 'upsert'
         call.payload = payload
         return chain
       },

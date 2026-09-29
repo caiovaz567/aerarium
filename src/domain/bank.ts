@@ -10,6 +10,8 @@ import { cents, formatMoney, sumMoney, type Cents } from './money'
 import {
   addMonths,
   dateInSaoPaulo,
+  daysInMonth,
+  isoDate,
   monthLabel,
   monthOf,
   monthsBetween,
@@ -75,6 +77,7 @@ export interface ImportExpense {
   readonly categoryId?: string | null
   readonly externalId?: string | null
   readonly note?: string | null
+  readonly forOther?: boolean
 }
 export interface ImportPlan extends InstallmentPlan {
   readonly externalKey?: string | null
@@ -96,6 +99,8 @@ export interface ImportState {
   readonly history: readonly CategorizedText[]
   /** Bank ids already handled (transactions, and "bill:ID" with the total). */
   readonly records: ReadonlyMap<string, { readonly amount: Cents | null }>
+  /** Fase 13.3: someone else uses the cards (only for the owner). */
+  readonly otherPerson?: boolean
 }
 
 export type RecordKind =
@@ -123,6 +128,8 @@ export interface ImportResult {
     readonly occurredAt: string | null
     readonly categoryId: string | null
     readonly externalId: string
+    /** Fase 13.3: the other person's, as guessed (the owner reviews it). */
+    readonly forOther: boolean
   }[]
   /**
    * Expenses launched by hand that are the same purchase. They take the
@@ -143,6 +150,7 @@ export interface ImportResult {
     readonly firstMonth: Month
     readonly categoryId: string | null
     readonly externalKey: string
+    readonly forOther: boolean
   }[]
   /** Plans made by hand that are the same purchase. */
   readonly planLinks: readonly {
@@ -162,6 +170,18 @@ export interface ImportResult {
   }[]
   /** Things worth telling the person, in plain words. */
   readonly notices: readonly string[]
+  /**
+   * Each closed bill against what the app knows of that invoice, so the
+   * preview can show where a difference comes from.
+   */
+  readonly billChecks: readonly {
+    readonly cardId: string
+    readonly month: Month
+    readonly bank: Cents
+    readonly installments: Cents
+    readonly subscriptions: Cents
+    readonly purchases: Cents
+  }[]
 }
 
 /** How long the bank's text and the person's can drift apart in days. */
@@ -207,14 +227,29 @@ export function bankInvoiceMonth(
     : undefined
   if (bill) return monthOf(bill.dueDate)
   const { day } = bankMoment(transaction.date)
-  if (account.dueDate) {
-    const open = monthOf(account.dueDate)
-    // After the open bill closed, it is already the next one.
-    return account.closeDate && day > account.closeDate
-      ? addMonths(open, 1)
-      : open
+  if (!account.dueDate) return invoiceMonthForCard(day, card)
+  const open = monthOf(account.dueDate)
+  // The open bill's closing: the bank's, else a week before it is due.
+  const close =
+    account.closeDate ??
+    isoDate(
+      new Date(Date.parse(`${account.dueDate}T12:00:00Z`) - 7 * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+    )
+  // After it closed, it is already the next one.
+  if (day > close) return addMonths(open, 1)
+  // Before, walk back one closing a month until the purchase is after it:
+  // an old purchase belongs to an old bill, not the open one.
+  const closingDay = Number(close.slice(8, 10))
+  for (let back = 1; back <= 24; back++) {
+    const target = addMonths(monthOf(close), -back)
+    const previous = isoDate(
+      `${target}-${String(Math.min(closingDay, daysInMonth(target))).padStart(2, '0')}`,
+    )
+    if (day > previous) return addMonths(open, 1 - back)
   }
-  return invoiceMonthForCard(day, card)
+  return addMonths(open, -24)
 }
 
 const daysApart = (a: ISODate, b: ISODate) =>
@@ -223,6 +258,50 @@ const daysApart = (a: ISODate, b: ISODate) =>
 
 const close = (a: Cents, b: Cents, share: number, floor: number) =>
   Math.abs(a - b) <= Math.max(floor, Math.abs(b) * share)
+
+/** A store's name without numbers and "PARC", to learn who buys there. */
+const storeKey = (text: string) =>
+  normalizeText(purchaseText(text))
+    .replace(/\d+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+/**
+ * Fase 13.3: whose a purchase from the bank is. The first import is history:
+ * the owner launched by hand what was theirs, so the rest was the other
+ * person's. Afterwards the store decides (the last choice for it), and a new
+ * store follows what most bank purchases on that card were.
+ */
+function ownerGuess(state: ImportState, firstImport: boolean) {
+  const cardOf = new Map(state.invoices.map((item) => [item.id, item.cardId]))
+  const seen = state.expenses
+    .filter((item) => item.externalId)
+    .map((item) => ({
+      key: storeKey(item.description),
+      cardId: cardOf.get(item.invoiceId),
+      forOther: item.forOther === true,
+    }))
+  return {
+    guess(text: string, cardId: string): boolean {
+      if (!state.otherPerson) return false
+      if (firstImport) return true
+      const key = storeKey(text)
+      const word = key.split(' ')[0]!
+      const latest = [...seen].reverse()
+      const same =
+        latest.find((item) => item.key === key) ??
+        (word.length >= 3
+          ? latest.find((item) => item.key.split(' ')[0] === word)
+          : undefined)
+      if (same) return same.forOther
+      const onCard = seen.filter((item) => item.cardId === cardId)
+      return onCard.filter((item) => item.forOther).length * 2 > onCard.length
+    },
+    learn(text: string, cardId: string, forOther: boolean) {
+      seen.push({ key: storeKey(text), cardId, forOther })
+    },
+  }
+}
 
 export function planBankImport(
   state: ImportState,
@@ -242,6 +321,7 @@ export function planBankImport(
     invoiceTotals: [] as ImportResult['invoiceTotals'][number][],
     records: [] as ImportResult['records'][number][],
     notices: [] as string[],
+    billChecks: [] as ImportResult['billChecks'][number][],
   }
   const record = (
     externalId: string,
@@ -259,6 +339,7 @@ export function planBankImport(
   const touched = new Set<string>()
   const plans: ImportPlan[] = [...state.plans]
   const history = [...state.history]
+  const owner = ownerGuess(state, state.records.size === 0)
 
   const invoiceFor = (cardId: string, target: Month) => {
     const existing = invoices.find(
@@ -347,6 +428,7 @@ export function planBankImport(
             firstMonth,
             categoryId,
             externalKey: key,
+            forOther: owner.guess(text, cardId),
           }
           result.plans.push(created)
           plan = {
@@ -405,9 +487,12 @@ export function planBankImport(
     const invoice = invoiceFor(cardId, target)
     touched.add(invoice.id)
     const categoryId = suggestCategory(name, state.categories, history)
+    const forOther = owner.guess(name, cardId)
+    owner.learn(name, cardId, forOther)
     const expense = {
       id: newId(),
       invoiceId: invoice.id,
+      forOther,
       description: name,
       amount: transaction.amount,
       spentOn: day,
@@ -447,6 +532,14 @@ export function planBankImport(
       fixed.subscriptionsAmount,
       launched,
     ])
+    result.billChecks.push({
+      cardId: account.cardId,
+      month: target,
+      bank: bill.total,
+      installments: fixed.installmentsAmount,
+      subscriptions: fixed.subscriptionsAmount,
+      purchases: launched,
+    })
     const rest = sumMoney([bill.total, cents(-known)])
     if (rest < 0)
       result.notices.push(

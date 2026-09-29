@@ -21,11 +21,12 @@ export function monthBalance(target: Month, data: FinancialData) {
   const invoices = data.invoices
     .filter((item) => item.month === target)
     .map((item) => ({
-      amount: invoiceTotals(item, data).total,
+      // Fase 13.3: only the owner's part of the invoice counts.
+      amount: invoiceTotals(item, data).mine,
       paid: item.paid,
     }))
   const installments = data.plans
-    .filter((item) => item.cardId === null)
+    .filter((item) => item.cardId === null && !item.forOther)
     .flatMap((plan) => installmentSchedule(plan, data.payments))
     .filter((item) => item.month === target)
   const outgoings = [...bills, ...invoices, ...installments]

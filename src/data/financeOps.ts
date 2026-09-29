@@ -78,6 +78,8 @@ const expenseRecord = (row: ExpenseRow) => ({
   category_id: row.categoryId ?? null,
   occurred_at: row.occurredAt ?? null,
   note: row.note ?? null,
+  external_id: row.externalId ?? null,
+  for_other: row.forOther ?? false,
 })
 
 /** Invoices go in unpaid; marking them paid afterwards lets the database freeze the total. */
@@ -309,6 +311,7 @@ export const ops = {
       categoryId: string | null
       occurredAt?: string | null
       note?: string | null
+      forOther?: boolean
     },
   ): FinanceOp {
     // The database moves spent_on to the day of occurred_at; so does the screen.
@@ -327,6 +330,9 @@ export const ops = {
                 occurred_at: changes.occurredAt,
               }),
               ...(changes.note !== undefined && { note: changes.note }),
+              ...(changes.forOther !== undefined && {
+                for_other: changes.forOther,
+              }),
             })
             .eq('id', expense.id),
         ),
@@ -412,6 +418,8 @@ export const ops = {
             first_month: monthDate(plan.firstMonth),
             note: plan.note,
             category_id: plan.categoryId ?? null,
+            external_key: plan.externalKey ?? null,
+            for_other: plan.forOther ?? false,
           }),
         )
         if (payments.length)

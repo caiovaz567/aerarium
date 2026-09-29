@@ -178,3 +178,37 @@ export function AddButton({
     </button>
   )
 }
+
+/** Fase 13.3: whose a purchase is, the owner's or the other person's. */
+export function WhoField({
+  other,
+  forOther,
+  onChange,
+}: {
+  /** The other person's name ("Pai"). */
+  readonly other: string
+  readonly forOther: boolean
+  readonly onChange: (forOther: boolean) => void
+}) {
+  return (
+    <div className="field">
+      <span id="de-quem">De quem</span>
+      <div className="segmented who" role="group" aria-labelledby="de-quem">
+        <button
+          type="button"
+          aria-pressed={!forOther}
+          onClick={() => onChange(false)}
+        >
+          Meu
+        </button>
+        <button
+          type="button"
+          aria-pressed={forOther}
+          onClick={() => onChange(true)}
+        >
+          {other}
+        </button>
+      </div>
+    </div>
+  )
+}

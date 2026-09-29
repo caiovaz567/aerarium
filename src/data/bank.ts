@@ -134,6 +134,7 @@ export function importState(finance: Finance): ImportState {
     categories: finance.categories,
     history: categoryHistory(finance),
     records,
+    otherPerson: Boolean(finance.otherPerson),
   }
 }
 
@@ -308,6 +309,7 @@ export const bankOps = {
       note: null,
       categoryId: item.categoryId,
       externalKey: item.externalKey,
+      forOther: item.forOther,
     }))
     const now = new Date().toISOString()
     const expenses: ExpenseRow[] = result.expenses.map((item) => ({
@@ -341,6 +343,7 @@ export const bankOps = {
                 first_month: monthDate(item.firstMonth),
                 category_id: item.categoryId,
                 external_key: item.externalKey,
+                for_other: item.forOther,
               })),
             ),
           )
@@ -362,6 +365,7 @@ export const bankOps = {
                 occurred_at: item.occurredAt,
                 category_id: item.categoryId,
                 external_id: item.externalId,
+                for_other: item.forOther,
               })),
             ),
           )

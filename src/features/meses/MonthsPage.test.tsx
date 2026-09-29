@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeKey } from '../../data/finance'
+import { financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
 const fake = vi.hoisted(() => ({
@@ -368,5 +369,55 @@ describe('Criar e excluir mês', () => {
     })
     expect(screen.getByText('Nenhum mês ainda')).toBeVisible()
     expect(screen.getByRole('button', { name: /^Criar / })).toBeVisible()
+  })
+})
+
+describe('Pai usa os cartões', () => {
+  const withDad = () => {
+    const finance = financeFixture()
+    return {
+      ...finance,
+      otherPerson: 'Pai',
+      restIsOther: true,
+      expenses: finance.expenses.map((item) =>
+        item.description === 'Uber' ? { ...item, forOther: true } : item,
+      ),
+    }
+  }
+
+  it('o seu saldo conta só a sua parte; a do pai aparece no cartão', () => {
+    renderApp('/meses/2026-09', undefined, withDad())
+    // 873,17 minus Uber 12,00 and "outros" 271,02, both his.
+    expect(heroValue('Saídas')).toBe('R$ 590,15')
+    const nubank = screen.getByRole('button', { name: /^Nubank Teste/ })
+    expect(text(nubank.textContent)).toContain('R$ 159,90')
+    expect(text(nubank.textContent)).toContain('Pai R$ 283')
+    expect(text(nubank.textContent)).not.toContain('outros')
+  })
+
+  it('na fatura, a compra dele tem a etiqueta; dá pra marcar como sua', async () => {
+    renderApp('/meses/2026-09', undefined, withDad())
+    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
+    const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
+    const uber = within(invoice).getByRole('button', { name: /^Uber/ })
+    expect(within(uber).getByText('Pai')).toBeVisible()
+    fireEvent.click(uber)
+    const edit = screen.getByRole('dialog', { name: 'Editar gasto' })
+    const who = within(edit).getByRole('group', { name: 'De quem' })
+    expect(within(who).getByRole('button', { name: 'Pai' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(within(who).getByRole('button', { name: 'Meu' }))
+    fireEvent.click(within(edit).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'invoice_expenses',
+        op: 'update',
+        payload: expect.objectContaining({ for_other: false }),
+      }),
+    )
+    expect(heroValue('Saídas')).toBe('R$ 602,15')
   })
 })

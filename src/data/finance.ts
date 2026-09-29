@@ -98,6 +98,12 @@ export interface Finance {
   readonly subscriptions: readonly SubscriptionRow[]
   readonly bankAccounts: readonly BankAccountRow[]
   readonly bankRecords: readonly BankRecordRow[]
+  /**
+   * Fase 13.3, only for the Open Finance owner: who else uses the cards
+   * ("Pai"). When set, "outros" of every invoice is theirs (restIsOther).
+   */
+  readonly otherPerson?: string | null
+  readonly restIsOther?: boolean
 }
 
 export const financeKey = (userId: string) => ['finance', userId] as const
@@ -138,6 +144,7 @@ export async function loadFinance(): Promise<Finance> {
     subscriptions,
     bankAccounts,
     bankRecords,
+    settings,
   ] = await Promise.all([
     select('cards', 'id,name,color,closing_day,due_day,bank,sort_order'),
     select('categories', 'id,name,color,icon,sort_order'),
@@ -153,11 +160,11 @@ export async function loadFinance(): Promise<Finance> {
     ),
     select(
       'invoice_expenses',
-      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,note,created_at',
+      'id,invoice_id,description,amount::text,spent_on,category_id,occurred_at,external_id,note,for_other,created_at',
     ),
     select(
       'installment_plans',
-      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id,external_key',
+      'id,card_id,description,installment_amount::text,final_adjustment::text,total_installments,first_month,note,category_id,external_key,for_other',
     ),
     select(
       'installment_payments',
@@ -172,6 +179,7 @@ export async function loadFinance(): Promise<Finance> {
       'id,pluggy_account_id,item_id,name,number,card_id,credit_limit::text,available_limit::text,limit_at',
     ),
     select('bank_records', 'external_id,amount::text'),
+    select('user_settings', 'other_person'),
   ])
   const monthRows = months
     .map((row) => ({ id: text(row.id), ref: monthOfDate(row.ref) }))
@@ -179,6 +187,7 @@ export async function loadFinance(): Promise<Finance> {
   const refOf = new Map(monthRows.map((row) => [row.id, row.ref]))
   const ref = (monthId: unknown) => refOf.get(text(monthId))!
 
+  const otherPerson = (settings[0]?.other_person as string | null) ?? null
   return {
     cards: cards
       .map((row) => ({
@@ -253,6 +262,7 @@ export async function loadFinance(): Promise<Finance> {
         occurredAt: instant(row.occurred_at),
         externalId: (row.external_id as string | null) ?? null,
         note: (row.note as string | null) ?? null,
+        forOther: row.for_other === true,
         createdAt: instant(row.created_at),
       }))
       .sort((a, b) => a.spentOn.localeCompare(b.spentOn)),
@@ -267,6 +277,7 @@ export async function loadFinance(): Promise<Finance> {
       note: (row.note as string | null) ?? null,
       categoryId: category(row.category_id),
       externalKey: (row.external_key as string | null) ?? null,
+      forOther: row.for_other === true,
     })),
     payments: payments.map((row) => ({
       id: text(row.id),
@@ -302,5 +313,7 @@ export async function loadFinance(): Promise<Finance> {
       externalId: text(row.external_id),
       amount: row.amount == null ? null : money(row.amount),
     })),
+    otherPerson,
+    restIsOther: otherPerson !== null,
   }
 }
