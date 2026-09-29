@@ -72,6 +72,8 @@ type Account = {
   creditData?: {
     balanceCloseDate?: string | null
     balanceDueDate?: string | null
+    creditLimit?: number | null
+    availableCreditLimit?: number | null
   } | null
 }
 type Transaction = {
@@ -151,6 +153,8 @@ Deno.serve(async (request) => {
         number: string | null
         closeDate: string | null
         dueDate: string | null
+        creditLimit: number | null
+        availableLimit: number | null
       }[],
       transactions: [] as {
         id: string
@@ -190,6 +194,8 @@ Deno.serve(async (request) => {
           number: account.number ?? null,
           closeDate: account.creditData?.balanceCloseDate ?? null,
           dueDate: account.creditData?.balanceDueDate ?? null,
+          creditLimit: account.creditData?.creditLimit ?? null,
+          availableLimit: account.creditData?.availableCreditLimit ?? null,
         })
         for (const transaction of await transactions<Transaction>(
           apiKey,

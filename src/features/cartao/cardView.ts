@@ -1,3 +1,10 @@
+import { cardFinal } from '../../domain/banks'
+import {
+  bestPurchaseDay,
+  dueDate,
+  dueText,
+  limitUse,
+} from '../../domain/cardDates'
 import type { ChartPoint } from '../../domain/chartSeries'
 import {
   installmentSchedule,
@@ -5,7 +12,13 @@ import {
 } from '../../domain/installments'
 import { invoiceTotals } from '../../domain/invoices'
 import { cents, sumMoney, type Cents } from '../../domain/money'
-import { dayMonth, type ISODate, type Month } from '../../domain/months'
+import {
+  addMonths,
+  dayMonth,
+  monthName,
+  type ISODate,
+  type Month,
+} from '../../domain/months'
 import type { Card, Finance, InvoiceRow, PlanRow } from '../../data/finance'
 
 /** The three numbers on the card page. */
@@ -27,6 +40,62 @@ export function cardStats(cardId: string, finance: Finance) {
         .map((item) => item.amount),
     ),
   }
+}
+
+/** "9 out" and "9 de outubro". */
+export const shortDate = (date: ISODate) =>
+  `${Number(date.slice(8, 10))} ${monthName(date.slice(0, 7) as Month)
+    .slice(0, 3)
+    .toLowerCase()}`
+export const longDate = (date: ISODate) =>
+  `${Number(date.slice(8, 10))} de ${monthName(
+    date.slice(0, 7) as Month,
+  ).toLowerCase()}`
+
+/**
+ * Fase 13.2, top of the card page like a bank app: this month's invoice with
+ * its due date, the limit (Open Finance), next invoice, best day to buy and
+ * what the invoice is made of.
+ */
+export function cardInvoiceView(
+  card: Card,
+  finance: Finance,
+  current: Month,
+  today: ISODate,
+) {
+  const invoice =
+    finance.invoices.find(
+      (item) => item.cardId === card.id && item.month === current,
+    ) ?? null
+  const totals = invoice ? invoiceTotals(invoice, finance) : null
+  const account = finance.bankAccounts.find((item) => item.cardId === card.id)
+  const due = card.dueDay ? dueDate(current, card.dueDay) : null
+  const limit =
+    account?.creditLimit != null && account.availableLimit != null
+      ? {
+          total: account.creditLimit,
+          available: account.availableLimit,
+          ...limitUse(account.creditLimit, account.availableLimit),
+        }
+      : null
+  return {
+    final: cardFinal(account?.number),
+    status: !invoice ? 'none' : invoice.paid ? 'paid' : 'open',
+    total: totals?.total ?? cents(0),
+    due,
+    dueText: due && invoice && !invoice.paid ? dueText(due, today) : null,
+    nextDue: card.dueDay ? dueDate(addMonths(current, 1), card.dueDay) : null,
+    bestDay: card.closingDay ? bestPurchaseDay(card.closingDay) : null,
+    limit,
+    parts: totals
+      ? [
+          { label: 'Compras', amount: totals.expensesAmount },
+          { label: 'Parcelamentos', amount: totals.installmentsAmount },
+          { label: 'Assinaturas', amount: totals.subscriptionsAmount },
+          { label: 'Outros', amount: totals.otherAmount },
+        ].filter((item) => item.amount > 0)
+      : [],
+  } as const
 }
 
 /** "em aberto", "paga", "estimada", "previsão", "sem fatura", "nada previsto". */

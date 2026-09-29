@@ -4,7 +4,7 @@ import {
   type Category,
   type CategorizedText,
 } from './categories'
-import { invoiceMonthForExpense } from './closing'
+import { invoiceMonthForCard } from './cardDates'
 import { fixedCardAmounts } from './invoices'
 import { cents, formatMoney, sumMoney, type Cents } from './money'
 import {
@@ -56,6 +56,7 @@ export interface BankBill {
 export interface ImportCard {
   readonly id: string
   readonly closingDay: number | null
+  readonly dueDay?: number | null
 }
 export interface ImportInvoice {
   readonly id: string
@@ -199,7 +200,7 @@ export function bankInvoiceMonth(
   transaction: BankTransaction,
   account: BankAccount,
   bills: readonly BankBill[],
-  closingDay: number | null,
+  card: Pick<ImportCard, 'closingDay' | 'dueDay'>,
 ): Month {
   const bill = transaction.billId
     ? bills.find((item) => item.id === transaction.billId)
@@ -213,7 +214,7 @@ export function bankInvoiceMonth(
       ? addMonths(open, 1)
       : open
   }
-  return invoiceMonthForExpense(day, closingDay)
+  return invoiceMonthForCard(day, card)
 }
 
 const daysApart = (a: ISODate, b: ISODate) =>
@@ -296,7 +297,7 @@ export function planBankImport(
       transaction,
       account,
       input.bills,
-      card?.closingDay ?? null,
+      card ?? { closingDay: null },
     )
     // Months are created by the person (they carry over what was left).
     if (!monthIds.has(target)) continue

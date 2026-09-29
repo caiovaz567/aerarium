@@ -73,6 +73,11 @@ export function useBankSync() {
       run(add)
       finance = add.apply(finance)
     }
+    const limits = bankOps.updateLimits(finance, data)
+    if (limits) {
+      run(limits)
+      finance = limits.apply(finance)
+    }
     const days = bankOps.fillCardDays(finance, data)
     if (days) {
       run(days)

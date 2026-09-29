@@ -143,6 +143,9 @@ update public.cards set bank = 'nubank', due_day = 10 where id = '20000000-0000-
 select pg_temp.assert_true((select bank = 'nubank' and due_day = 10 from public.cards where id = '20000000-0000-4000-8000-000000000002'), 'Cartao guarda banco e vencimento');
 select pg_temp.expect_error($q$update public.cards set bank = 'Banco!'$q$, '23514', 'Banco do cartao e uma chave simples');
 select pg_temp.expect_error($q$update public.cards set due_day = 32$q$, '23514', 'Vencimento entre 1 e 31');
+update public.bank_accounts set credit_limit = 5000, available_limit = 3200.50, limit_at = now() where id = 'b0000000-0000-4000-8000-000000000001';
+select pg_temp.assert_true((select available_limit = 3200.50 from public.bank_accounts where id = 'b0000000-0000-4000-8000-000000000001'), 'Conta do banco guarda o limite');
+select pg_temp.expect_error($q$update public.bank_accounts set credit_limit = -1$q$, '23514', 'Limite nao e negativo');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);

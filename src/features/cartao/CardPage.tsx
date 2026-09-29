@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { currentMonth } from '../../app/paths'
-import { useFinance } from '../../data/useFinance'
+import { today, useFinance } from '../../data/useFinance'
 import {
   chartAverage,
   chartComparison,
@@ -23,7 +23,15 @@ import { LoadError, Loading } from '../../ui/LoadStates'
 import { StickyBar } from '../../ui/StickyBar'
 import { useEditor } from '../editar/editorContext'
 import { CardChart } from './CardChart'
-import { cardStats, monthDetail, planLine, pointStatus } from './cardView'
+import {
+  cardInvoiceView,
+  cardStats,
+  longDate,
+  monthDetail,
+  planLine,
+  pointStatus,
+  shortDate,
+} from './cardView'
 import { usePlanActions } from './planActions'
 import { PlanRow } from './PlanRow'
 
@@ -40,7 +48,39 @@ function Triangle({ up }: { up: boolean }) {
   )
 }
 
-/** Card page: big card, three numbers, the chart and the month detail. */
+/** Share of the limit in use, as a ring. */
+function LimitRing({ share }: { share: number }) {
+  const length = 2 * Math.PI * 26
+  return (
+    <span className="limit-ring">
+      <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <circle className="track" cx="32" cy="32" r="26" />
+        <circle
+          className="used"
+          cx="32"
+          cy="32"
+          r="26"
+          strokeDasharray={`${share * length} ${length}`}
+        />
+      </svg>
+      <span>
+        <b>{percent.format(share * 100)}%</b>
+        <small>usado</small>
+      </span>
+    </span>
+  )
+}
+
+const STATUS = {
+  open: 'A pagar',
+  paid: 'Paga',
+  none: 'Sem fatura',
+} as const
+
+/**
+ * Card page like a bank app (Fase 13.2): this month's invoice, limit, dates and
+ * summary; then the chart, the month detail, plans and subscriptions.
+ */
 export function CardPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -108,6 +148,7 @@ export function CardPage() {
   const comparison = chartComparison(points, selected)
   const average = chartAverage(points, now)
   const stats = cardStats(card.id, finance)
+  const view = cardInvoiceView(card, finance, now, today())
   const detail = monthDetail(card.id, point, finance, now)
   const plans = finance.plans.filter(
     (plan) =>
@@ -139,28 +180,86 @@ export function CardPage() {
         </button>
       </StickyBar>
 
-      <div className="card-hero">
-        <div className="card-hero-art">
-          <CardArt card={card} size="lg" />
+      <section className="card-hero" aria-label="Fatura atual">
+        <div className="card-hero-head">
+          <CardArt card={card} />
+          <div>
+            <b>{card.name}</b>
+            {view.final && <small>final {view.final}</small>}
+          </div>
         </div>
-        <dl className="card-stats">
+        <div className="card-hero-grid">
           <div>
-            <dt>Parcelas em aberto</dt>
-            <dd>{formatMoney(stats.outstanding)}</dd>
+            <small>Vencimento</small>
+            <b>{view.due ? shortDate(view.due) : 'sem dia'}</b>
+            <small>
+              {view.dueText ?? (view.due ? '' : 'coloca em Editar')}
+            </small>
           </div>
           <div>
-            <dt>Última parcela</dt>
-            <dd>{stats.lastMonth ? monthLabel(stats.lastMonth) : 'Nenhuma'}</dd>
+            <small>Fatura de {monthName(now).toLowerCase()}</small>
+            <b>{formatMoney(view.total)}</b>
+            <span className={`status-pill ${view.status}`}>
+              {STATUS[view.status]}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {view.limit && (
+        <section className="block limit-block" aria-label="Limite">
+          <div>
+            <small>Limite disponível</small>
+            <b>{formatMoney(view.limit.available)}</b>
+            <small>de {formatMoney(view.limit.total)}</small>
+          </div>
+          <LimitRing share={view.limit.share} />
+        </section>
+      )}
+
+      {view.nextDue || view.bestDay ? (
+        <dl className="block card-dates">
+          <div>
+            <dt>Próxima fatura</dt>
+            <dd>{view.nextDue ? longDate(view.nextDue) : 'sem vencimento'}</dd>
           </div>
           <div>
-            <dt>Assinaturas</dt>
-            <dd>
-              {formatMoney(stats.subscriptions)}
-              <span>/mês</span>
-            </dd>
+            <dt>Melhor dia pra comprar</dt>
+            <dd>{view.bestDay ? `dia ${view.bestDay}` : 'sem fechamento'}</dd>
           </div>
         </dl>
-      </div>
+      ) : (
+        <p className="block card-dates-hint">
+          Coloca o dia de fechamento e o de vencimento em{' '}
+          <button type="button" onClick={() => editor.card(card.id)}>
+            Editar
+          </button>{' '}
+          pra ver o vencimento e o melhor dia pra comprar.
+        </p>
+      )}
+
+      {view.parts.length > 0 && (
+        <section
+          className="block invoice-parts"
+          aria-labelledby="resumo-fatura"
+        >
+          <div className="block-head">
+            <h2 id="resumo-fatura">Resumo da fatura</h2>
+          </div>
+          <dl>
+            {view.parts.map((part) => (
+              <div key={part.label}>
+                <dt>{part.label}</dt>
+                <dd>{formatMoney(part.amount)}</dd>
+              </div>
+            ))}
+            <div className="total">
+              <dt>Total</dt>
+              <dd>{formatMoney(view.total)}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
 
       <section className="block card-chart" aria-label="Fatura por mês">
         <div className="chart-top">
@@ -259,7 +358,13 @@ export function CardPage() {
         <div className="block-head">
           <h2 id="parcelas-cartao">Parcelas</h2>
           <span className="meta">
-            {plans.length ? `${plans.length} em aberto` : 'nenhuma'}
+            {plans.length
+              ? `${plans.length} em aberto · ${formatMoney(stats.outstanding)}${
+                  stats.lastMonth
+                    ? ` até ${monthLabel(stats.lastMonth).toLowerCase()}`
+                    : ''
+                }`
+              : 'nenhuma'}
           </span>
         </div>
         {plans.length > 0 && (

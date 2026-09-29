@@ -38,6 +38,8 @@ export interface BankData {
     readonly number: string | null
     readonly closeDate: string | null
     readonly dueDate: string | null
+    readonly creditLimit?: number | null
+    readonly availableLimit?: number | null
   }[]
   readonly transactions: readonly {
     readonly id: string
@@ -182,6 +184,54 @@ export const bankOps = {
           ),
         ),
       apply: (f) => ({ ...f, bankAccounts: [...f.bankAccounts, ...rows] }),
+    }
+  },
+
+  /** The limit of each bank card, as the bank says it now. */
+  updateLimits(finance: Finance, data: BankData): FinanceOp | null {
+    const at = new Date().toISOString()
+    const changes = finance.bankAccounts.flatMap((row) => {
+      const account = data.accounts.find(
+        (item) => item.id === row.pluggyAccountId,
+      )
+      if (account?.creditLimit == null || account.availableLimit == null)
+        return []
+      return [
+        {
+          id: row.id,
+          creditLimit: toCents(account.creditLimit),
+          availableLimit: toCents(account.availableLimit),
+        },
+      ]
+    })
+    if (!changes.length) return null
+    return {
+      run: async () => {
+        for (const change of changes)
+          await ok(
+            table('bank_accounts')
+              .update({
+                credit_limit: toDecimal(change.creditLimit),
+                available_limit: toDecimal(change.availableLimit),
+                limit_at: at,
+              })
+              .eq('id', change.id),
+          )
+      },
+      apply: (f) => ({
+        ...f,
+        bankAccounts: f.bankAccounts.map((row) => {
+          const change = changes.find((item) => item.id === row.id)
+          return change
+            ? {
+                ...row,
+                creditLimit: change.creditLimit,
+                availableLimit: change.availableLimit,
+                limitAt: at,
+              }
+            : row
+        }),
+      }),
     }
   },
 

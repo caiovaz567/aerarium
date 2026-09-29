@@ -66,6 +66,10 @@ export interface BankAccountRow {
   readonly name: string
   readonly number: string | null
   readonly cardId: string | null
+  /** Fase 13.2: the limit as the bank last said it. */
+  readonly creditLimit?: Cents | null
+  readonly availableLimit?: Cents | null
+  readonly limitAt?: string | null
 }
 /** A bank transaction or bill already handled. */
 export interface BankRecordRow {
@@ -163,7 +167,10 @@ export async function loadFinance(): Promise<Finance> {
       'subscriptions',
       'id,card_id,name,amount::text,charge_day,note,active,category_id',
     ),
-    select('bank_accounts', 'id,pluggy_account_id,item_id,name,number,card_id'),
+    select(
+      'bank_accounts',
+      'id,pluggy_account_id,item_id,name,number,card_id,credit_limit::text,available_limit::text,limit_at',
+    ),
     select('bank_records', 'external_id,amount::text'),
   ])
   const monthRows = months
@@ -286,6 +293,10 @@ export async function loadFinance(): Promise<Finance> {
       name: text(row.name),
       number: (row.number as string | null) ?? null,
       cardId: (row.card_id as string | null) ?? null,
+      creditLimit: row.credit_limit == null ? null : money(row.credit_limit),
+      availableLimit:
+        row.available_limit == null ? null : money(row.available_limit),
+      limitAt: instant(row.limit_at),
     })),
     bankRecords: bankRecords.map((row) => ({
       externalId: text(row.external_id),

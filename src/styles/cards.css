@@ -213,15 +213,6 @@ a.row-main {
   letter-spacing: -0.015em;
   overflow-wrap: anywhere;
 }
-.card-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.card-hero-art {
-  display: flex;
-  justify-content: center;
-}
 .card-art.lg {
   width: 100%;
   max-width: 280px;
@@ -260,47 +251,187 @@ a.row-main {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.card-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin: 0;
+/* Fase 13.2: the card page opens like a bank app's invoice screen. */
+.card-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 20px 20px;
+  border-radius: 22px;
+  background: var(--hero);
+  color: var(--hero-ink);
 }
-.card-stats > div {
-  min-width: 0;
-  padding: 10px 10px 9px;
-  border-radius: 12px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
+.card-hero-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.card-stats dt {
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 600;
+.card-hero-head .bank-logo {
+  width: 48px;
+  height: 48px;
 }
-.card-stats dd {
-  margin: 2px 0 0;
-  font-size: 14.5px;
-  font-weight: 700;
+.card-hero-head b {
+  display: block;
+  font: 800 19px / 1.15 var(--display);
   overflow-wrap: anywhere;
 }
-.card-stats dd span {
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 500;
+.card-hero small {
+  display: block;
+  color: var(--hero-muted);
+  font-size: 13px;
 }
-@media (min-width: 640px) {
-  .card-hero {
-    flex-direction: row;
-    align-items: center;
-  }
-  .card-hero-art {
-    flex: 0 0 260px;
-  }
-  .card-stats {
-    flex: 1;
-    grid-template-columns: 1fr;
-  }
+.card-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hero-track);
+}
+.card-hero-grid > div + div {
+  padding-left: 14px;
+  border-left: 1px solid var(--hero-track);
+}
+.card-hero-grid b {
+  display: block;
+  margin: 2px 0 3px;
+  font: 800 clamp(22px, 6.5vw, 28px) / 1.1 var(--display);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.status-pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 18%);
+  font-size: 12px;
+  font-weight: 700;
+}
+.status-pill.paid {
+  background: #dcf1e4;
+  color: #18794a;
+}
+
+.limit-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+}
+.limit-block > div {
+  flex: 1;
+  min-width: 0;
+}
+.limit-block small {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+.limit-block b {
+  display: block;
+  margin: 2px 0;
+  color: var(--accent);
+  font: 800 24px / 1.1 var(--display);
+}
+.limit-ring {
+  position: relative;
+  flex: none;
+  width: 76px;
+  height: 76px;
+}
+.limit-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.limit-ring circle {
+  fill: none;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.limit-ring .track {
+  stroke: var(--surface-2);
+}
+.limit-ring .used {
+  stroke: var(--accent);
+}
+.limit-ring > span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.limit-ring b {
+  font-size: 15px;
+  font-weight: 800;
+}
+.limit-ring small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.card-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 0;
+  padding: 14px 18px;
+}
+.card-dates > div + div {
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+}
+.card-dates dt {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.card-dates dd {
+  margin: 2px 0 0;
+  font-size: 15.5px;
+  font-weight: 700;
+}
+.card-dates-hint {
+  margin: 0;
+  padding: 14px 18px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.card-dates-hint button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.invoice-parts dl {
+  margin: 0;
+  padding: 0 18px 14px;
+}
+.invoice-parts dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14.5px;
+}
+.invoice-parts dt {
+  color: var(--muted);
+}
+.invoice-parts dd {
+  margin: 0;
+  font-weight: 600;
+}
+.invoice-parts .total {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-weight: 700;
+}
+.invoice-parts .total dt {
+  color: var(--ink);
 }
 
 .card-chart {

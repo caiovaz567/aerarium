@@ -1,6 +1,7 @@
 import { act, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { chartSeries } from '../../domain/chartSeries'
+import { cents } from '../../domain/money'
 import { month } from '../../domain/months'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
@@ -165,12 +166,26 @@ describe('aba Cartões', () => {
 describe('tela do cartão', () => {
   const head = () => spaced(document.querySelector('.chart-head')!.textContent)
 
-  it('abre no mês atual, com números, comparação e média', () => {
+  it('abre no mês atual, com a fatura, o resumo, a comparação e a média', () => {
     renderApp('/cartoes/c1')
-    const stats = document.querySelector('.card-stats')!
-    expect(spaced(stats.textContent)).toBe(
-      'Parcelas em abertoR$ 1.080,00Última parcelaMaio 2027AssinaturasR$ 39,90/mês',
+    expect(
+      spaced(screen.getByRole('region', { name: 'Fatura atual' }).textContent),
+    ).toBe(
+      'Nubank TesteVencimentosem diacoloca em EditarFatura de setembroR$ 442,92A pagar',
     )
+    // No closing or due day yet: a hint instead of the dates; no limit.
+    expect(screen.getByText(/Coloca o dia de fechamento/)).toBeVisible()
+    expect(screen.queryByRole('region', { name: 'Limite' })).toBeNull()
+    expect(
+      spaced(
+        screen.getByRole('region', { name: 'Resumo da fatura' }).textContent,
+      ),
+    ).toBe(
+      'Resumo da faturaComprasR$ 12,00ParcelamentosR$ 120,00AssinaturasR$ 39,90OutrosR$ 271,02TotalR$ 442,92',
+    )
+    expect(
+      screen.getByRole('region', { name: 'Parcelas' }).querySelector('.meta'),
+    ).toHaveTextContent('1 em aberto · R$ 1.080,00 até maio 2027')
     expect(head()).toBe(
       'Setembro 2026 · em abertoR$ 442,92R$ 83,02 (23,1%)vs ago',
     )
@@ -202,6 +217,39 @@ describe('tela do cartão', () => {
     expect(
       screen.getByRole('region', { name: 'Resumo dos cartões' }),
     ).toBeVisible()
+  })
+
+  it('com banco: final, vencimento, limite, próxima fatura e melhor dia', () => {
+    const finance = financeFixture()
+    renderApp('/cartoes/c1', undefined, {
+      ...finance,
+      cards: finance.cards.map((card) =>
+        card.id === 'c1' ? { ...card, closingDay: 3, dueDay: 25 } : card,
+      ),
+      bankAccounts: [
+        {
+          id: 'ba1',
+          pluggyAccountId: 'acc',
+          itemId: 'item',
+          name: 'Nubank',
+          number: '**** 5580',
+          cardId: 'c1',
+          creditLimit: cents(5_000_00),
+          availableLimit: cents(3_750_00),
+        },
+      ],
+    })
+    expect(
+      spaced(screen.getByRole('region', { name: 'Fatura atual' }).textContent),
+    ).toBe(
+      'Nubank Testefinal 5580Vencimento25 setfaltam 10 diasFatura de setembroR$ 442,92A pagar',
+    )
+    expect(
+      spaced(screen.getByRole('region', { name: 'Limite' }).textContent),
+    ).toBe('Limite disponívelR$ 3.750,00de R$ 5.000,0025%usado')
+    expect(spaced(document.querySelector('.card-dates')!.textContent)).toBe(
+      'Próxima fatura25 de outubroMelhor dia pra comprardia 4',
+    )
   })
 
   it('cartão que não existe', () => {

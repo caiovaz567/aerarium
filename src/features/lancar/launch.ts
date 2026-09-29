@@ -6,7 +6,7 @@ import type {
   PlanRow,
 } from '../../data/finance'
 import { ops, type FinanceOp, type MonthSnapshot } from '../../data/financeOps'
-import { invoiceMonthForExpense } from '../../domain/closing'
+import { invoiceMonthForCard } from '../../domain/cardDates'
 import { splitInstallments } from '../../domain/installments'
 import { cents, formatMoney, sumMoney, type Cents } from '../../domain/money'
 import {
@@ -47,7 +47,7 @@ export function suggestMonth(
   const current = monthOf(options.today)
   let target = options.openMonth ?? current
   if (target === current && options.card?.closingDay)
-    target = invoiceMonthForExpense(options.today, options.card.closingDay)
+    target = invoiceMonthForCard(options.today, options.card)
   if (allowed.includes(target)) return target
   // Outside what exists: the closest end.
   return target < allowed[0]! ? allowed[0]! : allowed[allowed.length - 1]!

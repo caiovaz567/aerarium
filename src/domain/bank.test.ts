@@ -100,6 +100,8 @@ const tx = (
 
 const spaced = (value: string | undefined) => value?.replace(/\s/g, ' ')
 
+const none = { closingDay: null }
+
 let counter = 0
 const ids = () => `new-${++counter}`
 
@@ -137,23 +139,25 @@ describe('textos e datas do banco', () => {
     ]
     const purchase = tx('t', 'X', 100, '2026-09-10T03:00:00.000Z')
     expect(
-      bankInvoiceMonth({ ...purchase, billId: 'b8' }, account, bills, null),
+      bankInvoiceMonth({ ...purchase, billId: 'b8' }, account, bills, none),
     ).toBe('2026-08')
     // Bill not in the list: the open one.
     expect(
-      bankInvoiceMonth({ ...purchase, billId: 'outra' }, account, bills, null),
+      bankInvoiceMonth({ ...purchase, billId: 'outra' }, account, bills, none),
     ).toBe(sep)
-    expect(bankInvoiceMonth(purchase, account, [], null)).toBe(sep)
+    expect(bankInvoiceMonth(purchase, account, [], none)).toBe(sep)
     expect(
       bankInvoiceMonth(
         purchase,
         { ...account, closeDate: isoDate('2026-09-08') },
         [],
-        null,
+        none,
       ),
     ).toBe(oct)
     expect(
-      bankInvoiceMonth(purchase, { ...account, dueDate: null }, [], 5),
+      bankInvoiceMonth(purchase, { ...account, dueDate: null }, [], {
+        closingDay: 5,
+      }),
     ).toBe(oct)
   })
 })
@@ -252,6 +256,19 @@ describe('importar compras', () => {
       ).links[0]
     expect(plan('uber *trip')?.note).toBeNull()
     expect(plan('Uber', 'Ida ao aeroporto')?.note).toBe('Ida ao aeroporto')
+  })
+
+  it('cartão que não está na lista: segue sem dia de fechamento', () => {
+    const result = planBankImport(
+      state({ cards: [] }),
+      {
+        accounts: [{ ...account, dueDate: null }],
+        transactions: [tx('t1', 'PADARIA', 1500, '2026-09-10T15:00:00.000Z')],
+        bills: [],
+      },
+      ids,
+    )
+    expect(result.expenses.map((item) => item.invoiceId)).toEqual(['inv9'])
   })
 
   it('assinatura cadastrada é reconhecida; se o valor mudou, avisa', () => {
