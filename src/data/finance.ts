@@ -107,6 +107,8 @@ export interface Finance {
    */
   readonly otherPerson?: string | null
   readonly restIsOther?: boolean
+  /** Profile "Pai": outflows seen as the other person's (not loaded). */
+  readonly viewAs?: 'owner' | 'other'
 }
 
 export const financeKey = (userId: string) => ['finance', userId] as const

@@ -81,6 +81,11 @@ export interface InvoiceContext {
    * undetailed rest of every invoice ("outros") is theirs.
    */
   readonly restIsOther?: boolean
+  /**
+   * Fase 13.3, profile "Pai": the month's outflows seen as the other person's
+   * (their purchases, plans and the rest of the invoices), not the owner's.
+   */
+  readonly viewAs?: 'owner' | 'other'
 }
 
 export interface FinancialData extends InvoiceContext {

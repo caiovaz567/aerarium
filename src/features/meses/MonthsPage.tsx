@@ -1,3 +1,4 @@
+import { useProfile } from '../../app/profileContext'
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { currentMonth, monthPath, parseMonth } from '../../app/paths'
@@ -18,6 +19,7 @@ import { useEditor } from '../editar/editorContext'
 import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
 import { IncomesBlock } from './MonthBlocks'
+import { OtherMonth } from './OtherMonth'
 import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
@@ -56,6 +58,7 @@ export function MonthsPage() {
   const run = useFinanceOp()
   const toast = useToast()
   const editor = useEditor()
+  const { profile } = useProfile(query.data?.otherPerson)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
   // Like v1: a new month starts from the top.
@@ -211,42 +214,48 @@ export function MonthsPage() {
     <>
       <h2 className="visually-hidden">Meses</h2>
       <MonthNav finance={finance} selected={selected} pathFor={monthPath} />
-      <MonthSummary month={selected} balance={view.balance} />
-      <IncomesBlock
-        incomes={view.incomes}
-        total={view.balance.incomes}
-        carryHint={view.carryHint}
-        onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
-        onDelete={deleteIncome}
-        onUseCarry={(hint) => {
-          run(
-            ops.updateIncome(hint.income, {
-              description: hint.income.description,
-              amount: hint.available,
-            }),
-          )
-          toast(`Sobra de ${monthName(hint.previous)} colocada`)
-        }}
-      />
-      <OutflowViews
-        finance={finance}
-        month={selected}
-        onOpen={openOutflow}
-        view={view}
-        categories={finance.categories}
-        onInvoice={(item) =>
-          setDialog({ kind: 'invoice', id: item.invoice.id })
-        }
-        onInvoicePaid={(item, paid) =>
-          run(ops.invoicePaid(item.invoice, paid, today()))
-        }
-        onInvoiceDelete={deleteInvoice}
-        onLoosePaid={loosePaid}
-        onLooseOpen={(item) => editor.plan(item.plan.id)}
-        onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
-        onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
-        onBillDelete={deleteBill}
-      />
+      {profile === 'other' ? (
+        <OtherMonth finance={finance} month={selected} onOpen={openOutflow} />
+      ) : (
+        <>
+          <MonthSummary month={selected} balance={view.balance} />
+          <IncomesBlock
+            incomes={view.incomes}
+            total={view.balance.incomes}
+            carryHint={view.carryHint}
+            onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
+            onDelete={deleteIncome}
+            onUseCarry={(hint) => {
+              run(
+                ops.updateIncome(hint.income, {
+                  description: hint.income.description,
+                  amount: hint.available,
+                }),
+              )
+              toast(`Sobra de ${monthName(hint.previous)} colocada`)
+            }}
+          />
+          <OutflowViews
+            finance={finance}
+            month={selected}
+            onOpen={openOutflow}
+            view={view}
+            categories={finance.categories}
+            onInvoice={(item) =>
+              setDialog({ kind: 'invoice', id: item.invoice.id })
+            }
+            onInvoicePaid={(item, paid) =>
+              run(ops.invoicePaid(item.invoice, paid, today()))
+            }
+            onInvoiceDelete={deleteInvoice}
+            onLoosePaid={loosePaid}
+            onLooseOpen={(item) => editor.plan(item.plan.id)}
+            onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
+            onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
+            onBillDelete={deleteBill}
+          />
+        </>
+      )}
 
       {income && (
         <IncomeModal

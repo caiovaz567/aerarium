@@ -90,4 +90,39 @@ describe('gastos de quem usa o cartão junto', () => {
     expect(sumMoney(items.map((item) => item.amount))).toBe(13900)
     expect(items.some((item) => item.source === 'other')).toBe(false)
   })
+
+  it('vistas pelo pai: as compras e parcelas dele e o "outros"', () => {
+    const items = monthOutflowItems(sep, {
+      ...data(true),
+      viewAs: 'other',
+      bills: [
+        {
+          id: 'luz',
+          month: sep,
+          description: 'Luz',
+          amount: cents(9000),
+          paid: false,
+          paidOn: null,
+          sortOrder: 0,
+        },
+      ],
+      expenses: [
+        { id: 'gasto-meu', invoiceId: 'invoice', amount: cents(1200) },
+        {
+          id: 'gasto-pai',
+          invoiceId: 'invoice',
+          amount: cents(800),
+          forOther: true,
+        },
+      ],
+    })
+    expect(items.map((item) => [item.source, item.id])).toEqual([
+      ['installment', 'pai-fora'],
+      ['installment', 'do-pai'],
+      ['expense', 'gasto-pai'],
+      ['other', 'invoice'],
+    ])
+    // 100 (outside) + 40 + 8 + 30 of "outros".
+    expect(sumMoney(items.map((item) => item.amount))).toBe(17800)
+  })
 })

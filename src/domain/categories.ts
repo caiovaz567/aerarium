@@ -365,7 +365,13 @@ export function monthOutflowItems(
   month(target)
   const items: OutflowItem[] = []
   const category = (value: string | null | undefined) => value ?? null
-  for (const bill of data.bills.filter((item) => item.month === target))
+  // Fase 13.3: whose outflows these are; bills and subscriptions are the owner's.
+  const asOther = data.viewAs === 'other'
+  const theirs = (forOther: boolean | undefined) =>
+    (forOther ?? false) === asOther
+  for (const bill of data.bills.filter(
+    (item) => item.month === target && !asOther,
+  ))
     items.push({
       source: 'bill',
       id: bill.id,
@@ -380,7 +386,7 @@ export function monthOutflowItems(
   )
   // Fase 13.3: what the other person bought is not the owner's outflow.
   for (const { plan, item } of schedule.filter(
-    ({ plan }) => plan.cardId === null && !plan.forOther,
+    ({ plan }) => plan.cardId === null && theirs(plan.forOther),
   ))
     items.push({
       source: 'installment',
@@ -393,7 +399,9 @@ export function monthOutflowItems(
   for (const invoice of data.invoices.filter((item) => item.month === target)) {
     const parts: OutflowItem[] = [
       ...schedule
-        .filter(({ plan }) => plan.cardId === invoice.cardId && !plan.forOther)
+        .filter(
+          ({ plan }) => plan.cardId === invoice.cardId && theirs(plan.forOther),
+        )
         .map(({ plan, item }) => ({
           source: 'installment' as const,
           id: plan.id,
@@ -403,7 +411,9 @@ export function monthOutflowItems(
           number: item.number,
         })),
       ...data.subscriptions
-        .filter((item) => item.cardId === invoice.cardId && item.active)
+        .filter(
+          (item) => item.cardId === invoice.cardId && item.active && !asOther,
+        )
         .map((item) => ({
           source: 'subscription' as const,
           id: item.id,
@@ -412,7 +422,9 @@ export function monthOutflowItems(
           categoryId: category(item.categoryId),
         })),
       ...data.expenses
-        .filter((item) => item.invoiceId === invoice.id && !item.forOther)
+        .filter(
+          (item) => item.invoiceId === invoice.id && theirs(item.forOther),
+        )
         .map((item) => ({
           source: 'expense' as const,
           id: item.id,
@@ -422,7 +434,11 @@ export function monthOutflowItems(
         })),
     ]
     const itemized = sumMoney(parts.map((item) => item.amount))
-    const rest = sumMoney([invoiceTotals(invoice, data).mine, cents(-itemized)])
+    const totals = invoiceTotals(invoice, data)
+    const rest = sumMoney([
+      asOther ? totals.otherShare : totals.mine,
+      cents(-itemized),
+    ])
     items.push(...parts)
     if (rest !== 0)
       items.push({

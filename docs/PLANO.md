@@ -45,7 +45,7 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 
 - [x] Base (29/09/2026, branch `novidades`): "de quem" em gastos e parcelamentos, "outros" é do pai, saldo só com a parte do dono, importação separando sozinha, prévia por cartão, compra antiga sem fatura do banco vai pra fatura certa.
 - [x] Tela "Chegou do banco" (29/09/2026): abre sozinha uma vez por sessão quando há compra ou parcelamento do banco sem conferir (`reviewed_at`), por dia, Meu ou Pai; aviso em Meses reabre. A primeira importação já entra conferida.
-- [ ] Seletor de perfil Eu | Pai no topo (só para o dono): a visão do Pai mostra os gastos dele nos cartões, por data, categoria e cartão.
+- [x] Seletor de perfil Eu | Pai no topo (29/09/2026, só aparece com outra pessoa ligada): a visão do Pai em Meses mostra os gastos dele, por cartão, por data e por categoria. Cartões e o e-mail ainda mostram só a visão de sempre.
 - [ ] Depois, se o dono quiser: mandar as compras do pai para a conta dele no Aerarium (escrita no servidor, com cuidado). Nunca guardar e-mail ou id do pai no Git.
 
 ## Fase 14: revisar em vez de lançar

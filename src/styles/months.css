@@ -657,3 +657,37 @@
     font-size: 13.5px;
   }
 }
+
+/* Fase 13.3: the other person's spending, card by card, in their hero. */
+.other-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--hero-track);
+  list-style: none;
+}
+.other-cards li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.other-cards span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.other-cards b {
+  white-space: nowrap;
+}
+.profile-switch {
+  flex: none;
+  margin: 0;
+}
+.profile-switch button {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}

@@ -420,4 +420,29 @@ describe('Pai usa os cartões', () => {
     )
     expect(heroValue('Saídas')).toBe('R$ 602,15')
   })
+
+  it('seletor Eu | Pai: a visão do pai mostra só os gastos dele', () => {
+    localStorage.removeItem('aerarium.perfil')
+    renderApp('/meses/2026-09', undefined, withDad())
+    const switcher = screen.getByRole('group', { name: 'Ver gastos de' })
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Pai' }))
+    const dad = screen.getByRole('region', { name: 'Resumo do Pai' })
+    expect(text(dad.textContent)).toContain('Gastos do Pai em Setembro')
+    // Uber 12,00 plus "outros" 271,02.
+    expect(text(dad.textContent)).toContain('R$ 283,02')
+    expect(text(dad.textContent)).toContain('Nubank TesteR$ 283,02')
+    expect(screen.queryByRole('region', { name: 'Resumo do mês' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Entradas' })).toBeNull()
+    expect(localStorage.getItem('aerarium.perfil')).toBe('other')
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
+    expect(heroValue('Saídas')).toBe('R$ 590,15')
+  })
+
+  it('sem outra pessoa, não tem seletor e a visão é sempre a sua', () => {
+    localStorage.setItem('aerarium.perfil', 'other')
+    renderApp('/meses/2026-09')
+    expect(screen.queryByRole('group', { name: 'Ver gastos de' })).toBeNull()
+    expect(heroValue('Saídas')).toBe('R$ 873,17')
+    localStorage.removeItem('aerarium.perfil')
+  })
 })

@@ -19,6 +19,8 @@ import {
   PlusIcon,
   RepeatIcon,
 } from '../ui/icons'
+import { ProfileProvider } from './profile'
+import { useProfile } from './profileContext'
 import { useSyncState } from './syncContext'
 import { useOnline } from './useOnline'
 
@@ -36,7 +38,34 @@ function SyncStatus() {
   )
 }
 
-function Header() {
+/** Fase 13.3: Eu | Pai, only when someone else uses the cards. */
+function ProfileSwitch({ other }: { readonly other: string }) {
+  const { profile, setProfile } = useProfile(other)
+  return (
+    <div
+      className="segmented profile-switch"
+      role="group"
+      aria-label="Ver gastos de"
+    >
+      <button
+        type="button"
+        aria-pressed={profile === 'me'}
+        onClick={() => setProfile('me')}
+      >
+        Eu
+      </button>
+      <button
+        type="button"
+        aria-pressed={profile === 'other'}
+        onClick={() => setProfile('other')}
+      >
+        {other}
+      </button>
+    </div>
+  )
+}
+
+function Header({ other }: { readonly other: string | null }) {
   const header = useRef<HTMLElement>(null)
   const [scrolled, setScrolled] = useState(false)
 
@@ -64,6 +93,7 @@ function Header() {
     <header ref={header} className={`app-header${scrolled ? ' scrolled' : ''}`}>
       <div className="app-header-inner">
         <Brand />
+        {other && <ProfileSwitch other={other} />}
         <SyncStatus />
         <ExcelButton />
         {/* On phones, Ajustes lives in the bottom bar instead. */}
@@ -125,68 +155,70 @@ export function AppShell() {
     setLaunching(true)
   }
   return (
-    <EditorProvider>
-      <a className="skip-link" href="#conteudo">
-        Ir para o conteúdo
-      </a>
-      <Header />
-      <nav className="tabs" aria-label="Seções">
-        <NavLink className="tab" to="/meses">
-          <CalendarIcon />
-          Meses
-        </NavLink>
-        <NavLink className="tab" to="/cartoes">
-          <CardIcon />
-          Cartões
-        </NavLink>
-        <button
-          type="button"
-          className="tab-add"
-          aria-label="Lançar gasto ou entrada"
-          onClick={openLaunch}
-        >
-          <PlusIcon />
-          <span>Lançar</span>
-        </button>
-        <NavLink className="tab" to="/assinaturas">
-          <RepeatIcon />
-          Assinaturas
-        </NavLink>
-        <NavLink className="tab tab-config" to="/config">
-          <GearIcon />
-          Ajustes
-        </NavLink>
-      </nav>
-      <main id="conteudo" className="app-content" tabIndex={-1}>
-        {review.pending > 0 && inMonths && (
+    <ProfileProvider>
+      <EditorProvider>
+        <a className="skip-link" href="#conteudo">
+          Ir para o conteúdo
+        </a>
+        <Header other={finance.data?.otherPerson ?? null} />
+        <nav className="tabs" aria-label="Seções">
+          <NavLink className="tab" to="/meses">
+            <CalendarIcon />
+            Meses
+          </NavLink>
+          <NavLink className="tab" to="/cartoes">
+            <CardIcon />
+            Cartões
+          </NavLink>
           <button
             type="button"
-            className="review-banner"
-            onClick={() => review.setOpen(true)}
+            className="tab-add"
+            aria-label="Lançar gasto ou entrada"
+            onClick={openLaunch}
           >
-            <b>
-              {review.pending === 1
-                ? '1 compra nova do banco'
-                : `${review.pending} compras novas do banco`}
-            </b>
-            <span>Conferir</span>
+            <PlusIcon />
+            <span>Lançar</span>
           </button>
+          <NavLink className="tab" to="/assinaturas">
+            <RepeatIcon />
+            Assinaturas
+          </NavLink>
+          <NavLink className="tab tab-config" to="/config">
+            <GearIcon />
+            Ajustes
+          </NavLink>
+        </nav>
+        <main id="conteudo" className="app-content" tabIndex={-1}>
+          {review.pending > 0 && inMonths && (
+            <button
+              type="button"
+              className="review-banner"
+              onClick={() => review.setOpen(true)}
+            >
+              <b>
+                {review.pending === 1
+                  ? '1 compra nova do banco'
+                  : `${review.pending} compras novas do banco`}
+              </b>
+              <span>Conferir</span>
+            </button>
+          )}
+          <Outlet />
+        </main>
+        {review.open && finance.data && (
+          <ReviewModal
+            finance={finance.data}
+            onClose={() => review.setOpen(false)}
+          />
         )}
-        <Outlet />
-      </main>
-      {review.open && finance.data && (
-        <ReviewModal
-          finance={finance.data}
-          onClose={() => review.setOpen(false)}
-        />
-      )}
-      {launching && finance.data && (
-        <LaunchModal
-          finance={finance.data}
-          openMonth={parseMonth(inMonths?.params.ym)}
-          onClose={() => setLaunching(false)}
-        />
-      )}
-    </EditorProvider>
+        {launching && finance.data && (
+          <LaunchModal
+            finance={finance.data}
+            openMonth={parseMonth(inMonths?.params.ym)}
+            onClose={() => setLaunching(false)}
+          />
+        )}
+      </EditorProvider>
+    </ProfileProvider>
   )
 }
