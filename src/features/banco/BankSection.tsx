@@ -1,14 +1,30 @@
 import { useState } from 'react'
-import { bankOps } from '../../data/bank'
+import { bankOps, type BankData } from '../../data/bank'
 import type { Finance } from '../../data/finance'
 import { useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
+import { formatMoney, fromDecimal } from '../../domain/money'
 import { settingsOps } from '../../data/settingsOps'
 import { BankIcon, PeopleIcon, RefreshIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { PreviewCards } from './PreviewCards'
 import { importMessage, lastSync, useBankEnabled, useBankSync } from './useBank'
+
+const short = (date: string | null | undefined) =>
+  date ? `${date.slice(8, 10)}/${date.slice(5, 7)}` : null
+
+/** "Fatura atual no banco: R$ 1.234,00 · fecha 02/10 · vence 09/10". */
+function bankBill(account: BankData['accounts'][number] | undefined) {
+  if (!account) return null
+  const parts = [
+    account.balance != null &&
+      `Fatura atual no banco: ${formatMoney(fromDecimal(account.balance.toFixed(2)))}`,
+    short(account.closeDate) && `fecha ${short(account.closeDate)}`,
+    short(account.dueDate) && `vence ${short(account.dueDate)}`,
+  ].filter(Boolean)
+  return parts.length ? <small>{parts.join(' · ')}</small> : null
+}
 
 const when = (date: Date | null) =>
   date
@@ -58,6 +74,8 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [preview, setPreview] = useState<ImportResult | null>(null)
+  // What the bank said on the last "Atualizar agora", per bank card.
+  const [seen, setSeen] = useState<BankData['accounts']>([])
   const [synced, setSynced] = useState(lastSync)
   if (!enabled) return null
 
@@ -66,6 +84,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
     setError('')
     try {
       const outcome = await fetchPlan()
+      setSeen(outcome.data.accounts)
       setSynced(lastSync())
       if (outcome.first && outcome.result.records.length)
         setPreview(outcome.result)
@@ -97,6 +116,9 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
                 {account.number ? `final ${account.number} · ` : ''}
                 {account.cardId ? 'entra no cartão' : 'não importa'}
               </small>
+              {bankBill(
+                seen.find((item) => item.id === account.pluggyAccountId),
+              )}
             </span>
             <select
               className="bank-card"
