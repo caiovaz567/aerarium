@@ -542,59 +542,22 @@ describe('total da fatura do banco', () => {
     total: cents(total),
   })
 
-  it('"outros" vira o que sobra depois de assinaturas e gastos', () => {
-    // Netflix 55,90 + Uber 12,00 already there.
+  it('guarda o total do banco com a fatura; o "outros" do dono não muda', () => {
     const result = planBankImport(
       state(),
       { accounts: [account], transactions: [], bills: [bill(50000)] },
       ids,
     )
-    expect(result.invoiceTotals).toEqual([
-      { invoiceId: 'inv9', otherAmount: 50000 - 5590 - 1200 },
-    ])
+    expect(result.invoiceTotals).toEqual([])
     expect(result.records).toEqual([
       { externalId: 'bill:b9', kind: 'bill', refId: 'inv9', amount: 50000 },
     ])
-  })
-
-  it('conta também as compras e os parcelamentos que acabaram de chegar', () => {
-    const result = planBankImport(
-      state(),
-      {
-        accounts: [account],
-        transactions: [
-          tx('t1', 'MERCADO', 10000, '2026-09-10T03:00:00.000Z'),
-          tx('p1', 'LOJA PARC 01/02', 3000, '2026-09-10T03:00:00.000Z', {
-            installmentNumber: 1,
-            totalInstallments: 2,
-          }),
-        ],
-        bills: [bill(50000)],
-      },
-      ids,
-    )
-    expect(result.invoiceTotals[0]!.otherAmount).toBe(
-      50000 - 5590 - 1200 - 10000 - 3000,
-    )
-  })
-
-  it('total menor que o que já se sabe: outros zero e um aviso', () => {
-    const result = planBankImport(
-      state(),
-      { accounts: [account], transactions: [], bills: [bill(1000)] },
-      ids,
-    )
-    expect(result.invoiceTotals).toEqual([
-      { invoiceId: 'inv9', otherAmount: 0 },
-    ])
-    expect(spaced(result.notices[0])).toMatch(
-      /^A fatura de Setembro 2026 veio R\$ 10,00 no banco, menos que parcelas, assinaturas e gastos juntos \(R\$ 67,90\)\.$/,
-    ) // Where the difference comes from, for the preview.
+    // What the app has of that invoice, for the preview.
     expect(result.billChecks).toEqual([
       {
         cardId: 'card',
         month: sep,
-        bank: 1000,
+        bank: 50000,
         installments: 0,
         subscriptions: 5590,
         purchases: 1200,
@@ -602,22 +565,25 @@ describe('total da fatura do banco', () => {
     ])
   })
 
-  it('já aplicada com o mesmo total, fatura paga, sem fatura ou sem cartão: nada', () => {
-    const applied = planBankImport(
-      state({ records: new Map([['bill:b9', { amount: cents(50000) }]]) }),
-      { accounts: [account], transactions: [], bills: [bill(50000)] },
-      ids,
-    )
-    expect(applied.invoiceTotals).toEqual([])
-    // Total changed at the bank: applied again.
-    const changed = planBankImport(
-      state({ records: new Map([['bill:b9', { amount: cents(40000) }]]) }),
-      { accounts: [account], transactions: [], bills: [bill(50000)] },
-      ids,
-    )
-    expect(changed.invoiceTotals).toHaveLength(1)
-    const paid = planBankImport(
-      state({
+  it('mesmo total já guardado, fatura paga, sem fatura ou sem cartão: nada', () => {
+    const run = (
+      overrides: Partial<ImportState>,
+      accounts: BankAccount[] = [account],
+    ) =>
+      planBankImport(
+        state(overrides),
+        { accounts, transactions: [], bills: [bill(50000)] },
+        ids,
+      ).records
+    expect(
+      run({ records: new Map([['bill:b9', { amount: cents(50000) }]]) }),
+    ).toEqual([])
+    // Total changed at the bank: kept again.
+    expect(
+      run({ records: new Map([['bill:b9', { amount: cents(40000) }]]) }),
+    ).toHaveLength(1)
+    expect(
+      run({
         invoices: [
           {
             id: 'inv9',
@@ -628,26 +594,9 @@ describe('total da fatura do banco', () => {
           },
         ],
       }),
-      { accounts: [account], transactions: [], bills: [bill(50000)] },
-      ids,
-    )
-    expect(paid.invoiceTotals).toEqual([])
-    const none = planBankImport(
-      state({ invoices: [] }),
-      { accounts: [account], transactions: [], bills: [bill(50000)] },
-      ids,
-    )
-    expect(none.invoiceTotals).toEqual([])
-    const unmapped = planBankImport(
-      state(),
-      {
-        accounts: [{ ...account, cardId: null }],
-        transactions: [],
-        bills: [bill(50000)],
-      },
-      ids,
-    )
-    expect(unmapped.invoiceTotals).toEqual([])
+    ).toEqual([])
+    expect(run({ invoices: [] })).toEqual([])
+    expect(run({}, [{ ...account, cardId: null }])).toEqual([])
   })
 })
 
@@ -733,7 +682,7 @@ describe('fatura aberta que recebe compras do banco', () => {
     expect(again.invoiceTotals).toEqual([])
   })
 
-  it('sem "outros", ou com a fatura do banco no mesmo envio, não mexe', () => {
+  it('sem "outros" digitado, não mexe', () => {
     expect(
       planBankImport(
         withOther(0),
@@ -741,25 +690,6 @@ describe('fatura aberta que recebe compras do banco', () => {
         ids,
       ).invoiceTotals,
     ).toEqual([])
-    const withBill = planBankImport(
-      withOther(27102),
-      {
-        accounts: [account],
-        transactions: [purchase],
-        bills: [
-          {
-            id: 'b9',
-            accountId: 'acc',
-            dueDate: isoDate('2026-09-21'),
-            total: cents(20000),
-          },
-        ],
-      },
-      ids,
-    )
-    expect(withBill.invoiceTotals).toEqual([
-      { invoiceId: 'inv9', otherAmount: 20000 - 5590 - 1200 - 800 },
-    ])
   })
 })
 

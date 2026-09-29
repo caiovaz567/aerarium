@@ -78,6 +78,8 @@ export interface BankAccountRow {
 export interface BankRecordRow {
   readonly externalId: string
   readonly amount: Cents | null
+  /** What it became; for "bill:ID", the app invoice. */
+  readonly refId?: string | null
 }
 export type PaymentRow = InstallmentPayment & { readonly id: string }
 export type SubscriptionRow = Subscription & {
@@ -103,10 +105,9 @@ export interface Finance {
   readonly bankRecords: readonly BankRecordRow[]
   /**
    * Fase 13.3, only for the Open Finance owner: who else uses the cards
-   * ("Pai"). When set, "outros" of every invoice is theirs (restIsOther).
+   * ("Pai").
    */
   readonly otherPerson?: string | null
-  readonly restIsOther?: boolean
   /** Profile "Pai": outflows seen as the other person's (not loaded). */
   readonly viewAs?: 'owner' | 'other'
 }
@@ -183,7 +184,7 @@ export async function loadFinance(): Promise<Finance> {
       'bank_accounts',
       'id,pluggy_account_id,item_id,name,number,card_id,credit_limit::text,available_limit::text,limit_at',
     ),
-    select('bank_records', 'external_id,amount::text'),
+    select('bank_records', 'external_id,amount::text,ref_id'),
     select('user_settings', 'other_person'),
   ])
   const monthRows = months
@@ -319,8 +320,8 @@ export async function loadFinance(): Promise<Finance> {
     bankRecords: bankRecords.map((row) => ({
       externalId: text(row.external_id),
       amount: row.amount == null ? null : money(row.amount),
+      refId: (row.ref_id as string | null) ?? null,
     })),
     otherPerson,
-    restIsOther: otherPerson !== null,
   }
 }

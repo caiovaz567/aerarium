@@ -43,8 +43,9 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
   const total = invoice.paid
     ? nonNegative(invoice.closedTotal!)
     : calculatedTotal
-  // Fase 13.3: what the other person bought; the owner's part is the rest.
-  const otherShare = sumMoney([
+  // Fase 13.3: the owner launches what is theirs ("outros" included); what
+  // the other person bought is marked. The owner's part is the rest.
+  const marked = sumMoney([
     ...context.plans
       .filter((plan) => plan.cardId === invoice.cardId && plan.forOther)
       .flatMap((plan) => installmentSchedule(plan, context.payments))
@@ -53,8 +54,15 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
     ...context.expenses
       .filter((item) => item.invoiceId === invoice.id && item.forOther)
       .map((item) => nonNegative(item.amount)),
-    context.restIsOther ? otherAmount : cents(0),
   ])
+  const mine = cents(Math.max(0, total - marked))
+  // A closed bill at the bank has the whole invoice: the other person's part
+  // is all of it that is not the owner's.
+  const bank = context.bankRecords?.find(
+    (item) => item.refId === invoice.id && item.externalId.startsWith('bill:'),
+  )?.amount
+  const otherShare =
+    bank != null ? cents(Math.max(marked, bank - mine)) : marked
   return {
     ...fixed,
     expensesAmount,
@@ -62,7 +70,7 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
     calculatedTotal,
     total,
     otherShare,
-    mine: cents(Math.max(0, total - otherShare)),
+    mine,
   }
 }
 

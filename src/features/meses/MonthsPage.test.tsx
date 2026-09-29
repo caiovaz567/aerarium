@@ -378,7 +378,6 @@ describe('Pai usa os cartões', () => {
     return {
       ...finance,
       otherPerson: 'Pai',
-      restIsOther: true,
       expenses: finance.expenses.map((item) =>
         item.description === 'Uber' ? { ...item, forOther: true } : item,
       ),
@@ -387,15 +386,14 @@ describe('Pai usa os cartões', () => {
 
   it('a sua visão só tem o que é seu; o pai te deve a parte dele', async () => {
     renderApp('/meses/2026-09', undefined, withDad())
-    // 873,17 minus Uber 12,00 and "outros" 271,02, both his.
-    expect(heroValue('Saídas')).toBe('R$ 590,15')
+    // 873,17 minus the Uber 12,00 he bought; "outros" is yours.
+    expect(heroValue('Saídas')).toBe('R$ 861,17')
     const nubank = screen.getByRole('button', { name: /^Nubank Teste/ })
-    expect(text(nubank.textContent)).toContain('R$ 159,90')
-    expect(text(nubank.textContent)).toContain('Pai R$ 283')
-    expect(text(nubank.textContent)).not.toContain('outros')
+    expect(text(nubank.textContent)).toContain('R$ 430,92')
+    expect(text(nubank.textContent)).toContain('outros R$ 271')
+    expect(text(nubank.textContent)).toContain('Pai R$ 12')
     const owed = screen.getByRole('region', { name: 'O que o Pai te deve' })
-    // Uber 12,00 plus "outros" 271,02.
-    expect(text(owed.textContent)).toContain('Pai te deve em SetembroR$ 283,02')
+    expect(text(owed.textContent)).toContain('Pai te deve em SetembroR$ 12,00')
     fireEvent.click(within(owed).getByRole('button', { name: 'Pai pagou' }))
     await settle()
     expect(writes()).toContainEqual(
@@ -403,7 +401,7 @@ describe('Pai usa os cartões', () => {
         table: 'incomes',
         op: 'insert',
         payload: expect.objectContaining({
-          amount: '283.02',
+          amount: '12.00',
           kind: 'from_other',
           description: 'Pai pagou',
         }),
@@ -413,7 +411,7 @@ describe('Pai usa os cartões', () => {
     expect(heroValue('Entradas')).toBe('R$ 5.100,00')
     expect(screen.queryByText('Pai pagou', { selector: 'span' })).toBeNull()
     expect(text(owed.textContent)).toContain('R$ 0,00')
-    expect(text(owed.textContent)).toContain('Já devolveu R$ 283,02')
+    expect(text(owed.textContent)).toContain('Já devolveu R$ 12,00')
   })
 
   it('na fatura, a compra dele tem a etiqueta; dá pra marcar como sua', async () => {
@@ -443,7 +441,7 @@ describe('Pai usa os cartões', () => {
       text(
         screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,
       ),
-    ).toContain('R$ 271,02')
+    ).toContain('R$ 0,00')
   })
 
   it('seletor Eu | Pai: a visão do pai mostra só os gastos dele', () => {
@@ -453,14 +451,13 @@ describe('Pai usa os cartões', () => {
     fireEvent.click(within(switcher).getByRole('button', { name: 'Pai' }))
     const dad = screen.getByRole('region', { name: 'Resumo do Pai' })
     expect(text(dad.textContent)).toContain('Gastos do Pai em Setembro')
-    // Uber 12,00 plus "outros" 271,02.
-    expect(text(dad.textContent)).toContain('R$ 283,02')
-    expect(text(dad.textContent)).toContain('Nubank TesteR$ 283,02')
+    expect(text(dad.textContent)).toContain('R$ 12,00')
+    expect(text(dad.textContent)).toContain('Nubank TesteR$ 12,00')
     expect(screen.queryByRole('region', { name: 'Resumo do mês' })).toBeNull()
     expect(screen.queryByRole('region', { name: 'Entradas' })).toBeNull()
     expect(localStorage.getItem('aerarium.perfil')).toBe('other')
     fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
-    expect(heroValue('Saídas')).toBe('R$ 590,15')
+    expect(heroValue('Saídas')).toBe('R$ 861,17')
   })
 
   it('sem outra pessoa, não tem seletor e a visão é sempre a sua', () => {

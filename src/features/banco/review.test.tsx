@@ -53,7 +53,6 @@ function fromBank(otherPerson: string | null = 'Pai'): Finance {
   return {
     ...finance,
     otherPerson,
-    restIsOther: otherPerson !== null,
     expenses: [
       ...finance.expenses,
       bank('b1', 'POSTO SHELL', '2026-09-20', '2026-09-20T13:00:00.000Z'),

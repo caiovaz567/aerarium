@@ -14,7 +14,7 @@ export const settingsOps = {
             updated_at: new Date().toISOString(),
           }),
         ),
-      apply: (f) => ({ ...f, otherPerson: name, restIsOther: name !== null }),
+      apply: (f) => ({ ...f, otherPerson: name }),
     }
   },
 }

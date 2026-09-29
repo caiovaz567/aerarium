@@ -484,6 +484,7 @@ export const bankOps = {
           ...result.records.map((item) => ({
             externalId: item.externalId,
             amount: item.amount,
+            refId: item.refId,
           })),
         ],
       }),

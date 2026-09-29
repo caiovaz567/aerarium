@@ -123,7 +123,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             <b>Outra pessoa usa seus cartões</b>
             <small>
               {finance.otherPerson
-                ? `As compras de ${finance.otherPerson} e o "outros" das faturas ficam separados. Você paga a fatura e ele te devolve.`
+                ? `Você lança o que é seu. O que for de ${finance.otherPerson} (marcado, ou o resto da fatura fechada no banco) fica separado.`
                 : 'Liga pra separar o que é seu do que é de outra pessoa.'}
             </small>
           </label>

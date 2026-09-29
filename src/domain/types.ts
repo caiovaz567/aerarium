@@ -78,10 +78,15 @@ export interface InvoiceContext {
   readonly subscriptions: readonly Subscription[]
   readonly expenses: readonly InvoiceExpense[]
   /**
-   * Fase 13.3 (the owner's choice): someone else uses the cards and the
-   * undetailed rest of every invoice ("outros") is theirs.
+   * Fase 13.3: bank records; "bill:ID" ones carry the bank's closed bill
+   * total for the invoice in refId. The other person's part of an invoice is
+   * that total minus the owner's (the owner's "outros" included).
    */
-  readonly restIsOther?: boolean
+  readonly bankRecords?: readonly {
+    readonly externalId: string
+    readonly refId?: string | null
+    readonly amount: Cents | null
+  }[]
   /**
    * Fase 13.3, profile "Pai": the month's outflows seen as the other person's
    * (their purchases, plans and the rest of the invoices), not the owner's.

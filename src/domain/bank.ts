@@ -13,7 +13,6 @@ import {
   dateInSaoPaulo,
   daysInMonth,
   isoDate,
-  monthLabel,
   monthOf,
   monthsBetween,
   type ISODate,
@@ -537,7 +536,9 @@ export function planBankImport(
     record(transaction.id, 'expense', expense.id)
   }
 
-  // A closed bill sets the total: "outros" is what is left after the rest.
+  // A closed bill is kept with its invoice: the whole invoice at the bank.
+  // The owner's own launches ("outros" included) stay as they are; the rest
+  // of the bill is the other person's part (see invoiceTotals).
   for (const bill of input.bills) {
     const key = `bill:${bill.id}`
     if (state.records.get(key)?.amount === bill.total) continue
@@ -554,32 +555,17 @@ export function planBankImport(
       subscriptions: state.subscriptions,
       expenses: [],
     })
-    const launched = sumMoney(
-      [...state.expenses, ...result.expenses]
-        .filter((item) => item.invoiceId === invoice.id)
-        .map((item) => item.amount),
-    )
-    const known = sumMoney([
-      fixed.installmentsAmount,
-      fixed.subscriptionsAmount,
-      launched,
-    ])
     result.billChecks.push({
       cardId: account.cardId,
       month: target,
       bank: bill.total,
       installments: fixed.installmentsAmount,
       subscriptions: fixed.subscriptionsAmount,
-      purchases: launched,
-    })
-    const rest = sumMoney([bill.total, cents(-known)])
-    if (rest < 0)
-      result.notices.push(
-        `A fatura de ${monthLabel(target)} veio ${formatMoney(bill.total)} no banco, menos que parcelas, assinaturas e gastos juntos (${formatMoney(known)}).`,
-      )
-    result.invoiceTotals.push({
-      invoiceId: invoice.id,
-      otherAmount: rest < 0 ? cents(0) : rest,
+      purchases: sumMoney(
+        [...state.expenses, ...result.expenses]
+          .filter((item) => item.invoiceId === invoice.id)
+          .map((item) => item.amount),
+      ),
     })
     record(key, 'bill', invoice.id, bill.total)
   }
@@ -594,8 +580,6 @@ export function planBankImport(
     if (cleanFrom && invoice.month < cleanFrom) continue
     const key = `open:${invoice.id}`
     if (state.records.has(key)) continue
-    if (result.invoiceTotals.some((item) => item.invoiceId === invoice.id))
-      continue
     result.invoiceTotals.push({ invoiceId: invoice.id, otherAmount: cents(0) })
     record(key, 'bill', invoice.id)
   }

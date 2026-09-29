@@ -77,7 +77,7 @@ export function compositionParts(
       expenses.map((item) => ({ name: item.description, amount: item.amount })),
       (count) => `${count} gastos`,
     ),
-    ...(!invoice.estimated && invoice.otherAmount > 0 && !finance.restIsOther
+    ...(!invoice.estimated && invoice.otherAmount > 0
       ? [`outros ${formatMoneyShort(invoice.otherAmount)}`]
       : []),
     ...(otherShare > 0 && finance.otherPerson
