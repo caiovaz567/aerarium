@@ -878,3 +878,18 @@ a.row-main {
   min-height: 34px;
   font-size: 13.5px;
 }
+.invoice-parts .bank-total {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.invoice-parts .bank-total .link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}

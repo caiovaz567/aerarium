@@ -268,6 +268,45 @@ describe('tela do cartão', () => {
     )
   })
 
+  it('com o pai ligado: total no banco pela tela do cartão e a parte dele', async () => {
+    const finance = financeFixture()
+    renderApp('/cartoes/c1', undefined, { ...finance, otherPerson: 'Pai' })
+    const summary = screen.getByRole('region', { name: 'Resumo da fatura' })
+    expect(spaced(summary.textContent)).toContain(
+      'Total no bancoDigitarParte do PaiR$ 0,00',
+    )
+    fireEvent.click(within(summary).getByRole('button', { name: 'Digitar' }))
+    const dialog = screen.getByRole('dialog', {
+      name: 'Total da fatura no banco',
+    })
+    fireEvent.change(
+      within(dialog).getByLabelText('Total da fatura no banco'),
+      {
+        target: { value: '500,00' },
+      },
+    )
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
+    expect(fake.current!.calls).toContainEqual(
+      expect.objectContaining({
+        table: 'invoices',
+        op: 'update',
+        payload: { bank_total: '500.00' },
+      }),
+    )
+    // 500,00 minus the 442,92 that is yours.
+    expect(spaced(summary.textContent)).toContain(
+      'Total no bancoR$ 500,00Parte do PaiR$ 57,08',
+    )
+  })
+
+  it('usuário normal não vê nada disso', () => {
+    renderApp('/cartoes/c1')
+    expect(
+      screen.getByRole('region', { name: 'Resumo da fatura' }),
+    ).not.toHaveTextContent('Total no banco')
+  })
+
   it('cartão que não existe', () => {
     renderApp('/cartoes/nao-existe')
     expect(screen.getByText('Cartão não encontrado')).toBeVisible()

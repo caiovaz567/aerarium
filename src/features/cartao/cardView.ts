@@ -80,6 +80,9 @@ export function cardInvoiceView(
         }
       : null
   return {
+    invoice,
+    bankTotal: invoice?.bankTotal ?? null,
+    otherShare: totals?.otherShare ?? cents(0),
     final: cardFinal(account?.number),
     status: !invoice ? 'none' : invoice.paid ? 'paid' : 'open',
     total: totals?.total ?? cents(0),

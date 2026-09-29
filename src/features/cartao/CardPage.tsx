@@ -22,6 +22,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { StickyBar } from '../../ui/StickyBar'
 import { useEditor } from '../editar/editorContext'
+import { BankTotalModal } from './BankTotalModal'
 import { CardChart } from './CardChart'
 import {
   cardInvoiceView,
@@ -122,6 +123,7 @@ export function CardPage() {
   }, [navigate, points, index])
 
   const editor = useEditor()
+  const [typingBank, setTypingBank] = useState(false)
   const actions = usePlanActions(finance ?? emptyFinance)
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -236,7 +238,7 @@ export function CardPage() {
         </p>
       )}
 
-      {view.parts.length > 0 && (
+      {(view.parts.length > 0 || (finance.otherPerson && view.invoice)) && (
         <section
           className="block invoice-parts"
           aria-labelledby="resumo-fatura"
@@ -255,8 +257,37 @@ export function CardPage() {
               <dt>Total</dt>
               <dd>{formatMoney(view.total)}</dd>
             </div>
+            {finance.otherPerson && view.invoice && (
+              <>
+                <div className="bank-total">
+                  <dt>Total no banco</dt>
+                  <dd>
+                    <button
+                      type="button"
+                      className="link"
+                      onClick={() => setTypingBank(true)}
+                    >
+                      {view.bankTotal === null
+                        ? 'Digitar'
+                        : formatMoney(view.bankTotal)}
+                    </button>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Parte do {finance.otherPerson}</dt>
+                  <dd>{formatMoney(view.otherShare)}</dd>
+                </div>
+              </>
+            )}
           </dl>
         </section>
+      )}
+      {typingBank && view.invoice && finance.otherPerson && (
+        <BankTotalModal
+          invoice={view.invoice}
+          other={finance.otherPerson}
+          onClose={() => setTypingBank(false)}
+        />
       )}
 
       <section className="block card-chart" aria-label="Fatura por mês">
