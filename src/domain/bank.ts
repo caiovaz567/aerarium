@@ -270,12 +270,11 @@ const storeKey = (text: string) =>
     .trim()
 
 /**
- * Fase 13.3: whose a purchase from the bank is. The first import is history:
- * the owner launched by hand what was theirs, so the rest was the other
- * person's. Afterwards the store decides (the last choice for it), and a new
- * store follows what most bank purchases on that card were.
+ * Fase 13.3: whose a purchase from the bank is. The store decides (the last
+ * choice for it), and a new store follows what most bank purchases on that
+ * card were. The owner checks it in "Chegou do banco".
  */
-function ownerGuess(state: ImportState, firstImport: boolean) {
+function ownerGuess(state: ImportState) {
   const cardOf = new Map(state.invoices.map((item) => [item.id, item.cardId]))
   const seen = state.expenses
     .filter((item) => item.externalId)
@@ -287,7 +286,6 @@ function ownerGuess(state: ImportState, firstImport: boolean) {
   return {
     guess(text: string, cardId: string): boolean {
       if (!state.otherPerson) return false
-      if (firstImport) return true
       const key = storeKey(text)
       const word = key.split(' ')[0]!
       const latest = [...seen].reverse()
@@ -312,6 +310,8 @@ export function planBankImport(
     readonly accounts: readonly BankAccount[]
     readonly transactions: readonly BankTransaction[]
     readonly bills: readonly BankBill[]
+    /** Today; the first import starts from here (the owner's choice). */
+    readonly today?: ISODate
   },
   newId: () => string = () => crypto.randomUUID(),
 ): ImportResult {
@@ -342,8 +342,20 @@ export function planBankImport(
   const touched = new Set<string>()
   const plans: ImportPlan[] = [...state.plans]
   const history = [...state.history]
-  const firstImport = state.records.size === 0
-  const owner = ownerGuess(state, firstImport)
+  // Fase 13.3 (the owner's choice): start from zero. What was at the bank
+  // before the first import stays out; the months keep what was launched by
+  // hand, and only purchases from that day on come in. Imports made before
+  // this rule existed have no start and keep taking everything.
+  const startKey = [...state.records.keys()].find((key) =>
+    key.startsWith('start:'),
+  )
+  const start: ISODate | null = startKey
+    ? isoDate(startKey.slice(6))
+    : state.records.size === 0 && input.today
+      ? input.today
+      : null
+  if (start && !startKey) record(`start:${start}`, 'ignored')
+  const owner = ownerGuess(state)
 
   const invoiceFor = (cardId: string, target: Month) => {
     const existing = invoices.find(
@@ -370,6 +382,7 @@ export function planBankImport(
   )
   for (const transaction of ordered) {
     if (state.records.has(transaction.id)) continue
+    if (start && bankMoment(transaction.date).day < start) continue
     const account = accounts.get(transaction.accountId)
     if (!account?.cardId) continue
     if (transaction.amount <= 0) {
@@ -406,7 +419,14 @@ export function planBankImport(
       )
       const firstMonth = addMonths(target, -(number - 1))
       const key = `${transaction.accountId}|${normalizeText(text)}|${total}|${transaction.amount}|${firstMonth}`
-      let plan = plans.find((item) => item.externalKey === key)
+      // The same purchase seen on two bills can land a month apart: one plan.
+      const prefix = key.slice(0, key.lastIndexOf('|') + 1)
+      let plan = plans.find(
+        (item) =>
+          item.externalKey === key ||
+          (item.externalKey?.startsWith(prefix) &&
+            Math.abs(monthsBetween(item.firstMonth, firstMonth)) <= 1),
+      )
       if (!plan) {
         // Made by hand before: same card, count and value, first month ±1.
         plan = plans.find(
@@ -433,7 +453,7 @@ export function planBankImport(
             categoryId,
             externalKey: key,
             forOther: owner.guess(text, cardId),
-            reviewed: firstImport,
+            reviewed: false,
           }
           result.plans.push(created)
           plan = {
@@ -498,7 +518,7 @@ export function planBankImport(
       id: newId(),
       invoiceId: invoice.id,
       forOther,
-      reviewed: firstImport,
+      reviewed: false,
       description: name,
       amount: transaction.amount,
       spentOn: day,
@@ -560,8 +580,12 @@ export function planBankImport(
 
   // An open invoice fed by the bank sums the purchases that arrived: the
   // "outros" typed by hand would count them twice, so it goes to zero, once.
+  // Starting from zero, the invoice open that day still holds purchases from
+  // before in "outros": only invoices whose whole cycle came after are zeroed.
+  const cleanFrom = start ? addMonths(monthOf(start), 2) : null
   for (const invoice of invoices) {
     if (!touched.has(invoice.id) || invoice.otherAmount <= 0) continue
+    if (cleanFrom && invoice.month < cleanFrom) continue
     const key = `open:${invoice.id}`
     if (state.records.has(key)) continue
     if (result.invoiceTotals.some((item) => item.invoiceId === invoice.id))
@@ -601,6 +625,13 @@ export function cardDaysFromBank(
   })
 }
 
+/** Card levels and networks: shared by many banks, they say nothing. */
+const TIERS = new Set(
+  'platinum gold black infinite signature grafite nanquim internacional nacional visa master mastercard elo amex card cartao credito'.split(
+    ' ',
+  ),
+)
+
 export function guessCard(
   bankName: string,
   cards: readonly { readonly id: string; readonly name: string }[],
@@ -611,7 +642,9 @@ export function guessCard(
   for (const card of cards) {
     const hits = normalizeText(card.name)
       .split(' ')
-      .filter((word) => word.length >= 2 && words.has(word)).length
+      .filter(
+        (word) => word.length >= 2 && !TIERS.has(word) && words.has(word),
+      ).length
     if (hits > score) {
       best = card.id
       score = hits

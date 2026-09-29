@@ -736,6 +736,7 @@ describe('palpite de cartão', () => {
     { id: 'smiles', name: 'Smiles BB' },
     { id: 'nubank', name: 'NuBank' },
     { id: 'mp', name: 'Mercado Pago' },
+    { id: 'itau', name: 'Itaú Platinum' },
   ]
   it.each([
     ['SANTANDER UNIQUE VISA INFINITE', 'santander'],
@@ -743,6 +744,8 @@ describe('palpite de cartão', () => {
     ['CARTAO MERCADO PAGO', 'mp'],
     ['OUROCARD SMILES VISA', 'smiles'],
     ['Dinners Elo Grafite', null],
+    // "Platinum" is a card level, not a bank.
+    ['croma-platinum', null],
   ])('"%s" → %s', (name, id) => {
     expect(guessCard(name, cards)).toBe(id)
   })
@@ -791,22 +794,6 @@ describe('de quem é a compra do banco', () => {
   it('sem a outra pessoa, tudo é do dono', () => {
     const result = planBankImport(state(), input(buy('a', 'PADARIA')), ids)
     expect(result.expenses[0]?.forOther).toBe(false)
-  })
-
-  it('na primeira importação, o que não foi lançado na mão é da outra pessoa', () => {
-    const result = planBankImport(
-      state({ otherPerson: true }),
-      input(
-        buy('a', 'PADARIA'),
-        tx('p', 'LOJA PARC 01/03', 3000, '2026-09-10T15:00:00.000Z', {
-          installmentNumber: 1,
-          totalInstallments: 3,
-        }),
-      ),
-      ids,
-    )
-    expect(result.expenses[0]?.forOther).toBe(true)
-    expect(result.plans[0]?.forOther).toBe(true)
   })
 
   it('depois, a loja decide; loja nova segue a maioria do cartão', () => {
@@ -859,5 +846,104 @@ describe('de quem é a compra do banco', () => {
       ids,
     )
     expect(result.expenses[0]?.forOther).toBe(false)
+  })
+})
+
+describe('começar do zero no dia da primeira importação', () => {
+  const at = (id: string, day: string, extra: Partial<BankTransaction> = {}) =>
+    tx(id, `LOJA ${id}`, 1000, `${day}T15:00:00.000Z`, extra)
+  const today = isoDate('2026-09-10')
+
+  it('o que já estava no banco fica de fora; o do dia em diante entra', () => {
+    const result = planBankImport(
+      state(),
+      {
+        accounts: [account],
+        transactions: [at('velha', '2026-09-09'), at('hoje', '2026-09-10')],
+        bills: [],
+        today,
+      },
+      ids,
+    )
+    expect(result.expenses.map((item) => item.externalId)).toEqual(['hoje'])
+    expect(result.expenses[0]?.reviewed).toBe(false)
+    expect(result.records.map((item) => item.externalId)).toEqual([
+      'start:2026-09-10',
+      'hoje',
+    ])
+  })
+
+  it('depois, o começo guardado continua valendo', () => {
+    const later = state({
+      records: new Map([['start:2026-09-10', { amount: null }]]),
+    })
+    const result = planBankImport(
+      later,
+      {
+        accounts: [account],
+        transactions: [at('velha', '2026-09-01'), at('nova', '2026-09-12')],
+        bills: [],
+        today: isoDate('2026-09-15'),
+      },
+      ids,
+    )
+    expect(result.expenses.map((item) => item.externalId)).toEqual(['nova'])
+    expect(result.records.map((item) => item.externalId)).toEqual(['nova'])
+  })
+
+  it('o "outros" da fatura aberta naquele dia fica; das seguintes, zera', () => {
+    const typed = (id: string, when: string) => ({
+      id,
+      cardId: 'card',
+      month: month(when),
+      paid: false,
+      otherAmount: cents(5000),
+    })
+    const result = planBankImport(
+      state({
+        records: new Map([['start:2026-09-10', { amount: null }]]),
+        months: [
+          { id: 'm9', ref: sep },
+          { id: 'm10', ref: oct },
+          { id: 'm11', ref: month('2026-11') },
+        ],
+        invoices: [typed('inv10', '2026-10'), typed('inv11', '2026-11')],
+      }),
+      {
+        accounts: [{ ...account, dueDate: null }],
+        transactions: [at('out', '2026-10-01'), at('nov', '2026-11-01')],
+        bills: [],
+      },
+      ids,
+    )
+    expect(result.invoiceTotals).toEqual([
+      { invoiceId: 'inv11', otherAmount: 0 },
+    ])
+  })
+
+  it('a mesma compra parcelada em duas faturas vira um parcelamento só', () => {
+    const parcel = (id: string, day: string, number: number) =>
+      tx(id, 'GREGORIO AUTO PARC', 13512, `${day}T15:00:00.000Z`, {
+        installmentNumber: number,
+        totalInstallments: 10,
+      })
+    const result = planBankImport(
+      state(),
+      {
+        accounts: [{ ...account, dueDate: null }],
+        // Two installments landing on the same bill: first months a month apart.
+        transactions: [
+          parcel('p5', '2026-09-03', 5),
+          parcel('p6', '2026-09-25', 6),
+        ],
+        bills: [],
+      },
+      ids,
+    )
+    expect(result.plans).toHaveLength(1)
+    expect(result.records.map((item) => item.kind)).toEqual([
+      'installment',
+      'installment',
+    ])
   })
 })

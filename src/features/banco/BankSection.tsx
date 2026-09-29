@@ -176,11 +176,10 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
           <div className="modal-form">
             <p>{importMessage(preview)}</p>
             <p className="muted">
-              As compras entram nas faturas abertas com a categoria sugerida.
-              Nas faturas abertas que receberem compras, o "outros" digitado vai
-              pra zero, pra não contar duas vezes. Faturas já pagas não mudam.
-              {finance.otherPerson &&
-                ` O que você não tinha lançado entra como do ${finance.otherPerson}; dá pra trocar depois.`}
+              Começa do zero hoje: as compras que já estavam no banco ficam de
+              fora, e seus meses continuam como você lançou. Fatura já fechada
+              no banco fica com o total do banco. Daqui pra frente, cada compra
+              nova aparece em "Chegou do banco" pra você conferir.
             </p>
             {preview.notices.length > 0 && (
               <ul className="bank-notices">

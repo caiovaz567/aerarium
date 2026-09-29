@@ -86,7 +86,7 @@ export function useBankSync() {
     markSynced()
     return {
       data,
-      result: planSync(finance, data),
+      result: planSync(finance, data, today()),
       first: finance.bankRecords.length === 0,
     }
   }, [client, run, userId])

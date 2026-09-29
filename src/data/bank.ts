@@ -499,6 +499,9 @@ export function syncFrom(today: ISODate): ISODate {
 }
 
 /** Plans an import against what the app has now (bank cards added first). */
-export function planSync(finance: Finance, data: BankData) {
-  return planBankImport(importState(finance), importInput(finance, data))
+export function planSync(finance: Finance, data: BankData, day: ISODate) {
+  return planBankImport(importState(finance), {
+    ...importInput(finance, data),
+    today: day,
+  })
 }
