@@ -44,6 +44,7 @@ O que fazer a seguir, em ordem: `docs/PLANO.md`. Marque o que terminar e siga o 
 - `npm run check`: lint, formatação, Vitest e build. `npm test`, `npm run test:watch`, `npm run test:coverage` (cobertura de `src/domain`).
 - `npm run e2e`: Playwright no iPhone (WebKit) e computador (Chromium), dois temas, mais o projeto `pwa` no build de produção. `npm run e2e:install` instala os navegadores. `npm run e2e:user` cria as contas fictícias de teste (senha em `.env.local`).
 - `npm run db:test`: testes SQL com rollback no desenvolvimento. `npm run db:domain`: compara `src/domain` com as views. `npm run db:seed`, `npm run db:preflight`: só desenvolvimento.
+- `npm run dev:copiar-prod`: copia os dados do dono da produção (só leitura, com o login dele) pra conta dele no desenvolvimento, trocando o que havia lá; senhas digitadas no terminal; cópia salva em `scripts/data/` (fora do Git). Sem compartilhamento e com o e-mail diário desligado.
 - `npm run db:dev`: aplica migrations novas e publica as funções no desenvolvimento, e roda `db:test`. `npm run db:prod` (só o dono): liga na produção, mostra o que muda, pergunta, aplica, pergunta se publica as funções e volta pro desenvolvimento. `npm run supabase:check`: confere o acesso com a chave pública.
 - `npm run supabase -- functions deploy NOME --project-ref REF --use-api`: publicar Edge Function.
 - `npm run import:backup -- --simular`: relatório do import da v1 (opções no topo de `scripts/import-backup.ts`).
