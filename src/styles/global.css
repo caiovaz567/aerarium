@@ -131,7 +131,7 @@ body.has-stuck .app-header.scrolled {
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 12px;
   background: var(--surface);
   color: var(--ink);
@@ -382,7 +382,12 @@ body.has-stuck .app-header.scrolled {
 .monthbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+}
+/* The month's name leads, big, on the left; the arrows follow on the right. */
+.monthbar .monthname {
+  order: -1;
+  text-align: left;
 }
 
 /* Blocks */
