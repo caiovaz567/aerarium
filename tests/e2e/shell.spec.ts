@@ -157,10 +157,25 @@ test('modal abre no centro, sem rolagem lateral, e fecha', async ({
 
 test('barra de meses gruda abaixo do cabeçalho e só ela tem sombra', async ({
   page,
+  isMobile,
 }, testInfo) => {
   await page.goto(SEPTEMBER)
   const header = page.getByRole('banner')
   const bar = page.locator('.stick')
+  if (!isMobile) {
+    // Wide screen: the month is part of the header's row, so it never scrolls.
+    await expect(header.locator('.stick')).toBeVisible()
+    await page.evaluate(() => {
+      const spacer = document.createElement('div')
+      spacer.style.height = '2000px'
+      document.querySelector('main')!.append(spacer)
+    })
+    await page.evaluate(() => window.scrollTo(0, 600))
+    await expect(header).toHaveClass(/scrolled/)
+    expect((await bar.boundingBox())!.y).toBeLessThan(40)
+    await expect(header).not.toHaveCSS('box-shadow', 'none')
+    return
+  }
   await expect(header).not.toHaveClass(/scrolled/)
   await expect(bar).not.toHaveClass(/stuck/)
   // Tall content so the page can scroll.

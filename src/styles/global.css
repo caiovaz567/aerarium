@@ -258,6 +258,50 @@ body.has-stuck .app-header.scrolled {
   height: 17px;
 }
 
+/* A page's own bar, lifted into the header's row on a wide screen. */
+.header-slot:empty {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .header-slot {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .header-slot .stick {
+    position: static;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .header-slot .monthbar {
+    order: -1;
+  }
+  /* Wide enough for the longest month: the arrows never move. */
+  .header-slot .monthname {
+    flex: none;
+    width: 290px;
+    font-size: 30px;
+  }
+  .header-slot .profile-switch {
+    width: 240px;
+    margin: 0 0 0 auto;
+  }
+  .header-slot .profile-switch button {
+    min-height: 36px;
+    font-size: 14px;
+  }
+  .app-header:has(.header-slot:not(:empty)) .app-header-inner {
+    padding-block: 10px 12px;
+  }
+  body.has-stuck .app-header.scrolled:has(.header-slot .stick) {
+    box-shadow: 0 1px 0 var(--line);
+  }
+}
+
 /* Ajustes: bottom bar on phones, side column on computers. */
 .header-config {
   display: none;
@@ -265,6 +309,8 @@ body.has-stuck .app-header.scrolled {
 
 @media (min-width: 900px) {
   .shell {
+    /* The width pages use, the header's row aligned with it. */
+    --page-width: calc(var(--content-width) + 16px);
     display: grid;
     grid-template-columns: 232px minmax(0, 1fr);
     grid-template-rows: auto 1fr;
@@ -278,7 +324,7 @@ body.has-stuck .app-header.scrolled {
   }
   .app-header-inner {
     justify-content: flex-end;
-    max-width: none;
+    max-width: var(--page-width);
     padding-block: 6px 10px;
   }
   .app-header .brand {
@@ -352,6 +398,7 @@ body.has-stuck .app-header.scrolled {
   .app-content {
     grid-column: 2;
     width: 100%;
+    max-width: calc(var(--page-width) + 16px);
     padding: 4px 8px 48px;
   }
 }

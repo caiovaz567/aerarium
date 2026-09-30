@@ -17,10 +17,9 @@ import { monthShort, type Month } from '../../domain/months'
 import { categoryChanges } from '../../domain/timeline'
 import { CategoryBadge } from '../../ui/CategoryBadge'
 import { CardIcon, ChevronDownIcon } from '../../ui/icons'
+import { categoryName, percent } from './categoryName'
 import { describeOutflow } from './outflowText'
 import { SpendingDonut } from './SpendingDonut'
-
-const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
 
 /**
  * Saídas "Por categoria" (Fase 11, ring in Fase 12): a ring with the share of
@@ -43,13 +42,7 @@ export function SpendingList({
       <p className="empty-hint">Nenhuma saída ainda. Toca no + pra lançar.</p>
     )
 
-  const label = (key: string) =>
-    key === UNCATEGORIZED
-      ? 'Sem categoria'
-      : key === UNDETAILED
-        ? 'Outros gastos das faturas'
-        : (finance.categories.find((item) => item.id === key)?.name ??
-          'Sem categoria')
+  const label = (key: string) => categoryName(finance, key)
   const compared = categoryChanges(month, finance)
   const total = sumMoney(groups.map((group) => group.amount))
 

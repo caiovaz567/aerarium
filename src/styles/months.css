@@ -808,35 +808,75 @@
   gap: 16px;
 }
 @media (min-width: 1100px) {
-  .app-content:has(.month-grid) {
-    max-width: 1120px;
+  .shell:has(.month-grid) {
+    --page-width: 1800px;
   }
   .month-grid {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    grid-template-areas:
-      'sum owed'
-      'out in';
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
     align-items: start;
     gap: 12px;
   }
+  .month-main,
+  .month-side {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+  /* Profile "Pai": the purchases on the left, the summary beside them. */
   .month-grid > .hero {
-    grid-area: sum;
+    grid-row: 1;
+    grid-column: 2;
   }
-  .month-grid > .owed-block {
-    grid-area: owed;
-    align-self: stretch;
+  .month-grid > .block {
+    grid-row: 1;
+    grid-column: 1;
   }
-  .month-grid > [aria-labelledby='saidas'] {
-    grid-area: out;
+  /* A card's row: name, what is in it, and the total, in columns. */
+  .card-body {
+    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.6fr) auto;
+    align-items: center;
+    column-gap: 20px;
   }
-  .month-grid > [aria-labelledby='entradas'] {
-    grid-area: in;
+  .card-body .val {
+    grid-column: 3;
   }
-  /* Without anyone else, Entradas moves up beside the summary. */
-  .month-grid:not(:has(> .owed-block)) {
-    grid-template-areas:
-      'sum in'
-      'out in';
+  .card-sub {
+    grid-row: 1;
+    grid-column: 2;
+    margin: 0;
   }
+}
+
+/* Wide screens, beside Saídas: the biggest categories, as bars. */
+.money-places ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 4px 16px 16px;
+  list-style: none;
+}
+.money-places li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 6px;
+  font-size: 14px;
+}
+.money-places b {
+  color: var(--muted);
+  font-weight: 600;
+}
+.money-bar {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+}
+.money-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
 }

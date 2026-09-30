@@ -1,6 +1,8 @@
 import { useProfile } from '../../app/profileContext'
 import { useEffect, useState, type MouseEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
+import { HeaderSlot } from '../../app/headerSlot'
+import { useWide } from '../../app/headerSlotContext'
 import { currentMonth, monthPath, parseMonth } from '../../app/paths'
 import type {
   BillRow,
@@ -28,6 +30,7 @@ import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
 import { MonthSummary } from './MonthSummary'
+import { MoneyPlaces } from './MoneyPlaces'
 import { forecastFinance, forecastUntil } from './forecast'
 import {
   buildNewMonth,
@@ -63,6 +66,7 @@ export function MonthsPage() {
   const run = useFinanceOp()
   const toast = useToast()
   const editor = useEditor()
+  const wide = useWide()
   const { profile } = useProfile(query.data?.otherPerson)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
@@ -229,17 +233,73 @@ export function MonthsPage() {
     else editor.subscription(item.id)
   }
 
+  const summary = <MonthSummary month={selected} balance={view.balance} />
+  const owed = finance.otherPerson && (
+    <OwedBlock
+      finance={shown}
+      month={selected}
+      owed={view.balance.otherOwed}
+      due={view.balance.otherDue}
+      onPaid={(income) => {
+        run(ops.restoreIncome(income))
+        toast(`${income.description}: parte dele acertada`, {
+          label: 'Desfazer',
+          onClick: () => run(ops.removeIncome(income)),
+        })
+      }}
+    />
+  )
+  const outflows = (
+    <OutflowViews
+      finance={shown}
+      month={selected}
+      onOpen={openOutflow}
+      view={view}
+      categories={finance.categories}
+      onInvoice={(item) => setDialog({ kind: 'invoice', id: item.invoice.id })}
+      onInvoicePaid={(item, paid) =>
+        run(ops.invoicePaid(item.invoice, paid, today()))
+      }
+      onInvoiceDelete={deleteInvoice}
+      onLoosePaid={loosePaid}
+      onLooseOpen={(item) => editor.plan(item.plan.id)}
+      onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
+      onBillPaid={(item, paid) => run(ops.billPaid(item, paid, today()))}
+      onBillDelete={deleteBill}
+    />
+  )
+  const incomes = (
+    <IncomesBlock
+      incomes={view.incomes}
+      total={view.balance.incomes}
+      carryHint={view.carryHint}
+      onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
+      onDelete={deleteIncome}
+      onUseCarry={(hint) => {
+        run(
+          ops.updateIncome(hint.income, {
+            description: hint.income.description,
+            amount: hint.available,
+          }),
+        )
+        toast(`Sobra de ${monthName(hint.previous)} colocada`)
+      }}
+    />
+  )
+
   return (
     <>
       <h2 className="visually-hidden">Meses</h2>
       <SharedEntry />
-      {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
-      <MonthNav
-        finance={finance}
-        selected={selected}
-        pathFor={monthPath}
-        forecastUntil={until}
-      />
+      <HeaderSlot>
+        {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
+        <MonthNav
+          finance={finance}
+          selected={selected}
+          pathFor={monthPath}
+          forecastUntil={until}
+        />
+      </HeaderSlot>
       {forecast && (
         <section className="forecast-note" aria-label="Previsão">
           <p>
@@ -270,59 +330,26 @@ export function MonthsPage() {
           <OtherMonth finance={shown} month={selected} onOpen={openOutflow} />
         ) : (
           <>
-            <MonthSummary month={selected} balance={view.balance} />
-            {finance.otherPerson && (
-              <OwedBlock
-                finance={shown}
-                month={selected}
-                owed={view.balance.otherOwed}
-                due={view.balance.otherDue}
-                onPaid={(income) => {
-                  run(ops.restoreIncome(income))
-                  toast(`${income.description}: parte dele acertada`, {
-                    label: 'Desfazer',
-                    onClick: () => run(ops.removeIncome(income)),
-                  })
-                }}
-              />
+            {wide ? (
+              <>
+                <div className="month-main">
+                  {summary}
+                  {outflows}
+                </div>
+                <div className="month-side">
+                  {owed}
+                  {incomes}
+                  <MoneyPlaces finance={shown} month={selected} />
+                </div>
+              </>
+            ) : (
+              <>
+                {summary}
+                {owed}
+                {outflows}
+                {incomes}
+              </>
             )}
-            <OutflowViews
-              finance={shown}
-              month={selected}
-              onOpen={openOutflow}
-              view={view}
-              categories={finance.categories}
-              onInvoice={(item) =>
-                setDialog({ kind: 'invoice', id: item.invoice.id })
-              }
-              onInvoicePaid={(item, paid) =>
-                run(ops.invoicePaid(item.invoice, paid, today()))
-              }
-              onInvoiceDelete={deleteInvoice}
-              onLoosePaid={loosePaid}
-              onLooseOpen={(item) => editor.plan(item.plan.id)}
-              onBill={(item) => setDialog({ kind: 'bill', id: item.id })}
-              onBillPaid={(item, paid) =>
-                run(ops.billPaid(item, paid, today()))
-              }
-              onBillDelete={deleteBill}
-            />
-            <IncomesBlock
-              incomes={view.incomes}
-              total={view.balance.incomes}
-              carryHint={view.carryHint}
-              onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
-              onDelete={deleteIncome}
-              onUseCarry={(hint) => {
-                run(
-                  ops.updateIncome(hint.income, {
-                    description: hint.income.description,
-                    amount: hint.available,
-                  }),
-                )
-                toast(`Sobra de ${monthName(hint.previous)} colocada`)
-              }}
-            />
           </>
         )}
       </div>
