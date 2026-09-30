@@ -95,3 +95,22 @@ test('resumo da fatura e lista de meses sem rolagem lateral', async ({
     await list.evaluate((node) => node.scrollWidth - node.clientWidth),
   ).toBe(0)
 })
+
+test('cartão em Meses abre Cartões no topo e "Voltar" volta pro mesmo lugar', async ({
+  page,
+}) => {
+  await page.goto('/meses/2026-09')
+  const card = page.getByRole('button', { name: /^Nubank Teste/ })
+  await card.scrollIntoViewIfNeeded()
+  await page.evaluate(() => window.scrollBy(0, 80))
+  await card.scrollIntoViewIfNeeded()
+  const before = await page.evaluate(() => window.scrollY)
+  await card.click()
+  await expect(page).toHaveURL(/\/cartoes\?/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+  await page.getByRole('button', { name: 'Voltar pra Meses' }).click()
+  await expect(page).toHaveURL(/\/meses\/2026-09$/)
+  await expect
+    .poll(() => page.evaluate(() => Math.round(window.scrollY)))
+    .toBe(Math.round(before))
+})

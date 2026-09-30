@@ -92,11 +92,18 @@ export function IncomesBlock({
   )
 }
 
-export function GroupHead({ title, total }: { title: string; total: Cents }) {
+export function GroupHead({
+  title,
+  total,
+}: {
+  title: string
+  /** Left out when it would repeat the block's total. */
+  total?: Cents
+}) {
   return (
     <div className="grp-h">
       <span>{title}</span>
-      <b>{formatMoney(total)}</b>
+      {total !== undefined && <b>{formatMoney(total)}</b>}
     </div>
   )
 }

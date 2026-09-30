@@ -3,6 +3,7 @@ import { useEffect, useState, type MouseEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { HeaderSlot } from '../../app/headerSlot'
 import { useWide } from '../../app/headerSlotContext'
+import { rememberScroll, takeScroll } from '../../app/scrollBack'
 import { currentMonth, monthPath, parseMonth } from '../../app/paths'
 import type {
   BillRow,
@@ -68,10 +69,10 @@ export function MonthsPage() {
   const { profile } = useProfile(query.data?.otherPerson)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
-  // Like v1: a new month starts from the top.
-  // Braces matter: newer browsers return a promise from scrollTo.
+  // Like v1: a new month starts from the top; back from a card in Cartões,
+  // where it was. Braces matter: newer browsers return a promise from scrollTo.
   useEffect(() => {
-    window.scrollTo(0, 0)
+    window.scrollTo(0, takeScroll(`/meses/${ym}`) ?? 0)
   }, [ym])
 
   if (query.isPending) return <Loading />
@@ -209,7 +210,11 @@ export function MonthsPage() {
   // A card's invoice lives in Cartões, with everything in it.
   const openInvoice = (invoiceId: string) => {
     const row = finance.invoices.find((item) => item.id === invoiceId)
-    if (row) navigate(`/cartoes?mes=${row.month}&cartao=${row.cardId}`)
+    if (!row) return
+    rememberScroll(`/meses/${ym}`)
+    navigate(`/cartoes?mes=${row.month}&cartao=${row.cardId}`, {
+      state: { from: 'meses' },
+    })
   }
   const expense =
     dialog?.kind === 'expense'

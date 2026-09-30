@@ -269,6 +269,24 @@ describe('Fatura do cartão', () => {
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
+  it('"Voltar pra Meses" volta pra onde estava na tela', async () => {
+    const scroll = vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    renderApp('/meses/2026-09')
+    Object.defineProperty(window, 'scrollY', { value: 640, configurable: true })
+    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
+    // Cartões opens at the top.
+    expect(scroll).toHaveBeenLastCalledWith(0, 0)
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Voltar pra Meses' }),
+    )
+    expect(
+      await screen.findByRole('region', { name: 'Resumo do mês' }),
+    ).toBeVisible()
+    expect(scroll).toHaveBeenLastCalledWith(0, 640)
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
+    scroll.mockRestore()
+  })
+
   it('remover gasto lançado tem Desfazer', async () => {
     renderApp('/meses/2026-09')
     fireEvent.click(screen.getByRole('button', { name: 'Por data' }))
@@ -477,7 +495,8 @@ describe('Pai usa os cartões', () => {
     const dad = screen.getByRole('region', { name: 'Resumo do Pai' })
     expect(text(dad.textContent)).toContain('Gastos do Pai em Setembro')
     expect(text(dad.textContent)).toContain('R$ 12,00')
-    expect(text(dad.textContent)).toContain('Nubank TesteR$ 12,00')
+    // The total once: the cards are in "Por tipo", not repeated here.
+    expect(dad).not.toHaveTextContent('Nubank Teste')
     expect(screen.queryByRole('region', { name: 'Resumo do mês' })).toBeNull()
     expect(screen.queryByRole('region', { name: 'Entradas' })).toBeNull()
     expect(localStorage.getItem('aerarium.perfil')).toBe('other')
@@ -490,7 +509,9 @@ describe('Pai usa os cartões', () => {
     ).toEqual(['Por tipo', 'Por data', 'Por categoria'])
     const byType = screen.getByRole('group', { name: 'Por tipo' })
     const card = within(byType).getByRole('button', { name: /^Nubank Teste/ })
-    expect(text(card.textContent)).toBe('Nubank TesteR$ 12,001 compra R$ 12')
+    // One kind only: no value repeated under the card's.
+    expect(text(card.textContent)).toBe('Nubank TesteR$ 12,001 compra')
+    expect(byType.querySelector('.grp-h b')).toBeNull()
     expect(within(byType).queryByText('Uber')).toBeNull()
     fireEvent.click(card)
     expect(card).toHaveAttribute('aria-expanded', 'true')

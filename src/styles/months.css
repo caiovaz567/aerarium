@@ -595,29 +595,6 @@
 }
 
 /* Fase 13.3: the other person's spending, card by card, in their hero. */
-.other-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 4px 0 0;
-  padding: 12px 0 0;
-  border-top: 1px solid var(--hero-track);
-  list-style: none;
-}
-.other-cards li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-}
-.other-cards span {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.other-cards b {
-  white-space: nowrap;
-}
 .profile-switch {
   margin: 0 0 12px;
 }

@@ -1,5 +1,12 @@
-import { useState } from 'react'
-import { Link, Navigate, useParams, useSearchParams } from 'react-router'
+import { useEffect, useState } from 'react'
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router'
 import { HeaderSlot } from '../../app/headerSlot'
 import { currentMonth, parseMonth } from '../../app/paths'
 import type { ExpenseRow } from '../../data/finance'
@@ -10,7 +17,7 @@ import { dateBR, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
 import { AddButton, TrashButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
-import { ChevronDownIcon, PlusIcon } from '../../ui/icons'
+import { ChevronDownIcon, ChevronLeftIcon, PlusIcon } from '../../ui/icons'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { cardsView } from '../cartao/cardView'
@@ -47,6 +54,15 @@ export function CardRedirect() {
  */
 export function CardsPage() {
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Opened from a card in Meses: a way back there, where it was.
+  const fromMonths =
+    (location.state as { from?: string } | null)?.from === 'meses'
+  // Braces matter: newer browsers return a promise from scrollTo.
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
   const query = useFinance()
   const run = useFinanceOp()
   const toast = useToast()
@@ -114,7 +130,10 @@ export function CardsPage() {
   const pathFor = (month: Month, key = picked) =>
     `/cartoes?mes=${month}${key ? `&cartao=${key}` : ''}`
   const pick = (key: string) =>
-    setParams({ mes: selected, cartao: key }, { replace: true })
+    setParams(
+      { mes: selected, cartao: key },
+      { replace: true, state: location.state },
+    )
   const block = view.blocks.find((item) => item.card.id === picked)
 
   const toggleArchive = () => {
@@ -156,6 +175,16 @@ export function CardsPage() {
         </p>
       </HeaderSlot>
 
+      {fromMonths && (
+        <button
+          type="button"
+          className="back-link"
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeftIcon />
+          Voltar pra Meses
+        </button>
+      )}
       <div className="card-strip" role="group" aria-label="Escolher cartão">
         {view.blocks.map(({ card, invoice, total }) => (
           <button

@@ -10,7 +10,6 @@ import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 import { pixKeyKind, pixKeyText, pixKeyValue } from '../../domain/pix'
 import { BankLogo } from '../../ui/BankLogo'
-import { CardArt } from '../../ui/CardArt'
 import { EmptyState } from '../../ui/EmptyState'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
@@ -125,17 +124,6 @@ function SharedMonths({
                 {month.paid > 0 &&
                   ` · você já pagou ${formatMoney(month.paid)}`}
               </p>
-              {month.cards.length > 0 && (
-                <ul className="other-cards">
-                  {month.cards.map(({ card, amount }) => (
-                    <li key={card.id}>
-                      <CardArt card={card} size="xs" />
-                      <span>{card.name}</span>
-                      <b>{formatMoney(amount)}</b>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </section>
 
             {view.pixKey && <PixBlock view={view} due={month.due} />}
@@ -145,7 +133,6 @@ function SharedMonths({
         <section className="block" aria-labelledby="suas-compras">
           <div className="block-head">
             <h2 id="suas-compras">Suas compras</h2>
-            <span className="sum neg">{formatMoney(month.owed)}</span>
           </div>
           <div
             className="segmented views"

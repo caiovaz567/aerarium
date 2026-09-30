@@ -16,8 +16,12 @@ import { OutflowRow } from './TimelineView'
 const total = (items: readonly OutflowItem[]) =>
   sumMoney(items.map((item) => item.amount))
 
-/** "2 parcelas R$ 225 · 3 compras R$ 180 · resto da fatura R$ 40". */
+/**
+ * "2 parcelas R$ 225 · 3 compras R$ 180 · resto da fatura R$ 40"; with one
+ * kind only, no value (it is the card's, beside it).
+ */
 function cardParts(items: readonly OutflowItem[]): string {
+  const kinds = new Set(items.map((item) => item.source)).size
   const group = (
     source: OutflowItem['source'],
     one: string,
@@ -25,9 +29,8 @@ function cardParts(items: readonly OutflowItem[]): string {
   ) => {
     const list = items.filter((item) => item.source === source)
     if (!list.length) return []
-    return [
-      `${list.length === 1 ? one : many(list.length)} ${formatMoneyShort(total(list))}`,
-    ]
+    const text = list.length === 1 ? one : many(list.length)
+    return [kinds > 1 ? `${text} ${formatMoneyShort(total(list))}` : text]
   }
   return [
     ...group('installment', '1 parcela', (count) => `${count} parcelas`),
@@ -90,7 +93,11 @@ export function OtherByType({
         <>
           <GroupHead
             title="Cartões"
-            total={total(cards.flatMap((item) => item.items))}
+            total={
+              loose.length
+                ? total(cards.flatMap((item) => item.items))
+                : undefined
+            }
           />
           <ul className="rows">
             {cards.map(({ card, items: mine }) => (
@@ -118,7 +125,10 @@ export function OtherByType({
       )}
       {loose.length > 0 && (
         <>
-          <GroupHead title="Parcelas" total={total(loose)} />
+          <GroupHead
+            title="Parcelas"
+            total={cards.length ? total(loose) : undefined}
+          />
           <ul className="timeline-list">{loose.map(row)}</ul>
         </>
       )}
