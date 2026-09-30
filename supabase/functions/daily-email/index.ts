@@ -159,18 +159,23 @@ async function sendFor(owner: string, test: boolean): Promise<number> {
     ).map((row) => row.external_id),
   )
 
+  const now = new Date().toISOString()
   const groups = emailGroups({
     transactions: await bankTransactions(from),
     cards,
     sent,
     from,
+    now,
     categories,
   })
   if (!groups.length && !test) return 0
 
+  const [settings] = await sql<{ other_person: string | null }[]>`
+    select other_person from public.user_settings where user_id = ${owner}`
   const { subject, html } = renderEmail({
     groups,
-    now: new Date().toISOString(),
+    now,
+    otherPerson: settings?.other_person ?? null,
     appUrl: env('APP_URL') || 'https://aerarium-delta.vercel.app',
     test,
   })

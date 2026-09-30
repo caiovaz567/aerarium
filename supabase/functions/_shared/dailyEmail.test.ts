@@ -47,13 +47,24 @@ describe('e-mail diário: o que entra', () => {
         tx('antes', 'nu', 10, '2026-09-20T12:00:00.000Z'),
         tx('outro-banco', 'x', 10, '2026-09-28T12:00:00.000Z'),
         tx('c', 'bb', 14.2, '2026-09-26T03:00:00.000Z', {
-          installmentNumber: 2,
+          installmentNumber: 1,
           totalInstallments: 4,
         }),
+        // Next installments of an old purchase, one dated in the future.
+        tx('parcela-2', 'nu', 50, '2026-09-27T12:00:00.000Z', {
+          installmentNumber: 2,
+          totalInstallments: 10,
+        }),
+        tx('parcela-10', 'nu', 198.31, '2026-10-25T12:00:00.000Z', {
+          installmentNumber: 10,
+          totalInstallments: 10,
+        }),
+        tx('amanha', 'nu', 20, '2026-09-30T15:00:00.000Z'),
       ],
       cards,
       sent: new Set(['ja-foi']),
       from: '2026-09-25',
+      now: '2026-09-29T12:00:00.000Z',
       categories: new Map([['amazon', { name: 'Compras', color: '#d98a00' }]]),
     })
     expect(groups.map((group) => [group.card.name, group.total])).toEqual([
@@ -81,7 +92,7 @@ describe('e-mail diário: o que entra', () => {
     // A bank date with no time: only the day.
     expect(groups[1]!.items[0]).toMatchObject({
       when: 'sáb 26',
-      installment: 'Parcela 2 de 4',
+      installment: 'Parcela 1 de 4',
     })
   })
 
@@ -104,6 +115,7 @@ describe('e-mail diário: o desenho', () => {
     cards,
     sent: new Set(),
     from: '2026-09-25',
+    now: '2026-09-29T12:00:00.000Z',
     categories: new Map([
       ['ifd*ifood <b>', { name: 'Alimentação', color: '#E8590C' }],
     ]),
@@ -125,6 +137,16 @@ describe('e-mail diário: o desenho', () => {
     expect(html).toContain('Alimentação · dom 27 · 21:43')
     expect(html).toContain('background:#E8590C')
     expect(html.match(/banks\//g)).toHaveLength(1)
+    expect(html).toContain('Abrir o Aerarium')
+    // With someone else using the cards, it asks to mark each purchase.
+    const marked = renderEmail({
+      groups,
+      now: '2026-09-29T12:00:00.000Z',
+      appUrl: 'https://app.test',
+      otherPerson: 'Pai',
+    }).html
+    expect(marked).toContain('marque o que é seu e o que é do Pai')
+    expect(marked).toContain('Marcar no Aerarium')
   })
 
   it('o primeiro, ao ligar: avisa que ficou ligado, mesmo sem compra', () => {

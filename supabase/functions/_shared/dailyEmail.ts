@@ -96,8 +96,10 @@ export function money(value: number): string {
 }
 
 /**
- * The purchases to tell about: charges on a known card, from the start day on,
- * not told before. Grouped by card (the order of `cards`), newest first.
+ * The purchases to tell about: new charges on a known card, from the start day
+ * on, not told before. Grouped by card (the order of `cards`), newest first.
+ * The bank also lists the next installments of old purchases, some dated in
+ * the future: only the first one of a plan is a new purchase.
  */
 export function emailGroups(input: {
   readonly transactions: readonly EmailTransaction[]
@@ -106,14 +108,18 @@ export function emailGroups(input: {
   readonly sent: ReadonlySet<string>
   /** "YYYY-MM-DD": nothing from before (the Open Finance start, or a week ago). */
   readonly from: string
+  /** ISO instant: nothing dated after it. */
+  readonly now: string
   /** Category by the purchase's name in lower case (the last one chosen). */
   readonly categories: ReadonlyMap<string, EmailCategory>
 }): EmailGroup[] {
   const fresh = input.transactions.filter(
     (item) =>
       item.amount > 0 &&
+      (item.installmentNumber ?? 1) <= 1 &&
       !input.sent.has(item.id) &&
-      saoPaulo(item.date).iso >= input.from,
+      saoPaulo(item.date).iso >= input.from &&
+      Date.parse(item.date) <= Date.parse(input.now),
   )
   return input.cards.flatMap((card) => {
     const items = fresh
@@ -206,6 +212,8 @@ export function renderEmail(input: {
   readonly appUrl: string
   /** The first one, sent when the switch is turned on. */
   readonly test?: boolean
+  /** Who else uses the cards ("Pai"): the email asks to mark each purchase. */
+  readonly otherPerson?: string | null
 }): { subject: string; html: string } {
   const items = input.groups.flatMap((group) => group.items)
   const total = input.groups.reduce((sum, group) => sum + group.total, 0)
@@ -214,6 +222,7 @@ export function renderEmail(input: {
   const subject = input.test
     ? 'Aerarium: resumo por e-mail ligado'
     : `Aerarium: ${count} no cartão, ${money(total)}`
+  const mark = Boolean(input.otherPerson) && items.length > 0
   const intro = input.test
     ? `<tr><td style="padding:0 4px 12px;color:#161a26;font-size:14px;line-height:1.5;${FONT}">Pronto! Todo dia às 9h chega aqui o que o banco mostrou de novo.${
         items.length
@@ -245,8 +254,13 @@ export function renderEmail(input: {
     </tr></table>
   </td></tr>
   ${input.groups.map((group) => cardBlock(group, input.appUrl)).join('')}
-  <tr><td align="center" style="padding:20px 0 6px;">
-    <a href="${escape(input.appUrl)}" style="display:inline-block;padding:12px 24px;border-radius:12px;background:#3140c2;color:#fff;font-size:15px;font-weight:700;text-decoration:none;${FONT}">Abrir o Aerarium</a>
+  ${
+    mark
+      ? `<tr><td align="center" style="padding:18px 20px 0;color:#62697e;font-size:14px;line-height:1.5;${FONT}">Abra o Aerarium e marque o que é seu e o que é do ${escape(input.otherPerson!)}.</td></tr>`
+      : ''
+  }
+  <tr><td align="center" style="padding:${mark ? 12 : 20}px 0 6px;">
+    <a href="${escape(input.appUrl)}" style="display:inline-block;padding:12px 24px;border-radius:12px;background:#3140c2;color:#fff;font-size:15px;font-weight:700;text-decoration:none;${FONT}">${mark ? 'Marcar no Aerarium' : 'Abrir o Aerarium'}</a>
   </td></tr>
   <tr><td align="center" style="padding:8px 20px;color:#8a90a3;font-size:12px;line-height:1.5;${FONT}">
     Chega às 9h, só nos dias com compra nova. Pra parar, desligue em Ajustes, Bancos conectados.
