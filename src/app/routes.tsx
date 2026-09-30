@@ -43,7 +43,6 @@ export function AppRoutes() {
           <Route path="assinaturas" element={<SubscriptionsPage />} />
           <Route path="config" element={<SettingsPage />} />
           <Route path="compartilhado" element={<SharedPage />} />
-          <Route path="compartilhado/previa" element={<SharedPage preview />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Route>

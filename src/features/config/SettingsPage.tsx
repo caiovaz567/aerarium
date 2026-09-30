@@ -56,8 +56,10 @@ const Chevron = () => (
 )
 
 /**
- * Ajustes, one card per subject (asked by the user after Fase 11): account on
- * top, then ways in, categories, your data, leaving, and deleting apart in red.
+ * Ajustes, one card per subject (asked by the user after Fase 11; regrouped on
+ * 29/09/2026): account on top, categories, the bank (Open Finance owner), who
+ * uses the cards, ways in, your data, and deleting apart in red. One icon color
+ * per card, so it does not look like a carnival.
  */
 export function SettingsPage() {
   const auth = useAuth()
@@ -117,47 +119,6 @@ export function SettingsPage() {
         </span>
       </div>
 
-      <section aria-labelledby="ajustes-entrar">
-        <h3 id="ajustes-entrar" className="settings-label">
-          Formas de entrar
-        </h3>
-        <ul className="settings-card">
-          {hasPassword && (
-            <li className="settings-row">
-              <Row
-                icon={<LockIcon />}
-                tone="accent"
-                title="E-mail e senha"
-                detail="Ativo"
-              />
-            </li>
-          )}
-          <li className="settings-row">
-            <Row
-              icon={<GoogleIcon />}
-              tone="google"
-              title="Google"
-              detail={googleEmail ?? (google ? 'Conectado' : 'Não conectado')}
-              end={
-                !google && (
-                  <button
-                    type="button"
-                    className="btn small"
-                    aria-label="Conectar conta Google"
-                    disabled={busy}
-                    onClick={() => run(linkGoogle)}
-                  >
-                    Conectar
-                  </button>
-                )
-              }
-            />
-          </li>
-        </ul>
-      </section>
-
-      {finance && <BankSection finance={finance} />}
-
       <section aria-labelledby="ajustes-categorias">
         <h3 id="ajustes-categorias" className="settings-label">
           Categorias
@@ -192,6 +153,47 @@ export function SettingsPage() {
         </ul>
       </section>
 
+      {finance && <BankSection finance={finance} />}
+
+      <section aria-labelledby="ajustes-entrar">
+        <h3 id="ajustes-entrar" className="settings-label">
+          Formas de entrar
+        </h3>
+        <ul className="settings-card">
+          {hasPassword && (
+            <li className="settings-row">
+              <Row
+                icon={<LockIcon />}
+                tone="muted"
+                title="E-mail e senha"
+                detail="Ativo"
+              />
+            </li>
+          )}
+          <li className="settings-row">
+            <Row
+              icon={<GoogleIcon />}
+              tone="google"
+              title="Google"
+              detail={googleEmail ?? (google ? 'Conectado' : 'Não conectado')}
+              end={
+                !google && (
+                  <button
+                    type="button"
+                    className="btn small"
+                    aria-label="Conectar conta Google"
+                    disabled={busy}
+                    onClick={() => run(linkGoogle)}
+                  >
+                    Conectar
+                  </button>
+                )
+              }
+            />
+          </li>
+        </ul>
+      </section>
+
       <section aria-labelledby="ajustes-dados">
         <h3 id="ajustes-dados" className="settings-label">
           Seus dados
@@ -207,7 +209,7 @@ export function SettingsPage() {
             >
               <Row
                 icon={<DownloadIcon />}
-                tone="pos"
+                tone="muted"
                 title="Baixar meus dados"
                 detail="Uma cópia de tudo, num arquivo JSON"
                 end={<Chevron />}
@@ -222,7 +224,7 @@ export function SettingsPage() {
             >
               <Row
                 icon={<ShieldIcon />}
-                tone="accent"
+                tone="muted"
                 title="Política de privacidade"
                 detail="O que o app guarda e onde"
                 end={<Chevron />}

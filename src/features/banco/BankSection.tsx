@@ -168,155 +168,167 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
   }
 
   return (
-    <section aria-labelledby="ajustes-bancos">
-      <h3 id="ajustes-bancos" className="settings-label">
-        Bancos conectados
-      </h3>
-      <ul className="settings-card">
-        {finance.bankAccounts.length > 0 && (
+    <>
+      <section aria-labelledby="ajustes-bancos">
+        <h3 id="ajustes-bancos" className="settings-label">
+          Bancos conectados
+        </h3>
+        <ul className="settings-card">
+          {finance.bankAccounts.length > 0 && (
+            <li>
+              <button
+                type="button"
+                className="settings-row action"
+                aria-label="Cartões do banco"
+                onClick={() => setAccounts(true)}
+              >
+                <span className="settings-icon accent" aria-hidden="true">
+                  <BankIcon />
+                </span>
+                <span className="settings-text">
+                  <b>Cartões do banco</b>
+                  <small>{accountsText(finance)}</small>
+                </span>
+                <span className="settings-chevron" aria-hidden="true">
+                  <ChevronRightIcon />
+                </span>
+              </button>
+            </li>
+          )}
+          <li className="settings-row">
+            <span className="settings-icon accent" aria-hidden="true">
+              <MailIcon />
+            </span>
+            <label className="settings-text" htmlFor="email-diario">
+              <b>Resumo por e-mail às 9h</b>
+              <small>
+                {mailing
+                  ? 'Ligando e mandando o primeiro…'
+                  : 'As compras novas do banco, por cartão, no e-mail da sua conta. Só nos dias com compra nova.'}
+              </small>
+            </label>
+            <input
+              id="email-diario"
+              type="checkbox"
+              className="switch"
+              checked={Boolean(finance.dailyEmail)}
+              disabled={mailing}
+              onChange={(event) => void toggleEmail(event.target.checked)}
+            />
+          </li>
           <li>
             <button
               type="button"
               className="settings-row action"
-              aria-label="Cartões do banco"
-              onClick={() => setAccounts(true)}
+              aria-label="Atualizar agora"
+              disabled={busy}
+              onClick={update}
             >
               <span className="settings-icon accent" aria-hidden="true">
-                <BankIcon />
+                <RefreshIcon />
               </span>
               <span className="settings-text">
-                <b>Cartões do banco</b>
-                <small>{accountsText(finance)}</small>
-              </span>
-              <span className="settings-chevron" aria-hidden="true">
-                <ChevronRightIcon />
+                <b>{busy ? 'Buscando no banco…' : 'Atualizar agora'}</b>
+                <small>
+                  {finance.bankAccounts.length
+                    ? `Última busca: ${when(synced)}. O banco atualiza uma vez por dia.`
+                    : 'Busca seus cartões no banco pela primeira vez.'}
+                </small>
               </span>
             </button>
           </li>
-        )}
-        <li className="settings-row">
-          <span className="settings-icon accent" aria-hidden="true">
-            <PeopleIcon />
-          </span>
-          <label className="settings-text" htmlFor="outra-pessoa">
-            <b>Outra pessoa usa seus cartões</b>
-            <small>
-              {finance.otherPerson
-                ? `Cada compra que chega do banco você marca: sua ou de ${finance.otherPerson}. O que for de ${finance.otherPerson} fica separado.`
-                : 'Liga pra separar o que é seu do que é de outra pessoa.'}
-            </small>
-          </label>
-          {finance.otherPerson && (
-            <OtherName
-              name={finance.otherPerson}
-              onSave={(name) => run(settingsOps.setOtherPerson(name))}
-            />
-          )}
-          <input
-            id="outra-pessoa"
-            type="checkbox"
-            className="switch"
-            checked={Boolean(finance.otherPerson)}
-            onChange={(event) =>
-              run(
-                settingsOps.setOtherPerson(event.target.checked ? 'Pai' : null),
-              )
-            }
-          />
-        </li>
-        {finance.otherPerson && <ShareSettings other={finance.otherPerson} />}
-        <li className="settings-row">
-          <span className="settings-icon accent" aria-hidden="true">
-            <MailIcon />
-          </span>
-          <label className="settings-text" htmlFor="email-diario">
-            <b>Resumo por e-mail às 9h</b>
-            <small>
-              {mailing
-                ? 'Ligando e mandando o primeiro…'
-                : 'As compras novas do banco, por cartão, no e-mail da sua conta. Só nos dias com compra nova.'}
-            </small>
-          </label>
-          <input
-            id="email-diario"
-            type="checkbox"
-            className="switch"
-            checked={Boolean(finance.dailyEmail)}
-            disabled={mailing}
-            onChange={(event) => void toggleEmail(event.target.checked)}
-          />
-        </li>
-        <li>
-          <button
-            type="button"
-            className="settings-row action"
-            aria-label="Atualizar agora"
-            disabled={busy}
-            onClick={update}
-          >
-            <span className="settings-icon pos" aria-hidden="true">
-              <RefreshIcon />
-            </span>
-            <span className="settings-text">
-              <b>{busy ? 'Buscando no banco…' : 'Atualizar agora'}</b>
-              <small>
-                {finance.bankAccounts.length
-                  ? `Última busca: ${when(synced)}. O banco atualiza uma vez por dia.`
-                  : 'Busca seus cartões no banco pela primeira vez.'}
-              </small>
-            </span>
-          </button>
-        </li>
-      </ul>
-      <p className="form-error" role="alert">
-        {error}
-      </p>
+        </ul>
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      </section>
 
-      {accounts && (
-        <AccountsModal finance={finance} onClose={() => setAccounts(false)} />
-      )}
-      {preview && (
-        <Modal title="Primeira importação" onClose={() => setPreview(null)}>
-          <div className="modal-form">
-            <p>{importMessage(preview)}</p>
-            <p className="muted">
-              Começa do zero hoje: as compras que já estavam no banco ficam de
-              fora, e seus meses continuam como você lançou. Fatura já fechada
-              no banco fica com o total do banco. Daqui pra frente, cada compra
-              nova aparece em "Chegou do banco" pra você conferir.
-            </p>
-            {preview.notices.length > 0 && (
-              <ul className="bank-notices">
-                {preview.notices.map((notice) => (
-                  <li key={notice}>{notice}</li>
-                ))}
-              </ul>
+      <section aria-labelledby="ajustes-outra-pessoa">
+        <h3 id="ajustes-outra-pessoa" className="settings-label">
+          Quem usa seus cartões
+        </h3>
+        <ul className="settings-card">
+          <li className="settings-row">
+            <span className="settings-icon warn" aria-hidden="true">
+              <PeopleIcon />
+            </span>
+            <label className="settings-text" htmlFor="outra-pessoa">
+              <b>Outra pessoa usa seus cartões</b>
+              <small>
+                {finance.otherPerson
+                  ? `Cada compra que chega do banco você marca: sua ou de ${finance.otherPerson}. O que for de ${finance.otherPerson} fica separado.`
+                  : 'Liga pra separar o que é seu do que é de outra pessoa.'}
+              </small>
+            </label>
+            {finance.otherPerson && (
+              <OtherName
+                name={finance.otherPerson}
+                onSave={(name) => run(settingsOps.setOtherPerson(name))}
+              />
             )}
-            <PreviewCards finance={finance} result={preview} />
-            <div className="modal-actions">
-              <span className="spacer" />
-              <button
-                type="button"
-                className="btn ghost"
-                onClick={() => setPreview(null)}
-              >
-                Agora não
-              </button>
-              <button
-                type="button"
-                className="btn primary"
-                onClick={() => {
-                  save(preview)
-                  setPreview(null)
-                  toast('Importado do banco')
-                }}
-              >
-                Importar
-              </button>
+            <input
+              id="outra-pessoa"
+              type="checkbox"
+              className="switch"
+              checked={Boolean(finance.otherPerson)}
+              onChange={(event) =>
+                run(
+                  settingsOps.setOtherPerson(
+                    event.target.checked ? 'Pai' : null,
+                  ),
+                )
+              }
+            />
+          </li>
+          {finance.otherPerson && <ShareSettings other={finance.otherPerson} />}
+        </ul>
+
+        {accounts && (
+          <AccountsModal finance={finance} onClose={() => setAccounts(false)} />
+        )}
+        {preview && (
+          <Modal title="Primeira importação" onClose={() => setPreview(null)}>
+            <div className="modal-form">
+              <p>{importMessage(preview)}</p>
+              <p className="muted">
+                Começa do zero hoje: as compras que já estavam no banco ficam de
+                fora, e seus meses continuam como você lançou. Fatura já fechada
+                no banco fica com o total do banco. Daqui pra frente, cada
+                compra nova aparece em "Chegou do banco" pra você conferir.
+              </p>
+              {preview.notices.length > 0 && (
+                <ul className="bank-notices">
+                  {preview.notices.map((notice) => (
+                    <li key={notice}>{notice}</li>
+                  ))}
+                </ul>
+              )}
+              <PreviewCards finance={finance} result={preview} />
+              <div className="modal-actions">
+                <span className="spacer" />
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={() => setPreview(null)}
+                >
+                  Agora não
+                </button>
+                <button
+                  type="button"
+                  className="btn primary"
+                  onClick={() => {
+                    save(preview)
+                    setPreview(null)
+                    toast('Importado do banco')
+                  }}
+                >
+                  Importar
+                </button>
+              </div>
             </div>
-          </div>
-        </Modal>
-      )}
-    </section>
+          </Modal>
+        )}
+      </section>
+    </>
   )
 }

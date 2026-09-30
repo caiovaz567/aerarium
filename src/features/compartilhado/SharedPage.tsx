@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 import { currentMonth, parseMonth } from '../../app/paths'
-import { parseShared, type SharedView } from '../../data/shared'
-import { useFinance } from '../../data/useFinance'
-import { useMyShares, useSharedWithMe } from '../../data/useShared'
+import type { SharedView } from '../../data/shared'
+import { useSharedWithMe } from '../../data/useShared'
 import { BANKS, bankName } from '../../domain/banks'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
@@ -18,7 +17,6 @@ import { OtherByType } from '../meses/OtherByType'
 import { SpendingList } from '../meses/SpendingBlock'
 import { TimelineView } from '../meses/TimelineView'
 import { sharedDefaultMonth, sharedFinance, sharedMonth } from './sharedFinance'
-import { shareData } from './snapshot'
 
 type View = 'tipo' | 'data' | 'categoria'
 const VIEWS: [View, string][] = [
@@ -174,38 +172,15 @@ function SharedMonths({
   )
 }
 
-/** The owner: what the other person sees, built from the owner's own data. */
-function usePreview(enabled: boolean): SharedView | null {
-  const finance = useFinance()
-  const shares = useMyShares(enabled)
-  if (!enabled || !finance.data) return null
-  const share = shares.data?.[0]
-  return parseShared({
-    ...shareData(finance.data),
-    ownerName: share?.ownerName ?? 'Você',
-    pixKey: share?.pixKey ?? null,
-    pixBank: share?.pixBank ?? null,
-  })
-}
-
 /**
  * "Cartões do Caio": what someone who shares their cards marked as yours,
- * read only, kept fresh. With `preview`, the owner sees it as the other
- * person does.
+ * read only, kept fresh.
  */
-export function SharedPage({
-  preview = false,
-}: {
-  readonly preview?: boolean
-}) {
-  const mine = useSharedWithMe()
-  const previewView = usePreview(preview)
-  if (!preview && mine.isPending) return <Loading />
-  if (!preview && !mine.data)
-    return <LoadError onRetry={() => mine.refetch()} />
-  if (preview && !previewView) return <Loading />
-  const view = preview ? previewView : mine.data![0]
-  const base = preview ? '/compartilhado/previa' : '/compartilhado'
+export function SharedPage() {
+  const query = useSharedWithMe()
+  if (query.isPending) return <Loading />
+  if (!query.data) return <LoadError onRetry={() => query.refetch()} />
+  const view = query.data[0]
   if (!view)
     return (
       <EmptyState title="Nada compartilhado com você">
@@ -215,18 +190,7 @@ export function SharedPage({
   return (
     <>
       <h2 className="page-title">Cartões do {view.ownerName}</h2>
-      {preview && (
-        <p className="forecast-note">
-          <span>
-            <b>Assim fica pra quem usa seus cartões.</b> Só leitura: é o que
-            você marcou pra outra pessoa.
-          </span>
-          <Link className="btn ghost" to="/config">
-            Voltar
-          </Link>
-        </p>
-      )}
-      <SharedMonths view={view} base={base} />
+      <SharedMonths view={view} base="/compartilhado" />
     </>
   )
 }

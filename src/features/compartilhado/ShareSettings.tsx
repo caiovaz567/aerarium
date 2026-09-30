@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
 import { shareWith, stopSharing, type ShareRow } from '../../data/shared'
 import { useUserId } from '../../data/useFinance'
 import { mySharesKey, useMyShares } from '../../data/useShared'
@@ -130,7 +129,7 @@ export function ShareSettings({ other }: { readonly other: string }) {
   return (
     <>
       <li className="settings-row share-row">
-        <span className="settings-icon accent" aria-hidden="true">
+        <span className="settings-icon warn" aria-hidden="true">
           <EyeIcon />
         </span>
         <span className="settings-text">
@@ -141,11 +140,6 @@ export function ShareSettings({ other }: { readonly other: string }) {
               : `Ele vê, na conta dele, só o que você marcar como dele.`}
           </small>
           <span className="share-actions">
-            {current && (
-              <Link className="link" to="/compartilhado/previa">
-                Ver como ele vê
-              </Link>
-            )}
             <button
               type="button"
               className="link"
