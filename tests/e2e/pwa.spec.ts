@@ -24,8 +24,8 @@ test('manifesto, ícones e metas do iPhone', async ({ page, request }) => {
     display: 'standalone',
     start_url: '/',
     lang: 'pt-BR',
-    theme_color: '#0D0F15',
-    background_color: '#0D0F15',
+    theme_color: '#0A0A0A',
+    background_color: '#0A0A0A',
   })
   const icons = [
     ...manifest.icons.map((icon: { src: string }) => icon.src),

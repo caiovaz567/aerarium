@@ -88,7 +88,7 @@ body.has-stuck .app-header.scrolled {
   min-width: 0;
   margin: 0;
   color: var(--accent);
-  font: 800 21px / 1.4 var(--display);
+  font: 800 21px / 1.4 var(--brand);
   letter-spacing: -0.01em;
 }
 .brand-mark {
@@ -565,9 +565,8 @@ body.has-stuck .app-header.scrolled {
   overscroll-behavior: contain;
   border-radius: 22px;
   background: var(--surface);
-  box-shadow:
-    0 24px 60px rgb(0 0 0 / 35%),
-    0 0 0 1px var(--line);
+  /* No shadows: a fine border and the dimmed backdrop set it apart. */
+  box-shadow: 0 0 0 1px var(--line-strong);
   animation: pop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .modal:focus {
@@ -607,9 +606,9 @@ body.has-stuck .app-header.scrolled {
   max-width: calc(100% - 32px);
   padding: 10px 12px 10px 16px;
   border-radius: 14px;
-  background: var(--ink);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
-  color: var(--bg);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line-strong);
+  color: var(--ink);
   font-size: 14px;
   font-weight: 600;
   transform: translateX(-50%);
@@ -619,7 +618,7 @@ body.has-stuck .app-header.scrolled {
   padding: 4px 6px;
   border: 0;
   background: none;
-  color: var(--accent-soft);
+  color: var(--accent);
   font-weight: 700;
 }
 /* Sits above the undo toast, so both fit at once. */

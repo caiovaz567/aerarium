@@ -57,8 +57,8 @@
 .pill {
   padding: 3px 9px;
   border-radius: 999px;
-  background: #fff;
-  color: #b3261e;
+  background: var(--neg-soft);
+  color: var(--neg);
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -78,10 +78,10 @@
   display: block;
   height: 100%;
   border-radius: 99px;
-  background: #fff;
+  background: var(--hero-bar);
 }
 .bar.over span {
-  background: #ffb3a6;
+  background: var(--neg);
 }
 .bar-cap {
   margin: -4px 0 0;
@@ -245,7 +245,7 @@
 .check[aria-pressed='true'] {
   border-color: var(--pos);
   background: var(--pos);
-  color: #fff;
+  color: var(--surface);
 }
 .check[aria-pressed='true'] svg {
   opacity: 1;
@@ -418,7 +418,7 @@
 }
 .btn.danger.armed {
   background: var(--neg);
-  color: #fff;
+  color: var(--surface);
 }
 .btn.wide {
   width: 100%;

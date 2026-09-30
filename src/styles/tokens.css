@@ -1,28 +1,39 @@
+/*
+ * The Hyperion language (H:\Fenix Project\DESIGN.md), 30/09/2026: flat
+ * near-black surfaces in dark, a light gray canvas with white cards in light,
+ * no shadows, Inter, and one blue accent as the only signal color. Green, red
+ * and amber keep their fixed meaning (paid, no vermelho, attention). Every
+ * text keeps WCAG AA contrast on its background.
+ */
 :root {
   color-scheme: light;
-  --bg: #f1f2f6;
+  --bg: #f4f4f5;
   --surface: #ffffff;
-  --surface-2: #e7e9f1;
-  --ink: #161a26;
-  --muted: #62697e;
-  --line: #e0e3ec;
-  --accent: #3140c2;
+  --surface-2: #ebebed;
+  --ink: #11181c;
+  --muted: #52525b;
+  --line: rgb(0 0 0 / 7%);
+  --line-strong: rgb(0 0 0 / 14%);
+  --accent: #005bc4;
   --accent-ink: #ffffff;
-  --accent-soft: #e3e6fa;
-  --hero: #2b39b3;
-  --hero-ink: #ffffff;
-  --hero-muted: rgb(255 255 255 / 74%);
-  --hero-track: rgb(255 255 255 / 22%);
-  --pos: #18794a;
-  --pos-soft: #dcf1e4;
-  --neg: #b23526;
-  --neg-soft: #f8e1dd;
-  --warn: #8f5c00;
-  --warn-soft: #fbefd6;
-  --shadow: 0 1px 2px rgb(22 26 38 / 5%), 0 4px 16px rgb(22 26 38 / 5%);
-  --display:
-    'Bricolage Grotesque', ui-rounded, 'Segoe UI', system-ui, sans-serif;
-  --body: 'Figtree', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --accent-soft: rgb(0 111 238 / 10%);
+  /* The month's summary: a plain card with the accent as the signal. */
+  --hero: var(--surface);
+  --hero-ink: var(--ink);
+  --hero-muted: var(--muted);
+  --hero-track: var(--surface-2);
+  --hero-bar: #006fee;
+  --pos: #12803f;
+  --pos-soft: rgb(23 201 100 / 12%);
+  --neg: #c20e4d;
+  --neg-soft: rgb(243 18 96 / 10%);
+  --warn: #936316;
+  --warn-soft: rgb(245 165 36 / 14%);
+  --shadow: none;
+  --display: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --body: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  /* Only the wordmark keeps the brand typeface. */
+  --brand: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -35,45 +46,43 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     color-scheme: dark;
-    --bg: #0d0f15;
-    --surface: #161922;
-    --surface-2: #1f2330;
-    --ink: #e9ebf3;
-    --muted: #959cb2;
-    --line: #272b39;
-    --accent: #8f9aff;
-    --accent-ink: #0d0f15;
-    --accent-soft: #22274a;
-    --hero: #27339a;
-    --hero-track: rgb(255 255 255 / 18%);
-    --pos: #52cc8e;
-    --pos-soft: #14291e;
-    --neg: #ff8272;
-    --neg-soft: #37191a;
-    --warn: #f0b44c;
-    --warn-soft: #2e2412;
-    --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-2: #1f1f1f;
+    --ink: #f2f2f2;
+    --muted: #a1a1aa;
+    --line: rgb(255 255 255 / 7%);
+    --line-strong: rgb(255 255 255 / 13%);
+    --accent: #338ef7;
+    --accent-ink: #0a0a0a;
+    --accent-soft: rgb(0 111 238 / 16%);
+    --hero-bar: #338ef7;
+    --pos: #34d399;
+    --pos-soft: rgb(52 211 153 / 13%);
+    --neg: #f87272;
+    --neg-soft: rgb(248 114 114 / 13%);
+    --warn: #f5c542;
+    --warn-soft: rgb(245 197 66 / 13%);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0d0f15;
-  --surface: #161922;
-  --surface-2: #1f2330;
-  --ink: #e9ebf3;
-  --muted: #959cb2;
-  --line: #272b39;
-  --accent: #8f9aff;
-  --accent-ink: #0d0f15;
-  --accent-soft: #22274a;
-  --hero: #27339a;
-  --hero-track: rgb(255 255 255 / 18%);
-  --pos: #52cc8e;
-  --pos-soft: #14291e;
-  --neg: #ff8272;
-  --neg-soft: #37191a;
-  --warn: #f0b44c;
-  --warn-soft: #2e2412;
-  --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1f1f1f;
+  --ink: #f2f2f2;
+  --muted: #a1a1aa;
+  --line: rgb(255 255 255 / 7%);
+  --line-strong: rgb(255 255 255 / 13%);
+  --accent: #338ef7;
+  --accent-ink: #0a0a0a;
+  --accent-soft: rgb(0 111 238 / 16%);
+  --hero-bar: #338ef7;
+  --pos: #34d399;
+  --pos-soft: rgb(52 211 153 / 13%);
+  --neg: #f87272;
+  --neg-soft: rgb(248 114 114 / 13%);
+  --warn: #f5c542;
+  --warn-soft: rgb(245 197 66 / 13%);
 }

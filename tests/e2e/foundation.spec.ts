@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { randomUUID } from 'node:crypto'
 import { unlink, writeFile } from 'node:fs/promises'
 
-const background = { light: 'rgb(241, 242, 246)', dark: 'rgb(13, 15, 21)' }
+const background = { light: 'rgb(244, 244, 245)', dark: 'rgb(10, 10, 10)' }
 
 function collectErrors(page: Page) {
   const errors: string[] = []
@@ -40,7 +40,7 @@ test('tela de entrar nos dois temas, sem erros nem rolagem lateral', async ({
     viewportWidth: window.innerWidth,
     fonts:
       document.fonts.check('800 21px "Bricolage Grotesque"') &&
-      document.fonts.check('400 15px Figtree'),
+      document.fonts.check('400 15px Inter'),
   }))
   expect(layout.contentWidth).toBeLessThanOrEqual(layout.viewportWidth)
   expect(layout.fonts).toBe(true)
