@@ -1,7 +1,8 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { financeKey } from '../../data/finance'
 import { fakeSupabase } from '../../test/fakeSupabase'
+import { financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
 // Fase 14.3: the switch of the daily email, in Ajustes → Bancos conectados.
@@ -41,6 +42,46 @@ function renderApp(...args: Parameters<typeof render>) {
 }
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
 const writes = () => fake.current!.calls.filter((call) => call.op !== 'select')
+
+describe('cartões do banco, agrupados', () => {
+  it('uma linha só; tocando, escolhe onde entra cada cartão', async () => {
+    const finance = financeFixture()
+    const account = (id: string, name: string, cardId: string | null) => ({
+      id,
+      pluggyAccountId: `p-${id}`,
+      itemId: 'item',
+      name,
+      number: '1234',
+      cardId,
+      creditLimit: null,
+      availableLimit: null,
+      limitAt: null,
+    })
+    renderApp('/config', undefined, {
+      ...finance,
+      bankAccounts: [
+        account('a1', 'NUBANK ROXINHO', 'c1'),
+        account('a2', 'OUROCARD', null),
+      ],
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Cartões do banco' }))
+    const dialog = screen.getByRole('dialog', { name: 'Cartões do banco' })
+    const ouro = within(dialog).getByLabelText(/OUROCARD/)
+    expect(ouro).toHaveValue('')
+    fireEvent.change(ouro, { target: { value: 'c2' } })
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'bank_accounts',
+        payload: expect.objectContaining({ card_id: 'c2' }),
+      }),
+    )
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Pronto' }))
+    expect(
+      screen.getByRole('button', { name: 'Cartões do banco' }),
+    ).toHaveTextContent('2 cartões · 2 entram no app')
+  })
+})
 
 describe('resumo por e-mail às 9h', () => {
   it('ligar passa pelo servidor, que manda o primeiro; desligar grava direto', async () => {

@@ -4,7 +4,13 @@ import type { Finance } from '../../data/finance'
 import { useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
 import { settingsOps } from '../../data/settingsOps'
-import { BankIcon, MailIcon, PeopleIcon, RefreshIcon } from '../../ui/icons'
+import {
+  BankIcon,
+  ChevronRightIcon,
+  MailIcon,
+  PeopleIcon,
+  RefreshIcon,
+} from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { PreviewCards } from './PreviewCards'
@@ -46,6 +52,62 @@ function OtherName({
   )
 }
 
+/** "6 cartões · 5 entram no app". */
+function accountsText(finance: Finance) {
+  const total = finance.bankAccounts.length
+  const used = finance.bankAccounts.filter((item) => item.cardId).length
+  return `${total} ${total === 1 ? 'cartão' : 'cartões'} · ${used} ${
+    used === 1 ? 'entra' : 'entram'
+  } no app`
+}
+
+/** Each bank card and the app card it feeds (or "Não importar"). */
+function AccountsModal({
+  finance,
+  onClose,
+}: {
+  readonly finance: Finance
+  readonly onClose: () => void
+}) {
+  const run = useFinanceOp()
+  return (
+    <Modal title="Cartões do banco" onClose={onClose}>
+      <p className="muted small">
+        Escolha em qual cartão do app entra cada cartão do banco.
+      </p>
+      <ul className="bank-accounts">
+        {finance.bankAccounts.map((account) => (
+          <li key={account.id} className="field">
+            <label htmlFor={`conta-${account.id}`}>
+              <b>{account.name}</b>
+              {account.number && <small> · final {account.number}</small>}
+            </label>
+            <select
+              id={`conta-${account.id}`}
+              value={account.cardId ?? ''}
+              onChange={(event) =>
+                run(bankOps.setAccountCard(account, event.target.value || null))
+              }
+            >
+              <option value="">Não importar</option>
+              {finance.cards.map((card) => (
+                <option key={card.id} value={card.id}>
+                  {card.name}
+                </option>
+              ))}
+            </select>
+          </li>
+        ))}
+      </ul>
+      <div className="modal-actions">
+        <button type="button" className="btn primary" onClick={onClose}>
+          Pronto
+        </button>
+      </div>
+    </Modal>
+  )
+}
+
 /**
  * Open Finance in Ajustes (only for the app's owner): each bank card and the
  * app card it feeds, and "Atualizar agora". The first import shows a preview.
@@ -60,6 +122,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
   const [preview, setPreview] = useState<ImportResult | null>(null)
   const [synced, setSynced] = useState(lastSync)
   const [mailing, setMailing] = useState(false)
+  const [accounts, setAccounts] = useState(false)
   if (!enabled) return null
 
   const toggleEmail = async (on: boolean) => {
@@ -109,35 +172,27 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
         Bancos conectados
       </h3>
       <ul className="settings-card">
-        {finance.bankAccounts.map((account) => (
-          <li className="settings-row" key={account.id}>
-            <span className="settings-icon accent" aria-hidden="true">
-              <BankIcon />
-            </span>
-            <span className="settings-text">
-              <b>{account.name}</b>
-              <small>
-                {account.number ? `final ${account.number} · ` : ''}
-                {account.cardId ? 'entra no cartão' : 'não importa'}
-              </small>
-            </span>
-            <select
-              className="bank-card"
-              aria-label={`Cartão do app para ${account.name}`}
-              value={account.cardId ?? ''}
-              onChange={(event) =>
-                run(bankOps.setAccountCard(account, event.target.value || null))
-              }
+        {finance.bankAccounts.length > 0 && (
+          <li>
+            <button
+              type="button"
+              className="settings-row action"
+              aria-label="Cartões do banco"
+              onClick={() => setAccounts(true)}
             >
-              <option value="">Não importar</option>
-              {finance.cards.map((card) => (
-                <option key={card.id} value={card.id}>
-                  {card.name}
-                </option>
-              ))}
-            </select>
+              <span className="settings-icon accent" aria-hidden="true">
+                <BankIcon />
+              </span>
+              <span className="settings-text">
+                <b>Cartões do banco</b>
+                <small>{accountsText(finance)}</small>
+              </span>
+              <span className="settings-chevron" aria-hidden="true">
+                <ChevronRightIcon />
+              </span>
+            </button>
           </li>
-        ))}
+        )}
         <li className="settings-row">
           <span className="settings-icon accent" aria-hidden="true">
             <PeopleIcon />
@@ -215,6 +270,9 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
         {error}
       </p>
 
+      {accounts && (
+        <AccountsModal finance={finance} onClose={() => setAccounts(false)} />
+      )}
       {preview && (
         <Modal title="Primeira importação" onClose={() => setPreview(null)}>
           <div className="modal-form">

@@ -178,18 +178,16 @@
   }
 }
 
-/* Open Finance: which app card each bank card feeds. */
-.bank-card {
-  flex: none;
-  max-width: 44%;
-  min-height: 38px;
-  padding: 6px 10px;
-  border: 1.5px solid var(--line);
-  border-radius: 10px;
-  background: var(--bg);
+/* Open Finance: which app card each bank card feeds (in a modal). */
+.bank-accounts {
+  display: grid;
+  gap: 14px;
+  margin: 12px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.bank-accounts label b {
   color: var(--ink);
-  font: inherit;
-  font-size: 14px;
 }
 .bank-notices {
   margin: 0;
