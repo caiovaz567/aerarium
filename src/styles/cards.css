@@ -946,3 +946,24 @@ a.row-main {
   width: calc(100% - 12px);
   margin: 0 6px 6px;
 }
+
+/* Card page: one list at a time under the chart. */
+.card-lists {
+  padding-top: 8px;
+}
+.card-lists .month-detail {
+  padding: 0 16px 8px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.list-meta {
+  margin: 0;
+  padding: 0 16px 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.row.later .val,
+.row.later .desc {
+  color: var(--muted);
+}

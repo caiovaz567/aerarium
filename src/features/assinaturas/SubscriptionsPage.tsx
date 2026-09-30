@@ -3,6 +3,7 @@ import { editOps } from '../../data/editOps'
 import type { SubscriptionRow } from '../../data/finance'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
 import { cents, formatMoney, sumMoney } from '../../domain/money'
+import { dateBR } from '../../domain/months'
 import { AddButton, TrashButton } from '../../ui/controls'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
@@ -23,6 +24,11 @@ export function SubscriptionsPage() {
   const total = sumMoney(list.map((item) => item.amount))
   const day = Number(today().slice(8))
   const next = list.find((item) => item.chargeDay >= day) ?? list[0]
+  // Not started yet: when it does, so it is not taken for a current charge.
+  const starts = (item: SubscriptionRow) =>
+    item.startedOn && item.startedOn > today()
+      ? `começa em ${dateBR(item.startedOn)}`
+      : null
   const cardName = (item: SubscriptionRow) =>
     finance.cards.find((card) => card.id === item.cardId)?.name
 
@@ -76,9 +82,9 @@ export function SubscriptionsPage() {
                     </span>
                     <span className="desc">
                       {item.name}
-                      {(cardName(item) || item.note) && (
+                      {(cardName(item) || item.note || starts(item)) && (
                         <span className="sub">
-                          {[cardName(item), item.note]
+                          {[starts(item), cardName(item), item.note]
                             .filter(Boolean)
                             .join(' · ')}
                         </span>

@@ -2,7 +2,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { chartSeries } from '../../domain/chartSeries'
 import { cents } from '../../domain/money'
-import { month } from '../../domain/months'
+import { isoDate, month } from '../../domain/months'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp } from '../../test/renderApp'
@@ -181,9 +181,6 @@ describe('tela do cartão', () => {
     ).toBe(
       'Resumo da faturaComprasR$ 12,00ParcelamentosR$ 120,00AssinaturasR$ 39,90OutrosR$ 271,02TotalR$ 442,92',
     )
-    expect(
-      screen.getByRole('region', { name: 'Parcelas' }).querySelector('.meta'),
-    ).toHaveTextContent('1 em aberto · R$ 1.080,00 até maio 2027')
     expect(head()).toBe(
       'Setembro 2026 · em abertoR$ 442,92R$ 83,02 (23,1%)vs ago',
     )
@@ -194,6 +191,32 @@ describe('tela do cartão', () => {
     expect(
       screen.getByRole('region', { name: 'O que tem em setembro' }),
     ).toHaveTextContent('Outros gastos não detalhados')
+    // One list at a time: the plans and the subscriptions in their own tabs.
+    fireEvent.click(screen.getByRole('button', { name: /^Parcelamentos/ }))
+    expect(
+      screen.getByRole('region', { name: 'Parcelas' }).querySelector('.meta'),
+    ).toHaveTextContent('1 em aberto · R$ 1.080,00 até maio 2027')
+    expect(
+      screen.queryByRole('region', { name: 'O que tem em setembro' }),
+    ).toBeNull()
+  })
+
+  it('assinatura que começa depois: aparece na aba, mas não conta no mês', () => {
+    const finance = financeFixture()
+    renderApp('/cartoes/c1', undefined, {
+      ...finance,
+      subscriptions: finance.subscriptions.map((item) => ({
+        ...item,
+        startedOn: isoDate('2026-10-11'),
+        firstMonth: month('2026-10'),
+      })),
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^Assinaturas/ }))
+    const list = screen.getByRole('region', { name: 'Assinaturas do cartão' })
+    expect(spaced(list.textContent)).toContain('R$ 0,00 em setembro')
+    expect(spaced(list.textContent)).toContain(
+      'Streamingentra a partir de outubro 2026',
+    )
   })
 
   it('setas do teclado e botões andam um mês; sem comparação a linha fica vazia', () => {

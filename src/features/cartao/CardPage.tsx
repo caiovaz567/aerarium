@@ -1,3 +1,4 @@
+import { chargedIn } from '../../domain/cardDates'
 import { HeaderSlot } from '../../app/headerSlot'
 import { PageColumns } from '../../ui/PageColumns'
 import { useEffect, useMemo, useState } from 'react'
@@ -11,7 +12,7 @@ import {
 } from '../../domain/chartSeries'
 import { bankFillsOther } from '../../domain/invoices'
 import { installmentStatus } from '../../domain/installments'
-import { cents, formatMoney } from '../../domain/money'
+import { cents, formatMoney, sumMoney } from '../../domain/money'
 import {
   monthLabel,
   monthName,
@@ -128,6 +129,9 @@ export function CardPage() {
 
   const editor = useEditor()
   const [typingBank, setTypingBank] = useState(false)
+  const [list, setList] = useState<'fatura' | 'parcelas' | 'assinaturas'>(
+    'fatura',
+  )
   const actions = usePlanActions(finance ?? emptyFinance)
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -163,6 +167,12 @@ export function CardPage() {
   )
   const subscriptions = finance.subscriptions.filter(
     (item) => item.cardId === card.id && item.active,
+  )
+  // Only what is charged in the picked month (a new one starts later).
+  const charged = sumMoney(
+    subscriptions
+      .filter((item) => chargedIn(item, selected))
+      .map((item) => item.amount),
   )
 
   return (
@@ -371,117 +381,166 @@ export function CardPage() {
           />
         </section>
 
-        <section
-          className="month-detail"
-          aria-label={`O que tem em ${monthName(selected).toLowerCase()}`}
-        >
-          <small>O que tem em {monthName(selected).toLowerCase()}</small>
-          <ul>
-            {detail.items.map((item) => (
-              <li key={item.key}>
-                <i className={`dot ${item.kind}`} />
-                <span>
-                  {item.name}
-                  <small>{item.sub}</small>
-                </span>
-                <b>{formatMoney(item.amount)}</b>
-              </li>
+        {/* One list at a time: the month's invoice, the installment plans, or
+            the subscriptions (each says when it starts). */}
+        <section className="block card-lists" aria-label="Listas do cartão">
+          <div
+            className="segmented views"
+            role="group"
+            aria-label="Ver do cartão"
+          >
+            {(
+              [
+                ['fatura', `Fatura de ${monthName(selected).toLowerCase()}`],
+                ['parcelas', `Parcelamentos · ${plans.length}`],
+                ['assinaturas', `Assinaturas · ${subscriptions.length}`],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                type="button"
+                key={key}
+                aria-pressed={list === key}
+                onClick={() => setList(key)}
+              >
+                {label}
+              </button>
             ))}
-            {detail.warning !== null && (
-              <li className="warn">
-                <span>
-                  Foi paga com {formatMoney(detail.warning)} a menos do que as
-                  partes somam hoje
-                </span>
-              </li>
-            )}
-            {detail.emptyText && (
-              <li className="none">
-                <span>{detail.emptyText}</span>
-              </li>
-            )}
-          </ul>
-        </section>
-
-        <section className="block" aria-labelledby="parcelas-cartao">
-          <div className="block-head">
-            <h2 id="parcelas-cartao">Parcelas</h2>
-            <span className="meta">
-              {plans.length
-                ? `${plans.length} em aberto · ${formatMoney(stats.outstanding)}${
-                    stats.lastMonth
-                      ? ` até ${monthLabel(stats.lastMonth).toLowerCase()}`
-                      : ''
-                  }`
-                : 'nenhuma'}
-            </span>
           </div>
-          {plans.length > 0 && (
-            <ul className="rows">
-              {plans.map((plan) => {
-                const line = planLine(plan, selected, finance)
-                return line ? (
-                  <PlanRow
-                    key={plan.id}
-                    line={line}
-                    onToggle={() => actions.toggle(line, selected)}
-                    onOpen={() => editor.plan(plan.id)}
-                  />
-                ) : (
-                  <li className="row" key={plan.id}>
-                    <span className="check-space" />
-                    <button
-                      type="button"
-                      className="row-main"
-                      onClick={() => editor.plan(plan.id)}
-                    >
-                      <span className="desc">
-                        {plan.description}
-                        <span className="sub">
-                          nenhuma parcela em {monthShort(selected)}
-                        </span>
-                      </span>
-                    </button>
-                    <span className="trash-space" />
-                  </li>
-                )
-              })}
-            </ul>
-          )}
-          <AddButton onClick={() => editor.plan(null, { cardId: card.id })}>
-            Parcela neste cartão
-          </AddButton>
-        </section>
 
-        {subscriptions.length > 0 && (
-          <section className="block" aria-labelledby="assinaturas-cartao">
-            <div className="block-head">
-              <h2 id="assinaturas-cartao">Assinaturas</h2>
-              <span className="sum">{formatMoney(stats.subscriptions)}</span>
-            </div>
-            <ul className="rows">
-              {subscriptions.map((item) => (
-                <li className="row" key={item.id}>
-                  <button
-                    type="button"
-                    className="row-main"
-                    onClick={() => editor.subscription(item.id)}
-                  >
-                    <span className="day">
-                      <small>dia</small>
-                      <b>{item.chargeDay}</b>
-                    </span>
-                    <span className="desc">
+          {list === 'fatura' && (
+            <section
+              className="month-detail"
+              aria-label={`O que tem em ${monthName(selected).toLowerCase()}`}
+            >
+              <ul>
+                {detail.items.map((item) => (
+                  <li key={item.key}>
+                    <i className={`dot ${item.kind}`} />
+                    <span>
                       {item.name}
-                      {item.note && <span className="sub">{item.note}</span>}
+                      <small>{item.sub}</small>
                     </span>
-                    <span className="val">{formatMoney(item.amount)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+                    <b>{formatMoney(item.amount)}</b>
+                  </li>
+                ))}
+                {detail.warning !== null && (
+                  <li className="warn">
+                    <span>
+                      Foi paga com {formatMoney(detail.warning)} a menos do que
+                      as partes somam hoje
+                    </span>
+                  </li>
+                )}
+                {detail.emptyText && (
+                  <li className="none">
+                    <span>{detail.emptyText}</span>
+                  </li>
+                )}
+              </ul>
+            </section>
+          )}
+
+          {list === 'parcelas' && (
+            <section aria-label="Parcelas">
+              <p className="meta list-meta">
+                {plans.length
+                  ? `${plans.length} em aberto · ${formatMoney(stats.outstanding)}${
+                      stats.lastMonth
+                        ? ` até ${monthLabel(stats.lastMonth).toLowerCase()}`
+                        : ''
+                    }`
+                  : 'Nenhum parcelamento em aberto'}
+              </p>
+              {plans.length > 0 && (
+                <ul className="rows">
+                  {plans.map((plan) => {
+                    const line = planLine(plan, selected, finance)
+                    return line ? (
+                      <PlanRow
+                        key={plan.id}
+                        line={line}
+                        onToggle={() => actions.toggle(line, selected)}
+                        onOpen={() => editor.plan(plan.id)}
+                      />
+                    ) : (
+                      <li className="row" key={plan.id}>
+                        <span className="check-space" />
+                        <button
+                          type="button"
+                          className="row-main"
+                          onClick={() => editor.plan(plan.id)}
+                        >
+                          <span className="desc">
+                            {plan.description}
+                            <span className="sub">
+                              nenhuma parcela em {monthShort(selected)}
+                            </span>
+                          </span>
+                        </button>
+                        <span className="trash-space" />
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              <AddButton onClick={() => editor.plan(null, { cardId: card.id })}>
+                Parcela neste cartão
+              </AddButton>
+            </section>
+          )}
+
+          {list === 'assinaturas' && (
+            <section aria-label="Assinaturas do cartão">
+              <p className="meta list-meta">
+                {subscriptions.length
+                  ? `${formatMoney(charged)} em ${monthName(selected).toLowerCase()}`
+                  : 'Nenhuma assinatura neste cartão'}
+              </p>
+              {subscriptions.length > 0 && (
+                <ul className="rows">
+                  {subscriptions.map((item) => {
+                    const later = !chargedIn(item, selected)
+                    return (
+                      <li
+                        className={`row${later ? ' later' : ''}`}
+                        key={item.id}
+                      >
+                        <button
+                          type="button"
+                          className="row-main"
+                          onClick={() => editor.subscription(item.id)}
+                        >
+                          <span className="day">
+                            <small>dia</small>
+                            <b>{item.chargeDay}</b>
+                          </span>
+                          <span className="desc">
+                            {item.name}
+                            {(later || item.note) && (
+                              <span className="sub">
+                                {[
+                                  later &&
+                                    item.firstMonth &&
+                                    `entra a partir de ${monthLabel(item.firstMonth).toLowerCase()}`,
+                                  item.note,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </span>
+                            )}
+                          </span>
+                          <span className="val">
+                            {formatMoney(item.amount)}
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </section>
+          )}
+        </section>
       </PageColumns>
     </>
   )

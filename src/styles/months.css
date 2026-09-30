@@ -519,8 +519,12 @@
 .invoice-top .card-art {
   width: 56px;
 }
+.invoice-top > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .invoice-top b {
-  display: block;
   font-size: 16px;
 }
 .invoice-top small {
@@ -543,32 +547,24 @@
   align-self: flex-start;
   font-size: 13.5px;
 }
-/* Installments and subscriptions of the invoice, in one line. */
+/* Installments and subscriptions of the invoice, one row that opens the card. */
 .invoice-auto {
   display: flex;
+  flex: 1;
   align-items: center;
   gap: 10px;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--bg);
+  min-width: 0;
   color: var(--ink);
   text-decoration: none;
 }
-.invoice-auto span {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
-}
 .invoice-auto small {
-  display: block;
   color: var(--accent);
-  font-size: 12px;
-  font-weight: 500;
 }
-.invoice-auto b {
-  font-size: 14px;
-  white-space: nowrap;
+.invoice-list li:has(> .invoice-auto) {
+  padding: 0;
+}
+.invoice-list .invoice-auto {
+  padding: 10px 12px;
 }
 @media (hover: hover) and (pointer: fine) {
   .invoice-auto:hover {

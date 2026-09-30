@@ -226,47 +226,61 @@ export function InvoiceModal({
       }
     >
       <div className="invoice">
+        {/* The total first; the card's name is already the title. */}
         <div className="invoice-top">
           <CardArt card={card} />
           <div>
-            <b>{card.name}</b>
-            <small>
-              Fatura de {monthLabel(invoice.month)}
-              {invoice.estimated && (
-                <>
-                  {' · '}
-                  <span className="est">estimada</span>
-                </>
-              )}
-            </small>
+            <b>{monthLabel(invoice.month)}</b>
+            {invoice.estimated && <span className="est">estimada</span>}
           </div>
         </div>
-
-        {/* What comes by itself, in one line: the card's page lists it. */}
-        {mineInstallments.length + subscriptions.length > 0 ? (
-          <Link className="invoice-auto" to={`/cartoes/${card.id}`}>
+        <div className="invoice-sum">
+          <span>Total da fatura</span>
+          <b className={impossible ? 'bad' : ''}>{formatMoney(shownTotal)}</b>
+        </div>
+        {finance.otherPerson && otherShare > 0 && (
+          <p className="invoice-split">
             <span>
-              {[
-                count(mineInstallments.length, 'parcela', 'parcelas'),
-                count(subscriptions.length, 'assinatura', 'assinaturas'),
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-              <small>Entram sozinhas · ver no cartão</small>
+              Sua parte <b>{formatMoney(minePart)}</b>
             </span>
-            <b>{formatMoney(automatic)}</b>
-          </Link>
-        ) : (
-          <p className="muted small">
-            Nenhuma parcela ou assinatura nesse cartão este mês.
+            <span>
+              {finance.otherPerson} <b>{formatMoney(otherShare)}</b>
+            </span>
           </p>
         )}
+        {invoice.paid &&
+          invoice.closedTotal !== null &&
+          invoice.closedTotal !== parts.calculatedTotal && (
+            <p className="muted small">
+              Foi paga com {formatMoney(invoice.closedTotal)}. As partes hoje
+              somam {formatMoney(parts.calculatedTotal)}.
+            </p>
+          )}
 
-        {mineExpenses.length > 0 && (
-          <div className="invoice-sec">
-            <small>Gastos lançados</small>
-            <ul className="invoice-list">{mineExpenses.map(expenseRow)}</ul>
-          </div>
+        {/* What makes it up, in one list: what comes by itself (listed on
+            the card's page), then what was launched. */}
+        {mineInstallments.length + subscriptions.length + mineExpenses.length >
+          0 && (
+          <ul className="invoice-list">
+            {mineInstallments.length + subscriptions.length > 0 && (
+              <li>
+                <Link className="invoice-auto" to={`/cartoes/${card.id}`}>
+                  <i className="dot installment" />
+                  <span>
+                    {[
+                      count(mineInstallments.length, 'parcela', 'parcelas'),
+                      count(subscriptions.length, 'assinatura', 'assinaturas'),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    <small>Entram sozinhas · ver no cartão</small>
+                  </span>
+                  <b>{formatMoney(automatic)}</b>
+                </Link>
+              </li>
+            )}
+            {mineExpenses.map(expenseRow)}
+          </ul>
         )}
 
         {otherInstallments.length + otherExpenses.length > 0 && (
@@ -280,7 +294,6 @@ export function InvoiceModal({
         )}
 
         <div className="invoice-sec">
-          <small>O resto da fatura</small>
           {totalMode ? (
             <MoneyField
               label="Total da fatura"
@@ -309,38 +322,13 @@ export function InvoiceModal({
         </div>
 
         {shared && (
-          <div className="invoice-sec">
-            <small>Com o {finance.otherPerson}</small>
-            <MoneyField
-              label="Total da fatura no banco"
-              value={bank}
-              onChange={setBank}
-              hint={`O total com o que é seu e o que é do ${finance.otherPerson}. Com Open Finance, vem sozinho.`}
-            />
-          </div>
+          <MoneyField
+            label="Total da fatura no banco"
+            value={bank}
+            onChange={setBank}
+            hint={`O seu e o do ${finance.otherPerson}, juntos.`}
+          />
         )}
-        <div className="invoice-sum">
-          <span>Total da fatura</span>
-          <b className={impossible ? 'bad' : ''}>{formatMoney(shownTotal)}</b>
-        </div>
-        {finance.otherPerson && otherShare > 0 && (
-          <p className="invoice-split">
-            <span>
-              Sua parte <b>{formatMoney(minePart)}</b>
-            </span>
-            <span>
-              {finance.otherPerson} <b>{formatMoney(otherShare)}</b>
-            </span>
-          </p>
-        )}
-        {invoice.paid &&
-          invoice.closedTotal !== null &&
-          invoice.closedTotal !== parts.calculatedTotal && (
-            <p className="muted small">
-              Foi paga com {formatMoney(invoice.closedTotal)}. As partes hoje
-              somam {formatMoney(parts.calculatedTotal)}.
-            </p>
-          )}
 
         <TextField
           label="Observação (opcional)"
