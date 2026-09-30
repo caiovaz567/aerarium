@@ -1,4 +1,5 @@
-// Draws the app icons: light temple on #3140C2, square corners
+// Draws the app icons: the app's blue temple (#338EF7) on its black
+// (#0A0A0A), square corners
 // (iOS rounds them itself). Run with `npm run icons`; the PNGs are committed.
 import { mkdir, writeFile } from 'node:fs/promises'
 import { chromium } from '@playwright/test'
@@ -10,7 +11,7 @@ const TEMPLE =
 const svg = (size, scale) => {
   const side = size * scale
   const offset = (size - side) / 2
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" fill="#3140C2"/><g transform="translate(${offset} ${offset}) scale(${side / 24})" fill="#FFFFFF">${TEMPLE}</g></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" fill="#0A0A0A"/><g transform="translate(${offset} ${offset}) scale(${side / 24})" fill="#338EF7">${TEMPLE}</g></svg>`
 }
 
 // Maskable icons are cropped to a circle of 80%, so the temple stays smaller.
