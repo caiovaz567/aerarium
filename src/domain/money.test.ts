@@ -94,40 +94,34 @@ describe('dinheiro em centavos', () => {
     expect(() => nonNegative(cents(-1))).toThrow())
 })
 
-describe('digitar valor da esquerda pra direita', () => {
+describe('digitar valor como no banco, sem vírgula', () => {
   it.each([
-    ['', ''],
-    ['1', '1'],
-    ['12', '12'],
-    ['1250', '1.250'],
-    ['1.2500', '12.500'],
-    ['1234567890123', '1.234.567.890'],
-    ['0', '0'],
-    ['05', '5'],
-    ['000', '0'],
-    [',', '0,'],
-    ['12,', '12,'],
-    ['12,5', '12,5'],
-    ['12,505', '12,50'],
-    ['1,2,3', '1,23'],
-    ['1147,29', '1.147,29'],
+    ['2', '0,02'],
+    ['23', '0,23'],
+    ['239', '2,39'],
+    ['2390', '23,90'],
+    ['123456', '1.234,56'],
+    ['0', ''],
+    ['007', '0,07'],
+    ['23,9', '2,39'],
     ['1.147,29', '1.147,29'],
-    ['12.', '12,'],
     ['R$ 12,50', '12,50'],
+    ['1234567890123', '1.234.567.890,12'],
     ['abc', ''],
-    ['-12', '12'],
+    ['-12', '0,12'],
   ])('"%s" vira "%s"', (typed, shown) => {
     expect(maskMoneyInput(typed)).toBe(shown)
   })
 
-  it('apagar volta um passo, sem virar centavos', () => {
-    expect(maskMoneyInput('1.25')).toBe('125')
+  it('apagar tira o último número', () => {
+    // "23,90" with the 0 deleted.
+    expect(maskMoneyInput('23,9')).toBe('2,39')
   })
 
   it('aceita o sinal de menos quando o campo pode ser negativo', () => {
     expect(maskMoneyInput('-', true)).toBe('-')
-    expect(maskMoneyInput('-1250,5', true)).toBe('-1.250,5')
-    expect(maskMoneyInput('12', true)).toBe('12')
+    expect(maskMoneyInput('-125050', true)).toBe('-1.250,50')
+    expect(maskMoneyInput('1200', true)).toBe('12,00')
   })
 
   it('lê "12," como 12 reais', () => {

@@ -71,7 +71,7 @@ export function MoneyField({
         <span aria-hidden="true">R$</span>
         <input
           id={id}
-          inputMode={allowNegative ? 'text' : 'decimal'}
+          inputMode={allowNegative ? 'text' : 'numeric'}
           autoComplete="off"
           placeholder="0,00"
           value={maskMoneyInput(value, allowNegative)}

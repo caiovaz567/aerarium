@@ -220,10 +220,10 @@ describe('Meses: mudanças', () => {
       'Coloca um valor.',
     )
     fireEvent.change(within(dialog).getByLabelText('Valor (R$)'), {
-      target: { value: '5500' },
+      target: { value: '550000' },
     })
-    // Thousands dots appear by themselves.
-    expect(within(dialog).getByLabelText('Valor (R$)')).toHaveValue('5.500')
+    // Like a bank app: no comma to type, the dots and the comma come alone.
+    expect(within(dialog).getByLabelText('Valor (R$)')).toHaveValue('5.500,00')
     fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
     await settle()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

@@ -95,24 +95,18 @@ export function formatMoneyShort(value: Cents): string {
 }
 
 /**
- * Typing an amount left to right (the user's choice): thousands dots appear by
- * themselves and a comma starts the cents. "1250" → "1.250", "1250,5" →
- * "1.250,5". The dots in the field are always ours, so a dot typed at the end
- * means a comma. Up to 10 whole digits and 2 of cents; letters never stay.
+ * Typing an amount like a bank app (the owner's choice, 30/09/2026): only
+ * digits, filling from the cents, so there is no comma to type. "2" → "0,02",
+ * "2390" → "23,90", "123456" → "1.234,56"; deleting takes off the last digit.
+ * Up to 12 digits; where it may be negative, a minus sign anywhere makes it so.
  */
 export function maskMoneyInput(input: string, allowNegative = false): string {
-  const negative = allowNegative && input.trim().startsWith('-')
-  const text = input.includes(',') ? input : input.replace(/\.$/, ',')
-  const [before = '', ...after] = text.split(',')
-  const whole = before
-    .replace(/\D/g, '')
-    .replace(/^0+(?=\d)/, '')
-    .slice(0, 10)
-  const sign = negative ? '-' : ''
-  if (!whole && !after.length) return sign
-  const grouped = (whole || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-  if (!after.length) return `${sign}${grouped}`
-  return `${sign}${grouped},${after.join('').replace(/\D/g, '').slice(0, 2)}`
+  const sign = allowNegative && input.includes('-') ? '-' : ''
+  const digits = input.replace(/\D/g, '').replace(/^0+/, '').slice(0, 12)
+  if (!digits) return sign
+  const padded = digits.padStart(3, '0')
+  const whole = padded.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return `${sign}${whole},${padded.slice(-2)}`
 }
 
 export function formatMoneyInput(value: Cents): string {

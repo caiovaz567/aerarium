@@ -204,7 +204,7 @@ export function LaunchModal({
             <span aria-hidden="true">R$</span>
             <input
               id="lancar-valor"
-              inputMode="decimal"
+              inputMode="numeric"
               autoComplete="off"
               placeholder="0,00"
               value={value}

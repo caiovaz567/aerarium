@@ -55,7 +55,7 @@ test('"Sei o total" e a sobra do mês anterior ficam gravados', async ({
     name: 'Outros gastos · Nubank Teste',
   })
   await dialog.getByRole('button', { name: 'Sei o total da fatura' }).click()
-  await dialog.getByLabel('Total da fatura').fill('500')
+  await dialog.getByLabel('Total da fatura').fill('50000')
   await dialog.getByRole('button', { name: 'Salvar' }).click()
   await saved(page)
   await page.goto('/meses/2026-09')
@@ -119,7 +119,9 @@ test('lançar um Uber de R$ 12 no cartão em menos de 5 segundos e desfazer', as
   await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
   const dialog = page.getByRole('dialog', { name: 'Lançar' })
   await expect(dialog.getByLabel('Valor')).toBeFocused()
-  await page.keyboard.type('12')
+  // Like a bank app: digits only, the comma comes by itself.
+  await page.keyboard.type('1200')
+  await expect(dialog.getByLabel('Valor')).toHaveValue('12,00')
   await dialog.getByLabel('Descrição').fill('Uber')
   await dialog.getByText('Nubank Teste').click()
   await dialog.getByRole('button', { name: 'Lançar' }).click()
@@ -138,7 +140,7 @@ test('lançar um Uber de R$ 12 no cartão em menos de 5 segundos e desfazer', as
 
   // Launch again and keep it: it survives a reload.
   await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
-  await page.keyboard.type('12')
+  await page.keyboard.type('1200')
   await dialog.getByRole('button', { name: 'Lançar' }).click()
   await saved(page)
   await page.reload()
@@ -219,7 +221,7 @@ test('categoria: lançar com sugestão, renomear, e tudo fica gravado', async ({
   await page.goto('/meses/2026-09')
   await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
   const dialog = page.getByRole('dialog', { name: 'Lançar' })
-  await dialog.getByLabel('Valor').fill('30')
+  await dialog.getByLabel('Valor').fill('3000')
   await dialog.getByLabel('Descrição').fill('Farmácia')
   await dialog.getByText('Pix, boleto ou dinheiro').click()
   await expect(dialog.getByLabel('Saúde')).toBeChecked()
