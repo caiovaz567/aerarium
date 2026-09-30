@@ -48,29 +48,21 @@ const selectedLabel = (page: Page) =>
   page.locator('.month-label.on').textContent()
 
 async function openCard(page: Page) {
-  await page.goto(`/cartoes/${E2E.card1}`)
+  await page.goto(`/cartoes?cartao=${E2E.card1}`)
   await expect(page.locator('.chart-strip svg')).toBeVisible()
 }
 
-test('aba Cartões: resumo, blocos e nome longo sem "…"', async ({
+test('Cartões numa tela só: fila de cartões e nome longo sem "…"', async ({
   page,
-  isMobile,
 }, testInfo) => {
   await page.goto('/cartoes?mes=2026-09')
-  const hero = page.getByRole('region', { name: 'Resumo dos cartões' })
-  await expect(hero).toContainText('Faturas de Setembro')
-  expect(
-    (await hero.locator('.hero-num').textContent())?.replace(/\s/g, ' '),
-  ).toBe('R$ 442,92')
-  if (!isMobile) {
-    // Wide screen: a list of cards, one open beside it.
-    const pick = page
-      .getByRole('navigation', { name: 'Escolher cartão' })
-      .getByRole('button', { name: new RegExp(LONG_CARD) })
-    await pick.click()
-    await expect(pick).toHaveAttribute('aria-pressed', 'true')
-  }
-  const title = page.locator('.card-title b', { hasText: LONG_CARD })
+  await expect(page.locator('.all-invoices')).toContainText('R$ 442,92')
+  const pick = page
+    .getByRole('group', { name: 'Escolher cartão' })
+    .getByRole('button', { name: new RegExp(LONG_CARD) })
+  await pick.click()
+  await expect(pick).toHaveAttribute('aria-pressed', 'true')
+  const title = page.locator('.card-hero-head b', { hasText: LONG_CARD })
   expect(
     await title.evaluate((node) => node.scrollWidth > node.clientWidth),
   ).toBe(false)
@@ -178,7 +170,7 @@ test('girar o celular redesenha e mantém o mês no centro', async ({
   await noSideScroll(page)
 })
 
-test('teclado: setas andam um mês e Esc volta', async ({ page, isMobile }) => {
+test('teclado: setas andam um mês no gráfico', async ({ page, isMobile }) => {
   test.skip(isMobile, 'Teclado é no computador.')
   await openCard(page)
   await page.keyboard.press('ArrowRight')
@@ -186,6 +178,4 @@ test('teclado: setas andam um mês e Esc volta', async ({ page, isMobile }) => {
     .poll(() => selectedLabel(page))
     .toBe(label(shift(todayMonth(), 1)))
   await expect.poll(() => offCentre(page)).toBeLessThan(2)
-  await page.keyboard.press('Escape')
-  await expect(page).toHaveURL(/\/cartoes$/)
 })

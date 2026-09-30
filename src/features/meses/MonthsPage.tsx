@@ -22,6 +22,7 @@ import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
 import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { InvoiceModal } from './InvoiceModal'
+import { useSaveInvoice } from './useSaveInvoice'
 import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
 import { OwedBlock } from './OwedBlock'
@@ -68,6 +69,7 @@ export function MonthsPage() {
   const editor = useEditor()
   const wide = useWide()
   const { profile } = useProfile(query.data?.otherPerson)
+  const saveInvoice = useSaveInvoice()
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
   // Like v1: a new month starts from the top.
@@ -409,17 +411,9 @@ export function MonthsPage() {
           card={invoice.card}
           finance={finance}
           onClose={close}
-          onSave={({ paid, bankTotal, ...changes }) => {
-            run(ops.updateInvoice(invoice.invoice, changes))
-            if (
-              bankTotal !== undefined &&
-              bankTotal !== (invoice.invoice.bankTotal ?? null)
-            )
-              run(ops.setBankTotal(invoice.invoice, bankTotal))
-            if (paid !== invoice.invoice.paid)
-              run(ops.invoicePaid(invoice.invoice, paid, today()))
+          onSave={(changes) => {
+            saveInvoice(invoice.invoice, changes)
             close()
-            toast('Salvo')
           }}
         />
       )}

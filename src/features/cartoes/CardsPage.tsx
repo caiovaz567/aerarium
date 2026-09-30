@@ -1,27 +1,32 @@
-import { useWide } from '../../app/headerSlotContext'
-import { PageColumns } from '../../ui/PageColumns'
+import { useState } from 'react'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router'
 import { HeaderSlot } from '../../app/headerSlot'
-import { cardFinal } from '../../domain/banks'
-import { useState, type ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router'
 import { currentMonth, parseMonth } from '../../app/paths'
-import { useFinance } from '../../data/useFinance'
-import { cents, formatMoney, type Cents } from '../../domain/money'
-import { dateBR, monthName, type Month } from '../../domain/months'
+import type { ExpenseRow } from '../../data/finance'
+import { ops } from '../../data/financeOps'
+import { today, useFinance, useFinanceOp } from '../../data/useFinance'
+import { cents, formatMoney } from '../../domain/money'
+import { dateBR, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
 import { AddButton, TrashButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
 import { ChevronDownIcon, PlusIcon } from '../../ui/icons'
 import { LoadError, Loading } from '../../ui/LoadStates'
-import { cardsView, type CardBlock } from '../cartao/cardView'
+import { useToast } from '../../ui/toastContext'
+import { cardsView } from '../cartao/cardView'
 import { usePlanActions } from '../cartao/planActions'
 import { PlanRow } from '../cartao/PlanRow'
 import { useEditor } from '../editar/editorContext'
+import { ExpenseModal } from '../meses/EditModals'
+import { InvoiceModal } from '../meses/InvoiceModal'
 import { MonthNav } from '../meses/MonthNav'
 import { defaultMonth } from '../meses/monthView'
+import { useSaveInvoice } from '../meses/useSaveInvoice'
+import { CardDetail } from './CardDetail'
 
-const cardsPath = (value: Month) => `/cartoes?mes=${value}`
 const ARCHIVE_KEY = 'aerarium.arquivados'
+/** The installments paid apart from any card, picked like a card. */
+const LOOSE = 'fora'
 
 function readArchiveOpen() {
   try {
@@ -31,137 +36,29 @@ function readArchiveOpen() {
   }
 }
 
-/** Stacked bar: installments, subscriptions, the rest. */
-function StackBar({
-  parts,
-  onHero = false,
-}: {
-  readonly parts: readonly { value: Cents; className: string }[]
-  readonly onHero?: boolean
-}) {
-  const shown = parts.filter((part) => part.value > 0)
-  const total = shown.reduce((sum, part) => sum + part.value, 0)
-  return (
-    <div className={`stack${onHero ? ' on-hero' : ''}`} aria-hidden="true">
-      {total > 0 &&
-        shown.map((part) => (
-          <span
-            key={part.className}
-            className={part.className}
-            style={{ width: `${(part.value / total) * 100}%` }}
-          />
-        ))}
-    </div>
-  )
+/** Old link to one card: the same screen, with that card picked. */
+export function CardRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/cartoes?cartao=${id}`} replace />
 }
 
-function CardSection({
-  block,
-  month,
-  final,
-  onEdit,
-  children,
-}: {
-  readonly block: CardBlock
-  readonly month: Month
-  /** Last 4 digits, from the bank (Open Finance). */
-  readonly final: string | null
-  readonly onEdit: () => void
-  readonly children: ReactNode
-}) {
-  const { card, invoice } = block
-  const status = invoice
-    ? invoice.paid
-      ? 'Fatura paga'
-      : 'Fatura em aberto'
-    : `Sem fatura em ${monthName(month).toLowerCase()}`
-  const showBar =
-    invoice && block.total > 0 && (block.installments || block.subscriptions)
-  return (
-    <section className="block card-block" aria-label={card.name}>
-      <div className="card-head">
-        <Link
-          className="card-art-link"
-          to={`/cartoes/${card.id}`}
-          aria-label={`Ver gráfico de ${card.name}`}
-          tabIndex={-1}
-        >
-          <CardArt card={card} />
-        </Link>
-        <Link className="card-title" to={`/cartoes/${card.id}`}>
-          <b>{card.name}</b>
-          <small className={invoice?.paid ? 'ok' : ''}>{status}</small>
-          {(final || card.dueDay) && (
-            <small>
-              {[
-                final && `final ${final}`,
-                card.dueDay && `vence dia ${card.dueDay}`,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </small>
-          )}
-        </Link>
-        {invoice && <span className="sum">{formatMoney(block.total)}</span>}
-        <button
-          type="button"
-          className="pill-button"
-          onClick={onEdit}
-          aria-label={`Editar ${card.name}`}
-        >
-          Editar
-        </button>
-      </div>
-      {showBar && (
-        <div className="card-bar">
-          <StackBar
-            parts={[
-              { value: block.installments, className: 'installments' },
-              { value: block.subscriptions, className: 'subscriptions' },
-              { value: block.other, className: 'other' },
-            ]}
-          />
-          <div className="legend">
-            {block.installments > 0 && (
-              <span>
-                <i className="installments" />
-                Parcelas <b>{formatMoney(block.installments)}</b>
-              </span>
-            )}
-            {block.subscriptions > 0 && (
-              <span>
-                <i className="subscriptions" />
-                Assinaturas <b>{formatMoney(block.subscriptions)}</b>
-              </span>
-            )}
-            {block.other > 0 && (
-              <span>
-                <i className="other" />
-                Outros <b>{formatMoney(block.other)}</b>
-              </span>
-            )}
-          </div>
-          {block.other < 0 && (
-            <p className="warnline">
-              A fatura está {formatMoney(cents(-block.other))} abaixo das
-              parcelas + assinaturas. Vale conferir o valor.
-            </p>
-          )}
-        </div>
-      )}
-      {children}
-    </section>
-  )
-}
-
-/** Aba Cartões. */
+/**
+ * Aba Cartões, one screen: the cards in a row, and the picked one's invoice,
+ * chart and everything in it (Cartões and the card page were two screens).
+ */
 export function CardsPage() {
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const query = useFinance()
-  const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
-  const [picked, setPicked] = useState<string | null>(null)
-  const wide = useWide()
+  const run = useFinanceOp()
+  const toast = useToast()
   const editor = useEditor()
+  const saveInvoice = useSaveInvoice()
+  const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
+  const [dialog, setDialog] = useState<{
+    kind: 'expense' | 'invoice'
+    id: string
+  } | null>(null)
+  const close = () => setDialog(null)
   const actions = usePlanActions(
     query.data ?? {
       cards: [],
@@ -207,6 +104,21 @@ export function CardsPage() {
     )
 
   const view = cardsView(finance, selected)
+  const looseTotal = cents(
+    view.loose.reduce((sum, line) => sum + line.amount, 0),
+  )
+  const keys = [
+    ...view.blocks.map((block) => block.card.id),
+    ...(view.loose.length ? [LOOSE] : []),
+  ]
+  const asking = params.get('cartao')
+  const picked = asking && keys.includes(asking) ? asking : keys[0]
+  const pathFor = (month: Month, key = picked) =>
+    `/cartoes?mes=${month}${key ? `&cartao=${key}` : ''}`
+  const pick = (key: string) =>
+    setParams({ mes: selected, cartao: key }, { replace: true })
+  const block = view.blocks.find((item) => item.card.id === picked)
+
   const toggleArchive = () => {
     const open = !archiveOpen
     setArchiveOpen(open)
@@ -216,207 +128,132 @@ export function CardsPage() {
       /* private mode: just not remembered */
     }
   }
-
-  const newCard = (
-    <button
-      type="button"
-      className="new-card"
-      onClick={() => editor.card(null)}
-    >
-      <PlusIcon />
-      Novo cartão
-    </button>
-  )
-  // Every card's block, then what is paid apart from the cards.
-  const sections = [
-    ...view.blocks.map((block) => ({
-      key: block.card.id,
-      name: block.card.name,
-      detail: block.card.dueDay
-        ? `vence dia ${block.card.dueDay}`
-        : 'sem vencimento',
-      art: <CardArt card={block.card} size="xs" />,
-      total: block.invoice ? formatMoney(block.total) : '',
-      section: (
-        <CardSection
-          key={block.card.id}
-          block={block}
-          month={selected}
-          final={cardFinal(
-            finance.bankAccounts.find((item) => item.cardId === block.card.id)
-              ?.number,
-          )}
-          onEdit={() => editor.card(block.card.id)}
-        >
-          {(block.plans.length > 0 || block.subscriptionNames.length > 0) && (
-            <ul className="rows">
-              {block.plans.map((line) => (
-                <PlanRow
-                  key={line.plan.id}
-                  line={line}
-                  onToggle={() => actions.toggle(line, selected)}
-                  onOpen={() => editor.plan(line.plan.id)}
-                  onDelete={() => actions.remove(line.plan)}
-                />
-              ))}
-              {block.subscriptionNames.length > 0 && (
-                <li className="row">
-                  <span className="check-space" />
-                  <Link className="row-main" to="/assinaturas">
-                    <span className="desc">
-                      {block.subscriptionNames.length === 1
-                        ? '1 assinatura'
-                        : `${block.subscriptionNames.length} assinaturas`}
-                      <span className="sub link-button">
-                        {block.subscriptionNames.join(', ')}
-                      </span>
-                    </span>
-                    <span className="val">
-                      {formatMoney(block.subscriptions)}
-                    </span>
-                  </Link>
-                  <span className="trash-space" />
-                </li>
-              )}
-            </ul>
-          )}
-          <AddButton
-            onClick={() => editor.plan(null, { cardId: block.card.id })}
-          >
-            Parcela neste cartão
-          </AddButton>
-        </CardSection>
-      ),
-    })),
-    ...(view.loose.length > 0
-      ? [
-          {
-            key: 'fora',
-            name: 'Fora dos cartões',
-            detail: 'Parcelas pagas à parte',
-            art: <span className="card-art xs none" aria-hidden="true" />,
-            total: formatMoney(
-              cents(view.loose.reduce((sum, line) => sum + line.amount, 0)),
-            ),
-            section: (
-              <section
-                key="fora"
-                className="block card-block"
-                aria-label="Fora dos cartões"
-              >
-                <div className="card-head">
-                  <div className="card-title">
-                    <b>Fora dos cartões</b>
-                    <small>Parcelas pagas à parte</small>
-                  </div>
-                  <span className="sum">
-                    {formatMoney(
-                      cents(
-                        view.loose.reduce((sum, line) => sum + line.amount, 0),
-                      ),
-                    )}
-                  </span>
-                </div>
-                <ul className="rows">
-                  {view.loose.map((line) => (
-                    <PlanRow
-                      key={line.plan.id}
-                      line={line}
-                      onToggle={() => actions.toggle(line, selected)}
-                      onOpen={() => editor.plan(line.plan.id)}
-                      onDelete={() => actions.remove(line.plan)}
-                    />
-                  ))}
-                </ul>
-                <AddButton onClick={() => editor.plan(null, { cardId: null })}>
-                  Parcela fora de cartão
-                </AddButton>
-              </section>
-            ),
-          },
-        ]
-      : []),
-  ]
-  // Wide screen: the list on the left, one card at a time on the right.
-  const shown = sections.find((item) => item.key === picked) ?? sections[0]
+  const removeExpense = (row: ExpenseRow) => {
+    run(ops.removeExpense(row))
+    toast('Gasto removido', {
+      label: 'Desfazer',
+      onClick: () => run(ops.restoreExpense(row)),
+    })
+  }
+  const expense =
+    dialog?.kind === 'expense'
+      ? finance.expenses.find((item) => item.id === dialog.id)
+      : undefined
+  const invoice =
+    dialog?.kind === 'invoice'
+      ? view.blocks.find((item) => item.invoice?.id === dialog.id)
+      : undefined
 
   return (
     <>
       <h2 className="visually-hidden">Cartões</h2>
       <HeaderSlot>
-        <MonthNav finance={finance} selected={selected} pathFor={cardsPath} />
+        <MonthNav
+          finance={finance}
+          selected={selected}
+          pathFor={(month) => pathFor(month)}
+        />
+        <p className="all-invoices">
+          Todas as faturas <b>{formatMoney(view.totals.total)}</b>
+        </p>
       </HeaderSlot>
 
-      <section className="hero" aria-label="Resumo dos cartões">
-        <div className="hero-label">Faturas de {monthName(selected)}</div>
-        <p className="hero-num">{formatMoney(view.totals.total)}</p>
-        <StackBar
-          onHero
-          parts={[
-            { value: view.totals.installments, className: 'installments' },
-            { value: view.totals.subscriptions, className: 'subscriptions' },
-            { value: view.totals.other, className: 'other' },
-          ]}
-        />
-        <dl className="hero-split">
-          <div>
-            <dt>Parcelas</dt>
-            <dd>{formatMoney(view.totals.installments)}</dd>
-          </div>
-          <div>
-            <dt>Assinaturas</dt>
-            <dd>{formatMoney(view.totals.subscriptions)}</dd>
-          </div>
-          <div>
-            <dt>Outros</dt>
-            <dd>{formatMoney(view.totals.other)}</dd>
-          </div>
-        </dl>
-        <p className="hero-foot">
-          Parcelas em aberto no total: <b>{formatMoney(view.outstanding)}</b>
-        </p>
-      </section>
+      <div className="card-strip" role="group" aria-label="Escolher cartão">
+        {view.blocks.map(({ card, invoice, total }) => (
+          <button
+            type="button"
+            key={card.id}
+            aria-pressed={card.id === picked}
+            onClick={() => pick(card.id)}
+          >
+            <CardArt card={card} size="xs" />
+            <span className="pick-name">
+              <b>{card.name}</b>
+              <small>{invoice ? formatMoney(total) : 'sem fatura'}</small>
+            </span>
+          </button>
+        ))}
+        {view.loose.length > 0 && (
+          <button
+            type="button"
+            aria-pressed={picked === LOOSE}
+            onClick={() => pick(LOOSE)}
+          >
+            <span className="card-art xs none" aria-hidden="true" />
+            <span className="pick-name">
+              <b>Fora dos cartões</b>
+              <small>{formatMoney(looseTotal)}</small>
+            </span>
+          </button>
+        )}
+        <button
+          type="button"
+          className="strip-new"
+          aria-label="Novo cartão"
+          onClick={() => editor.card(null)}
+        >
+          <PlusIcon />
+        </button>
+      </div>
 
       {!view.blocks.length && (
         <EmptyState title="Nenhum cartão ainda">
-          Seus cartões aparecem aqui.
+          Seus cartões aparecem aqui. Toque no + pra criar o primeiro.
         </EmptyState>
       )}
 
-      {wide && sections.length > 0 ? (
-        <PageColumns
-          sideLeft
-          side={
-            <nav className="block card-picker" aria-label="Escolher cartão">
-              <ul>
-                {sections.map((item) => (
-                  <li key={item.key}>
-                    <button
-                      type="button"
-                      aria-pressed={item.key === shown?.key}
-                      onClick={() => setPicked(item.key)}
-                    >
-                      {item.art}
-                      <span className="pick-name">
-                        <b>{item.name}</b>
-                        <small>{item.detail}</small>
-                      </span>
-                      <span className="pick-sum">{item.total}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-              {newCard}
-            </nav>
+      {block && (
+        <CardDetail
+          key={block.card.id}
+          card={block.card}
+          finance={finance}
+          month={selected}
+          onExpense={(item) => setDialog({ kind: 'expense', id: item.id })}
+          onInvoice={() =>
+            block.invoice &&
+            setDialog({ kind: 'invoice', id: block.invoice.id })
           }
-        >
-          {shown?.section}
-        </PageColumns>
-      ) : (
-        <>
-          {sections.map((item) => item.section)}
-          {newCard}
-        </>
+          onPaid={(paid) => {
+            const row = block.invoice!
+            const day = today()
+            run(ops.invoicePaid(row, paid, day))
+            toast(
+              paid
+                ? `Fatura ${block.card.name} paga`
+                : `Fatura ${block.card.name} em aberto`,
+              {
+                label: 'Desfazer',
+                onClick: () => run(ops.invoicePaid(row, !paid, day)),
+              },
+            )
+          }}
+        />
+      )}
+
+      {picked === LOOSE && (
+        <section className="block card-block" aria-label="Fora dos cartões">
+          <div className="card-head">
+            <div className="card-title">
+              <b>Fora dos cartões</b>
+              <small>Parcelas pagas à parte</small>
+            </div>
+            <span className="sum">{formatMoney(looseTotal)}</span>
+          </div>
+          <ul className="rows">
+            {view.loose.map((line) => (
+              <PlanRow
+                key={line.plan.id}
+                line={line}
+                onToggle={() => actions.toggle(line, selected)}
+                onOpen={() => editor.plan(line.plan.id)}
+                onDelete={() => actions.remove(line.plan)}
+              />
+            ))}
+          </ul>
+          <AddButton onClick={() => editor.plan(null, { cardId: null })}>
+            Parcela fora de cartão
+          </AddButton>
+        </section>
       )}
 
       <section className="block">
@@ -481,6 +318,37 @@ export function CardsPage() {
           </ul>
         )}
       </section>
+
+      {expense && (
+        <ExpenseModal
+          expense={expense}
+          categories={finance.categories}
+          otherPerson={finance.otherPerson}
+          onClose={close}
+          onDelete={() => {
+            close()
+            removeExpense(expense)
+          }}
+          onSave={(changes) => {
+            run(ops.updateExpense(expense, changes))
+            close()
+            toast('Salvo')
+          }}
+        />
+      )}
+      {invoice?.invoice && (
+        <InvoiceModal
+          invoice={invoice.invoice}
+          card={invoice.card}
+          finance={finance}
+          cardLink={false}
+          onClose={close}
+          onSave={(changes) => {
+            saveInvoice(invoice.invoice!, changes)
+            close()
+          }}
+        />
+      )}
     </>
   )
 }

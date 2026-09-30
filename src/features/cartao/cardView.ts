@@ -20,7 +20,13 @@ import {
   type ISODate,
   type Month,
 } from '../../domain/months'
-import type { Card, Finance, InvoiceRow, PlanRow } from '../../data/finance'
+import type {
+  Card,
+  ExpenseRow,
+  Finance,
+  InvoiceRow,
+  PlanRow,
+} from '../../data/finance'
 
 /** The three numbers on the card page. */
 export function cardStats(cardId: string, finance: Finance) {
@@ -122,96 +128,34 @@ export function pointStatus(point: ChartPoint, current: Month) {
     : { text: 'em aberto', tone: '' }
 }
 
-export interface DetailItem {
-  readonly key: string
-  readonly kind: 'installment' | 'subscription' | 'other'
-  readonly name: string
-  readonly sub: string
-  readonly amount: Cents
-  /** Its category; null for the invoice's undetailed rest or none chosen. */
-  readonly categoryId: string | null
-}
+const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 
-function sameCategory(items: readonly { categoryId?: string | null }[]) {
-  const ids = new Set(items.map((item) => item.categoryId ?? null))
-  return ids.size === 1 ? [...ids][0]! : null
-}
+/** "ter, 29/09". */
+export const dayLabel = (day: ISODate) =>
+  `${WEEKDAYS[new Date(`${day}T12:00:00Z`).getUTCDay()]}, ${dayMonth(day)}`
 
-/** "O que tem em outubro": what makes up the selected month. */
-export function monthDetail(
-  cardId: string,
-  point: ChartPoint,
-  finance: Finance,
-  current: Month,
-) {
-  const items: DetailItem[] = []
-  let warning: Cents | null = null
-  if (point.kind !== 'empty') {
-    for (const plan of finance.plans.filter((item) => item.cardId === cardId))
-      for (const item of installmentSchedule(plan, finance.payments))
-        if (item.month === point.month)
-          items.push({
-            key: `plan-${plan.id}`,
-            kind: 'installment',
-            name: plan.description,
-            sub: item.paidOn
-              ? `paga em ${dayMonth(item.paidOn)}`
-              : `parcela ${item.number}/${item.totalInstallments}`,
-            amount: item.amount,
-            categoryId: plan.categoryId ?? null,
-          })
-    const subscriptions = finance.subscriptions.filter(
-      (item) => item.cardId === cardId && chargedIn(item, point.month),
-    )
-    if (subscriptions.length)
-      items.push({
-        key: 'subscriptions',
-        kind: 'subscription',
-        name: 'Assinaturas',
-        sub: subscriptions.map((item) => item.name).join(', '),
-        amount: sumMoney(subscriptions.map((item) => item.amount)),
-        // One category when they all share it.
-        categoryId: sameCategory(subscriptions),
-      })
-    const invoice = finance.invoices.find((item) => item.id === point.invoiceId)
-    if (invoice) {
-      const expenses = finance.expenses.filter(
-        (item) => item.invoiceId === invoice.id,
-      )
-      for (const expense of expenses)
-        items.push({
-          key: `expense-${expense.id}`,
-          kind: 'other',
-          name: expense.description,
-          sub: `gasto em ${dayMonth(expense.spentOn)}`,
-          amount: expense.amount,
-          categoryId: expense.categoryId ?? null,
-        })
-      if (invoice.otherAmount > 0 && point.kind === 'real')
-        items.push({
-          key: 'other',
-          kind: 'other',
-          name: expenses.length
-            ? 'Outros gastos não detalhados'
-            : 'Outros gastos',
-          sub: 'o resto da fatura',
-          amount: invoice.otherAmount,
-          categoryId: null,
-        })
-      const totals = invoiceTotals(invoice, finance)
-      if (invoice.paid && totals.total < totals.calculatedTotal)
-        warning = cents(totals.calculatedTotal - totals.total)
-    }
+/**
+ * The purchases in a card's invoice for the month, newest first, one group per
+ * day. Without a time, a purchase goes after the ones of its day that have one.
+ */
+export function purchaseDays(cardId: string, target: Month, finance: Finance) {
+  const invoice = finance.invoices.find(
+    (item) => item.cardId === cardId && item.month === target,
+  )
+  if (!invoice) return []
+  const newest = (a: ExpenseRow, b: ExpenseRow) =>
+    b.spentOn.localeCompare(a.spentOn) ||
+    (b.occurredAt ?? '').localeCompare(a.occurredAt ?? '') ||
+    (b.createdAt ?? '').localeCompare(a.createdAt ?? '')
+  const days: { day: ISODate; items: ExpenseRow[] }[] = []
+  for (const expense of finance.expenses
+    .filter((item) => item.invoiceId === invoice.id)
+    .sort(newest)) {
+    const last = days[days.length - 1]
+    if (last?.day === expense.spentOn) last.items.push(expense)
+    else days.push({ day: expense.spentOn, items: [expense] })
   }
-  const emptyText =
-    point.kind === 'empty'
-      ? point.month > current
-        ? 'Nada previsto pra esse mês ainda'
-        : 'Nenhuma fatura desse cartão nesse mês'
-      : items.length
-        ? null
-        : 'Nada previsto nesse mês'
-  return { items, warning, emptyText }
+  return days
 }
 
 export interface PlanLine {

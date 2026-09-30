@@ -1,6 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router'
-import { CardPage } from '../features/cartao/CardPage'
-import { CardsPage } from '../features/cartoes/CardsPage'
+import { CardRedirect, CardsPage } from '../features/cartoes/CardsPage'
 import { SharedPage } from '../features/compartilhado/SharedPage'
 import { SettingsPage } from '../features/config/SettingsPage'
 import { LoginPage } from '../features/login/LoginPage'
@@ -39,7 +38,7 @@ export function AppRoutes() {
           <Route path="meses" element={<MonthsIndex />} />
           <Route path="meses/:ym" element={<MonthsPage />} />
           <Route path="cartoes" element={<CardsPage />} />
-          <Route path="cartoes/:id" element={<CardPage />} />
+          <Route path="cartoes/:id" element={<CardRedirect />} />
           <Route path="assinaturas" element={<SubscriptionsPage />} />
           <Route path="config" element={<SettingsPage />} />
           <Route path="compartilhado" element={<SharedPage />} />

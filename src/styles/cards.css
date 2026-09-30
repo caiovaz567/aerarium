@@ -1,4 +1,4 @@
-/* Cartões and the card page. Measures from v1. */
+/* Cartões: the cards in a row and the picked one. Measures from v1. */
 
 a.row-main {
   color: var(--ink);
@@ -21,52 +21,6 @@ a.row-main {
   color: var(--accent);
 }
 
-/* Stacked bars */
-.stack {
-  display: flex;
-  gap: 2px;
-  height: 8px;
-  overflow: hidden;
-  border-radius: 99px;
-  background: var(--surface-2);
-}
-.stack span {
-  display: block;
-  height: 100%;
-}
-.stack .installments,
-.legend .installments {
-  background: var(--accent);
-}
-.stack .subscriptions,
-.legend .subscriptions {
-  background: var(--warn);
-}
-.stack .other,
-.legend .other {
-  background: color-mix(in srgb, var(--muted) 45%, transparent);
-}
-.stack.on-hero {
-  background: var(--hero-track);
-}
-.stack.on-hero .installments {
-  background: var(--hero-bar);
-}
-.stack.on-hero .subscriptions {
-  background: var(--warn);
-}
-.stack.on-hero .other {
-  background: color-mix(in srgb, var(--muted) 45%, transparent);
-}
-.hero-foot {
-  margin: 0;
-  color: var(--hero-muted);
-  font-size: 12.5px;
-}
-.hero-foot b {
-  color: var(--hero-ink);
-}
-
 /* One block per card */
 .card-head {
   display: flex;
@@ -74,11 +28,7 @@ a.row-main {
   gap: 10px;
   padding: 14px 12px 10px 16px;
 }
-.card-art-link {
-  display: flex;
-  flex: none;
-  border-radius: 8px;
-}
+
 .card-title {
   flex: 1;
   min-width: 0;
@@ -102,40 +52,7 @@ a.row-main {
 .card-head .sum {
   white-space: nowrap;
 }
-.card-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 16px 12px;
-}
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  color: var(--muted);
-  font-size: 12.5px;
-}
-.legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.legend i {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 3px;
-}
-.legend b {
-  color: var(--ink);
-  font-weight: 600;
-}
-.warnline {
-  margin: 0;
-  color: var(--warn);
-  font-size: 12.5px;
-}
+
 .card-block .rows,
 .bordered {
   border-top: 1px solid var(--line);
@@ -199,12 +116,6 @@ a.row-main {
   font: 800 18px / 1 var(--display);
 }
 
-/* Card page */
-.page-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 .page-title {
   flex: 1;
   min-width: 0;
@@ -278,117 +189,7 @@ a.row-main {
   color: var(--hero-muted);
   font-size: 13px;
 }
-.card-hero-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.3fr;
-  gap: 12px;
-  padding-top: 14px;
-  border-top: 1px solid var(--hero-track);
-}
-.card-hero-grid > div + div {
-  padding-left: 14px;
-  border-left: 1px solid var(--hero-track);
-}
-.card-hero-grid b {
-  display: block;
-  margin: 2px 0 3px;
-  font: 800 clamp(22px, 6.5vw, 28px) / 1.1 var(--display);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-.status-pill {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 18%);
-  font-size: 12px;
-  font-weight: 700;
-}
-.status-pill.paid {
-  background: #dcf1e4;
-  color: #18794a;
-}
 
-.limit-block {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
-}
-.limit-block > div {
-  flex: 1;
-  min-width: 0;
-}
-.limit-block small {
-  display: block;
-  color: var(--muted);
-  font-size: 13px;
-}
-.limit-block b {
-  display: block;
-  margin: 2px 0;
-  color: var(--accent);
-  font: 800 24px / 1.1 var(--display);
-}
-.limit-ring {
-  position: relative;
-  flex: none;
-  width: 88px;
-  height: 88px;
-}
-.limit-ring svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-.limit-ring circle {
-  fill: none;
-  stroke-width: 5;
-  stroke-linecap: round;
-}
-.limit-ring .track {
-  stroke: var(--surface-2);
-}
-.limit-ring .used {
-  stroke: var(--accent);
-}
-.limit-ring > span {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.limit-ring b {
-  font-size: 16px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-.limit-ring small {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.card-dates {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin: 0;
-  padding: 14px 18px;
-}
-.card-dates > div + div {
-  padding-left: 14px;
-  border-left: 1px solid var(--line);
-}
-.card-dates dt {
-  color: var(--muted);
-  font-size: 12.5px;
-}
-.card-dates dd {
-  margin: 2px 0 0;
-  font-size: 15.5px;
-  font-weight: 700;
-}
 .card-dates-hint {
   margin: 0;
   padding: 14px 18px;
@@ -403,34 +204,6 @@ a.row-main {
   font: inherit;
   font-weight: 700;
   text-decoration: underline;
-}
-
-.invoice-parts dl {
-  margin: 0;
-  padding: 0 18px 14px;
-}
-.invoice-parts dl > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 7px 0;
-  font-size: 14.5px;
-}
-.invoice-parts dt {
-  color: var(--muted);
-}
-.invoice-parts dd {
-  margin: 0;
-  font-weight: 600;
-}
-.invoice-parts .total {
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-  font-weight: 700;
-}
-.invoice-parts .total dt {
-  color: var(--ink);
 }
 
 .card-chart {
@@ -505,20 +278,7 @@ a.row-main {
   background: var(--surface-2);
   color: var(--muted);
 }
-.chart-nav {
-  display: flex;
-  flex: none;
-  gap: 6px;
-}
-.chart-nav .icon-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-}
-.chart-nav svg {
-  width: 18px;
-  height: 18px;
-}
+
 .average {
   margin: 0;
   color: var(--muted);
@@ -626,71 +386,9 @@ a.row-main {
   cursor: pointer;
 }
 
-/* "O que tem em outubro" */
-.month-detail {
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-.month-detail > small {
-  display: block;
-  margin-bottom: 2px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-.month-detail ul {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.month-detail li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-top: 1px solid var(--line);
-}
-.month-detail li:first-child {
-  border-top: 0;
-}
-.month-detail li > span:not(.cat-badge) {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-.month-detail li small {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-}
-.month-detail li b {
-  font-size: 14px;
-  white-space: nowrap;
-}
-.month-detail li.warn span {
-  color: var(--warn);
-  font-size: 13px;
-}
-.month-detail li.none span {
-  color: var(--muted);
-  font-size: 13px;
-}
-.dot.installment,
-.month-detail .dot.installment {
-  background: var(--accent);
-}
-
 @media (max-width: 480px) {
   .card-head {
     padding: 14px 10px 10px 14px;
-  }
-  .card-bar {
-    padding: 0 14px 12px;
   }
   .check-space {
     width: 32px;
@@ -875,54 +573,7 @@ a.row-main {
   min-height: 34px;
   font-size: 13.5px;
 }
-.invoice-parts .bank-total {
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
-}
-.invoice-parts .bank-total .link-button {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font: inherit;
-  font-weight: 700;
-  text-decoration: underline;
-  cursor: pointer;
-}
 
-/* Cartões on a wide screen: every card in a list, the picked one beside it. */
-.card-picker ul {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: 0;
-  padding: 6px;
-  list-style: none;
-}
-.card-picker li button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 0;
-  border-radius: 12px;
-  background: none;
-  color: var(--ink);
-  text-align: left;
-}
-.card-picker li button[aria-pressed='true'] {
-  background: var(--surface-2);
-}
-@media (hover: hover) and (pointer: fine) {
-  .card-picker li button:not([aria-pressed='true']):hover {
-    background: color-mix(in srgb, var(--surface-2) 55%, transparent);
-  }
-}
-.card-picker .bank-logo.xs {
-  margin-inline: 3px;
-}
 .pick-name {
   display: flex;
   flex: 1;
@@ -938,25 +589,12 @@ a.row-main {
   color: var(--muted);
   font-size: 12.5px;
 }
-.pick-sum {
-  font-weight: 600;
-  white-space: nowrap;
-}
-.card-picker .new-card {
-  width: calc(100% - 12px);
-  margin: 0 6px 6px;
-}
 
-/* Card page: one list at a time under the chart. */
+/* The card's lists under the chart. */
 .card-lists {
   padding-top: 8px;
 }
-.card-lists .month-detail {
-  padding: 0 16px 8px;
-  border-radius: 0;
-  background: none;
-  box-shadow: none;
-}
+
 .list-meta {
   margin: 0;
   padding: 0 16px 8px;
@@ -968,11 +606,306 @@ a.row-main {
   color: var(--muted);
 }
 
-/* Category tiles in the month's list, a little bigger than in Meses. */
-.month-detail .cat-badge.round {
+/* Every invoice of the month, beside the month. */
+.all-invoices {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+}
+.all-invoices b {
+  color: var(--ink);
+  white-space: nowrap;
+}
+@media (min-width: 1100px) {
+  .header-slot .all-invoices {
+    margin: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--surface);
+  }
+}
+
+/* The cards in a row: a phone scrolls it sideways. */
+.card-strip {
+  display: flex;
+  gap: 8px;
+  margin: 0 -16px 12px;
+  padding: 2px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+@media (max-width: 480px) {
+  .card-strip {
+    margin-inline: -12px;
+    padding-inline: 12px;
+  }
+}
+.card-strip::-webkit-scrollbar {
+  display: none;
+}
+.card-strip button {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px 8px 8px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  text-align: left;
+}
+.card-strip button[aria-pressed='true'] {
+  background: var(--surface-2);
+  box-shadow: 0 0 0 1.5px var(--accent);
+}
+.card-strip .pick-name b {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.card-strip .pick-name small {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.card-strip .strip-new {
+  justify-content: center;
+  width: 48px;
+  padding: 0;
+  border: 1.5px dashed var(--line);
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+}
+.card-strip .strip-new svg {
+  width: 18px;
+  height: 18px;
+}
+@media (min-width: 1100px) {
+  .card-strip {
+    flex-wrap: wrap;
+    margin-inline: 0;
+    padding-inline: 0;
+    overflow: visible;
+  }
+  .card-strip button {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+  .card-strip .strip-new {
+    flex: none;
+  }
+}
+
+/* The picked card's invoice. */
+.card-hero .pill-button {
+  margin-left: auto;
+}
+.card-hero-head > div {
+  min-width: 0;
+}
+.card-hero-sum > b {
+  display: block;
+  font: 800 clamp(28px, 8vw, 34px) / 1.15 var(--display);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.card-hero-sum .status.open {
+  color: var(--warn);
+  font-weight: 600;
+}
+.card-hero-sum .status.paid {
+  color: var(--pos);
+  font-weight: 600;
+}
+.card-hero-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 8px;
+}
+.card-hero-split > * {
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font: inherit;
+  text-align: left;
+}
+.card-hero-split > .other {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  color: var(--warn);
+}
+.card-hero-split small {
+  font-size: 12px;
+}
+.card-hero-split b {
+  display: block;
+  font-size: 16px;
+  white-space: nowrap;
+}
+.card-hero-pay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+.card-hero-pay svg {
+  width: 16px;
+  height: 16px;
+  color: var(--pos);
+}
+.card-hero-pay[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--pos) 14%, transparent);
+  color: var(--pos);
+}
+.card-hero-limit small b {
+  color: var(--ink);
+}
+.limit-bar {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--hero-track);
+}
+.limit-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+.card-hero-dates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0;
+}
+.card-hero-dates dt {
+  color: var(--hero-muted);
+  font-size: 12.5px;
+}
+.card-hero-dates dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.card-hero .card-dates-hint {
+  padding: 0;
+}
+
+/* Everything in the invoice: purchases by day, newest first, then the
+   installments, subscriptions and the rest that come every month. */
+.feed,
+.feed ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.feed-day h4 {
+  margin: 0;
+  padding: 10px 16px 4px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+.feed-day li:first-child > .feed-row {
+  border-top: 0;
+}
+.feed-row.newest {
+  background: var(--accent-soft);
+}
+@media (hover: hover) and (pointer: fine) {
+  .feed-row:hover {
+    background: var(--surface-2);
+  }
+}
+.feed-row .cat-badge.round {
   width: 30px;
 }
-.month-detail .cat-badge.round svg {
+.feed-row .cat-badge.round svg {
   width: 15px;
   height: 15px;
+}
+.feed-text {
+  flex: 1;
+  min-width: 0;
+}
+.feed-name {
+  font-size: 14.5px;
+  overflow-wrap: anywhere;
+}
+.feed-text small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 8px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.feed-row > b {
+  font-size: 14.5px;
+  white-space: nowrap;
+}
+.feed-row.later .feed-name,
+.feed-row.later > b {
+  color: var(--muted);
+  font-weight: 600;
+}
+.feed-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: 1px;
+}
+.feed-tag.last {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.feed-tag.other {
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+  color: var(--warn);
+}
+.feed-progress {
+  display: inline-block;
+  width: 64px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: var(--surface-2);
+}
+.feed-progress span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.card-lists > div > .list-meta {
+  padding-top: 4px;
 }

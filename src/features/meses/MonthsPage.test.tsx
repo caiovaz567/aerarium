@@ -272,7 +272,7 @@ describe('Resumo da fatura', () => {
     expect(within(dialog).queryByText('Notebook')).toBeNull()
     expect(
       within(dialog).getByRole('link', { name: 'Ver tudo desse cartão' }),
-    ).toHaveAttribute('href', '/cartoes/c1')
+    ).toHaveAttribute('href', '/cartoes?mes=2026-09&cartao=c1')
     // Outros gastos and the note only when asked for.
     expect(within(dialog).queryByLabelText('Outros gastos')).toBeNull()
     fireEvent.click(

@@ -136,7 +136,9 @@ describe('Editar cartão', () => {
     type(form, 'Dia de fechamento (opcional)', '5')
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
     await settle()
-    expect(screen.getByText('Nubank Roxinho')).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /^Nubank Roxinho/, pressed: true }),
+    ).toBeVisible()
     await waitFor(() =>
       expect(writes()[0]).toMatchObject({
         table: 'cards',
@@ -179,7 +181,7 @@ describe('Editar cartão', () => {
     renderApp('/cartoes?mes=2026-09')
     const logo = () =>
       screen
-        .getByRole('region', { name: 'Nubank Teste' })
+        .getByRole('region', { name: /^Fatura de/ })
         .querySelector('.bank-logo')
     expect(logo()).toHaveAttribute('src', '/banks/nubank.png')
     fireEvent.click(screen.getByRole('button', { name: 'Editar Nubank Teste' }))
@@ -196,8 +198,8 @@ describe('Editar cartão', () => {
     await settle()
     expect(logo()).toHaveAttribute('src', '/banks/itau.png')
     expect(
-      screen.getByRole('region', { name: 'Nubank Teste' }),
-    ).toHaveTextContent('vence dia 12')
+      screen.getByRole('region', { name: /^Fatura de/ }),
+    ).toHaveTextContent(/vence\s12 set/)
     await waitFor(() =>
       expect(writes()[0]).toMatchObject({
         table: 'cards',
@@ -231,7 +233,7 @@ describe('Editar cartão', () => {
     type(form, 'Nome do cartão', 'Inter')
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
     await settle()
-    expect(screen.getByRole('region', { name: 'Inter' })).toBeVisible()
+    expect(screen.getByRole('button', { name: /^Inter/ })).toBeVisible()
     await waitFor(() =>
       expect(writes()[0]).toMatchObject({
         table: 'cards',
@@ -250,14 +252,15 @@ describe('Editar cartão', () => {
       within(form).getByRole('button', { name: 'Toca de novo pra confirmar' }),
     )
     await settle()
-    expect(screen.queryByRole('region', { name: 'Nubank Teste' })).toBeNull()
+    expect(screen.queryByRole('button', { name: /^Nubank Teste/ })).toBeNull()
     // The Notebook plan stays, now without a card.
+    fireEvent.click(screen.getByRole('button', { name: /^Fora dos cartões/ }))
     expect(
       screen.getByRole('region', { name: 'Fora dos cartões' }),
     ).toHaveTextContent('Notebook')
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
     await settle()
-    expect(screen.getByRole('region', { name: 'Nubank Teste' })).toBeVisible()
+    expect(screen.getByRole('button', { name: /^Nubank Teste/ })).toBeVisible()
     await waitFor(() =>
       expect(writes().map((call) => `${call.table}:${call.op}`)).toEqual([
         'cards:delete',
@@ -331,9 +334,9 @@ describe('Editar parcelamento', () => {
 
   it('"Parcela neste cartão" cria parcelamento no cartão', async () => {
     renderApp('/cartoes?mes=2026-09')
-    const nubank = screen.getByRole('region', { name: 'Nubank Teste' })
+    fireEvent.click(screen.getByRole('button', { name: /^Parcelas/ }))
     fireEvent.click(
-      within(nubank).getByRole('button', { name: 'Parcela neste cartão' }),
+      screen.getByRole('button', { name: 'Parcela neste cartão' }),
     )
     const form = dialog('Novo parcelamento')
     expect(within(form).getByLabelText('Cobrado em')).toHaveValue('c1')
@@ -366,7 +369,10 @@ describe('Editar parcelamento', () => {
       }),
     )
     expect(
-      await screen.findByRole('heading', { name: 'Nubank Teste' }),
+      await screen.findByRole('button', {
+        name: /^Nubank Teste/,
+        pressed: true,
+      }),
     ).toBeVisible()
     expect(
       screen.queryByRole('dialog', { name: 'Fatura Nubank Teste' }),
@@ -435,7 +441,7 @@ describe('Excel', () => {
 describe('logo que não carrega', () => {
   it('volta pro desenho do cartão em vez de imagem quebrada', () => {
     renderApp('/cartoes?mes=2026-09')
-    const region = screen.getByRole('region', { name: 'Nubank Teste' })
+    const region = screen.getByRole('region', { name: /^Fatura de/ })
     fireEvent.error(region.querySelector('.bank-logo')!)
     expect(region.querySelector('.bank-logo')).toBeNull()
     expect(region.querySelector('.card-art')).not.toBeNull()

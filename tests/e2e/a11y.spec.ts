@@ -27,8 +27,8 @@ async function audit(page: Page) {
 
 const SCREENS: [string, string, string][] = [
   ['Meses', '/meses/2026-09', 'Conta de luz'],
-  ['Cartões', '/cartoes?mes=2026-09', 'Faturas de Setembro'],
-  ['Cartão', `/cartoes/${E2E.card1}`, 'Nubank Teste'],
+  ['Cartões', '/cartoes?mes=2026-09', 'Todas as faturas'],
+  ['Cartão (link antigo)', `/cartoes/${E2E.card1}`, 'Todas as faturas'],
   ['Assinaturas', '/assinaturas', 'Streaming'],
   ['Ajustes', '/config', 'Baixar meus dados'],
   ['Privacidade', '/privacidade', 'O que o app guarda'],

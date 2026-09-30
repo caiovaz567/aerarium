@@ -152,11 +152,11 @@ describe('esqueleto', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('cartão inexistente oferece voltar', () => {
+  it('cartão que não existe abre o primeiro', () => {
     renderApp('/cartoes/qualquer')
     expect(
-      screen.getByRole('link', { name: 'Voltar pros cartões' }),
-    ).toHaveAttribute('href', '/cartoes')
+      screen.getByRole('button', { name: /^Nubank Teste/, pressed: true }),
+    ).toBeVisible()
   })
 })
 

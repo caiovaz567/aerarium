@@ -38,10 +38,13 @@ export function InvoiceModal({
   finance,
   onClose,
   onSave,
+  cardLink = true,
 }: {
   readonly invoice: InvoiceRow
   readonly card: Card
   readonly finance: Finance
+  /** "Ver tudo desse cartão"; not when already on the card. */
+  readonly cardLink?: boolean
   readonly onClose: () => void
   readonly onSave: (changes: InvoiceChanges) => void
 }) {
@@ -241,9 +244,14 @@ export function InvoiceModal({
         <p className="form-error" role="alert">
           {error}
         </p>
-        <Link className="btn ghost" to={`/cartoes/${card.id}`}>
-          Ver tudo desse cartão
-        </Link>
+        {cardLink && (
+          <Link
+            className="btn ghost"
+            to={`/cartoes?mes=${invoice.month}&cartao=${card.id}`}
+          >
+            Ver tudo desse cartão
+          </Link>
+        )}
       </div>
     </Modal>
   )
