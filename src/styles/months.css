@@ -884,3 +884,16 @@
   border-radius: inherit;
   background: var(--accent);
 }
+
+/* Under a bill: where it was paid from. */
+.desc .paid-from-sub {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.paid-from-sub .bank-logo.tiny,
+.paid-from-sub svg {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}

@@ -156,3 +156,13 @@ fieldset.field legend {
   background: var(--accent);
   color: var(--accent-ink);
 }
+
+/* "Saiu de" of a Pix, boleto or cash payment: chips that wrap, then a list. */
+.paid-from-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.paid-from select {
+  margin-top: 8px;
+}

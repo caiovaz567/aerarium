@@ -60,6 +60,7 @@ const billRecord = (row: BillRow) => ({
   sort_order: row.sortOrder,
   category_id: row.categoryId ?? null,
   occurred_at: row.occurredAt ?? null,
+  paid_from: row.paidFrom ?? null,
 })
 const invoiceRecord = (row: InvoiceRow) => ({
   id: row.id,
@@ -238,6 +239,7 @@ export const ops = {
       paid: boolean
       categoryId?: string | null
       occurredAt?: string | null
+      paidFrom?: string | null
     },
     today: ISODate,
   ): FinanceOp {
@@ -256,6 +258,9 @@ export const ops = {
               }),
               ...(changes.occurredAt !== undefined && {
                 occurred_at: changes.occurredAt,
+              }),
+              ...(changes.paidFrom !== undefined && {
+                paid_from: changes.paidFrom,
               }),
             })
             .eq('id', bill.id),

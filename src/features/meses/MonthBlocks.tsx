@@ -1,3 +1,6 @@
+import { isBankKey, paidFromName } from '../../domain/banks'
+import { BankLogo } from '../../ui/BankLogo'
+import { WalletIcon } from '../../ui/icons'
 import type { BillRow, IncomeRow } from '../../data/finance'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName } from '../../domain/months'
@@ -8,6 +11,22 @@ import { CheckButton, TrashButton } from '../../ui/controls'
 import type { CardOutflow, CarryHint, LooseOutflow } from './monthView'
 
 const EMPTY = 'Toca no + pra lançar.'
+
+/** Under a bill: the bank (logo and name) or cash it came from, if said. */
+function PaidFrom({ value }: { readonly value?: string | null }) {
+  const name = paidFromName(value)
+  if (!name) return null
+  return (
+    <span className="sub paid-from-sub">
+      {isBankKey(value) ? (
+        <BankLogo bank={value} className="tiny" />
+      ) : (
+        <WalletIcon />
+      )}
+      {name}
+    </span>
+  )
+}
 
 export function IncomesBlock({
   incomes,
@@ -228,7 +247,10 @@ export function OutflowsByType({
                   onClick={() => onBill(bill)}
                 >
                   <CategoryBadge category={category(bill.categoryId)} />
-                  <span className="desc">{bill.description}</span>
+                  <span className="desc">
+                    {bill.description}
+                    <PaidFrom value={bill.paidFrom} />
+                  </span>
                   <span className={`val${bill.amount ? '' : ' zero'}`}>
                     {formatMoney(bill.amount)}
                   </span>

@@ -438,6 +438,59 @@ describe('modal Lançar', () => {
     expect(within(dialog).queryByText('Onde')).not.toBeInTheDocument()
   })
 
+  it('Pix com "Saiu de": grava o banco, mostra na linha e lembra da próxima vez', async () => {
+    renderApp('/meses/2026-09')
+    let dialog = open()
+    fireEvent.click(
+      within(dialog).getByRole('radio', { name: 'Pix, boleto ou dinheiro' }),
+    )
+    let from = within(dialog).getByRole('group', { name: 'Saiu de (opcional)' })
+    // The banks of the cards first, then cash; any other bank in the list.
+    expect(
+      within(from)
+        .getAllByRole('button')
+        .map((item) => item.textContent),
+    ).toEqual(['Nubank', 'Dinheiro'])
+    fireEvent.change(within(from).getByLabelText('Outro banco'), {
+      target: { value: 'santander' },
+    })
+    expect(
+      within(from).getByRole('button', { name: 'Santander' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.change(within(dialog).getByLabelText('Valor'), {
+      target: { value: '50,00' },
+    })
+    fireEvent.change(within(dialog).getByLabelText('Descrição'), {
+      target: { value: 'Pix pro pedreiro' },
+    })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Lançar' }))
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'bills',
+        op: 'insert',
+        payload: expect.objectContaining({ paid_from: 'santander' }),
+      }),
+    )
+    const row = screen.getByRole('button', { name: /^Pix pro pedreiro/ })
+    expect(spaced(row.textContent)).toContain('Pix pro pedreiroSantander')
+
+    dialog = open()
+    fireEvent.click(
+      within(dialog).getByRole('radio', { name: 'Pix, boleto ou dinheiro' }),
+    )
+    from = within(dialog).getByRole('group', { name: 'Saiu de (opcional)' })
+    // Remembered; tapping it again clears it (a bank no card has goes back
+    // to the list).
+    const santander = within(from).getByRole('button', { name: 'Santander' })
+    expect(santander).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(santander)
+    expect(within(from).queryByRole('button', { name: 'Santander' })).toBeNull()
+    expect(
+      within(from).getByRole('option', { name: 'Santander' }),
+    ).toBeInTheDocument()
+  })
+
   it('sem nenhum mês, pede pra criar um primeiro', () => {
     renderApp('/cartoes', undefined, {
       ...financeFixture(),

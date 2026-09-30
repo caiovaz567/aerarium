@@ -79,3 +79,25 @@ export function bankName(key: BankKey): string {
 export function bankColor(key: BankKey): string {
   return BANKS.find((bank) => bank.key === key)!.color
 }
+
+/** A Pix, boleto or cash payment: from a bank (its key) or from cash. */
+export const CASH = 'cash'
+
+/** "Santander", "Dinheiro", or null when it was not said (or is unknown). */
+export function paidFromName(key: string | null | undefined): string | null {
+  if (key === CASH) return 'Dinheiro'
+  return isBankKey(key) ? bankName(key) : null
+}
+
+/**
+ * The banks offered first for "Saiu de": the person's cards' banks, in their
+ * order, then the one already chosen when it is another bank.
+ */
+export function paidFromBanks(
+  cards: readonly { readonly name: string; readonly bank?: string | null }[],
+  chosen: string | null | undefined,
+): BankKey[] {
+  const keys = cards.flatMap((card) => cardBank(card) ?? [])
+  if (isBankKey(chosen)) keys.push(chosen)
+  return [...new Set(keys)]
+}

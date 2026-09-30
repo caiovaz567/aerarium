@@ -231,6 +231,28 @@ describe('Meses: mudanças', () => {
   })
 })
 
+describe('Saiu de', () => {
+  it('na conta, escolher de onde saiu grava e aparece embaixo do nome', async () => {
+    renderApp('/meses/2026-09')
+    fireEvent.click(screen.getByRole('button', { name: /^Conta de luz/ }))
+    const edit = screen.getByRole('dialog', { name: 'Editar conta' })
+    const from = within(edit).getByRole('group', { name: 'Saiu de (opcional)' })
+    fireEvent.click(within(from).getByRole('button', { name: 'Dinheiro' }))
+    fireEvent.click(within(edit).getByRole('button', { name: 'Salvar' }))
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'bills',
+        op: 'update',
+        payload: expect.objectContaining({ paid_from: 'cash' }),
+      }),
+    )
+    expect(
+      text(screen.getByRole('button', { name: /^Conta de luz/ }).textContent),
+    ).toContain('Conta de luzDinheiro')
+  })
+})
+
 describe('Resumo da fatura', () => {
   const open = () => {
     renderApp('/meses/2026-09')

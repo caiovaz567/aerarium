@@ -375,6 +375,7 @@ export function MonthsPage() {
       {bill && (
         <BillModal
           bill={bill}
+          cards={finance.cards}
           categories={finance.categories}
           onClose={close}
           onDelete={() => deleteBill(bill)}

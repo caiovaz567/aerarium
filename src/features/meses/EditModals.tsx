@@ -1,3 +1,4 @@
+import { PaidFromField } from '../../ui/PaidFromField'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import type { BillRow, ExpenseRow, IncomeRow } from '../../data/finance'
 import type { Category } from '../../domain/categories'
@@ -108,6 +109,7 @@ export function IncomeModal({
 
 export function BillModal({
   bill,
+  cards,
   categories,
   onClose,
   onSave,
@@ -122,10 +124,17 @@ export function BillModal({
     paid: boolean
     categoryId: string | null
     occurredAt: string | null
+    paidFrom: string | null
   }) => void
   readonly onDelete: () => void
+  /** For "Saiu de": the banks of these cards come first. */
+  readonly cards: readonly {
+    readonly name: string
+    readonly bank?: string | null
+  }[]
 }) {
   const [description, setDescription] = useState(bill.description)
+  const [paidFrom, setPaidFrom] = useState(bill.paidFrom ?? null)
   const [when, setWhen] = useState(
     bill.occurredAt ? instantToSaoPaulo(bill.occurredAt) : '',
   )
@@ -156,6 +165,7 @@ export function BillModal({
           paid,
           categoryId,
           occurredAt,
+          paidFrom,
         })
       }}
     >
@@ -167,6 +177,7 @@ export function BillModal({
       />
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />
       <CheckField label="Já paguei" checked={paid} onChange={setPaid} />
+      <PaidFromField cards={cards} value={paidFrom} onChange={setPaidFrom} />
       <WhenField label="Quando (opcional)" value={when} onChange={setWhen} />
       <CategoryPicker
         categories={categories}

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CASH,
+  paidFromBanks,
+  paidFromName,
   bankColor,
   bankName,
   BANKS,
@@ -47,5 +50,30 @@ describe('logo do banco', () => {
     expect(isBankKey('nubank')).toBe(true)
     expect(isBankKey(null)).toBe(false)
     expect(new Set(BANKS.map((bank) => bank.key)).size).toBe(BANKS.length)
+  })
+})
+
+describe('de onde saiu um Pix, boleto ou dinheiro', () => {
+  it('nome do banco, "Dinheiro" ou nada', () => {
+    expect(paidFromName('santander')).toBe('Santander')
+    expect(paidFromName(CASH)).toBe('Dinheiro')
+    expect(paidFromName(null)).toBeNull()
+    expect(paidFromName('banco-que-sumiu')).toBeNull()
+  })
+
+  it('primeiro os bancos dos cartões, sem repetir; e o já escolhido', () => {
+    const cards = [
+      { name: 'Santander Unique' },
+      { name: 'Nubank', bank: 'nubank' },
+      { name: 'Santander Free' },
+      { name: 'Sem logo', bank: 'none' },
+    ]
+    expect(paidFromBanks(cards, null)).toEqual(['santander', 'nubank'])
+    expect(paidFromBanks(cards, 'caixa')).toEqual([
+      'santander',
+      'nubank',
+      'caixa',
+    ])
+    expect(paidFromBanks(cards, CASH)).toEqual(['santander', 'nubank'])
   })
 })

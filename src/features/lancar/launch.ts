@@ -101,6 +101,8 @@ export interface LaunchInput {
   readonly occurredAt?: string | null
   /** Fase 13.3, owner only: a card purchase or a plan of the other person. */
   readonly forOther?: boolean
+  /** A Pix, boleto or cash bill: the bank it came from, or 'cash'. */
+  readonly paidFrom?: string | null
 }
 
 export interface Launch {
@@ -221,6 +223,7 @@ export function buildLaunch(
       sortOrder: inMonth([...finance.bills, ...(created?.bills ?? [])]),
       categoryId: input.categoryId ?? null,
       occurredAt,
+      paidFrom: input.paidFrom ?? null,
     }
     return finish(
       (snapshot) => ({ ...snapshot, bills: [...snapshot.bills, bill] }),

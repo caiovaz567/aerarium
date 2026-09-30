@@ -38,6 +38,8 @@ export type BillRow = Bill & {
   readonly monthId: string
   /** Fase 12: exact instant (ISO), when known. */
   readonly occurredAt?: string | null
+  /** Where a Pix, boleto or cash payment came from: a bank key or 'cash'. */
+  readonly paidFrom?: string | null
 }
 export type InvoiceRow = Invoice & { readonly monthId: string }
 export type ExpenseRow = InvoiceExpense & {
@@ -167,7 +169,7 @@ export async function loadFinance(): Promise<Finance> {
     select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
     select(
       'bills',
-      'id,month_id,description,amount::text,paid,paid_on,sort_order,category_id,occurred_at',
+      'id,month_id,description,amount::text,paid,paid_on,sort_order,category_id,occurred_at,paid_from',
     ),
     select(
       'invoices',
@@ -255,6 +257,7 @@ export async function loadFinance(): Promise<Finance> {
         sortOrder: Number(row.sort_order),
         categoryId: category(row.category_id),
         occurredAt: instant(row.occurred_at),
+        paidFrom: row.paid_from ? text(row.paid_from) : null,
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder),
     invoices: invoices.map((row) => ({

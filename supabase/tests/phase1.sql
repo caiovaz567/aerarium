@@ -86,6 +86,9 @@ update public.invoices set other_amount = 30 where id = '50000000-0000-4000-8000
 update public.bills set paid = false where id = '70000000-0000-4000-8000-000000000012';
 select pg_temp.assert_true((select paid_on is null from public.bills where id = '70000000-0000-4000-8000-000000000012'), 'Conta reaberta limpa a data');
 update public.bills set paid = true where id = '70000000-0000-4000-8000-000000000012';
+update public.bills set paid_from = 'santander' where id = '70000000-0000-4000-8000-000000000012';
+select pg_temp.assert_true((select paid_from = 'santander' from public.bills where id = '70000000-0000-4000-8000-000000000012'), 'Conta guarda de onde saiu');
+select pg_temp.expect_error($q$update public.bills set paid_from = 'Banco X!' where id = '70000000-0000-4000-8000-000000000012'$q$, '23514', 'Recusa origem fora do formato');
 insert into public.months (id, ref) values ('30000000-0000-4000-8000-000000000099', '2027-01-01');
 select pg_temp.assert_true((select incomes = 0 and available = 0 and committed_ratio is null from public.v_month_summary where ref = '2027-01-01'), 'Mes vazio sem divisao por zero');
 insert into public.incomes (month_id, description, amount, kind) values ('30000000-0000-4000-8000-000000000099', 'Deficit anterior', -10, 'carryover');

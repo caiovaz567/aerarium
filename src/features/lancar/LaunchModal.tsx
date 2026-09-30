@@ -1,3 +1,5 @@
+import { paidFromName } from '../../domain/banks'
+import { PaidFromField } from '../../ui/PaidFromField'
 import { useId, useState, type FormEvent } from 'react'
 import type { Finance } from '../../data/finance'
 import { today as todayDate, useFinanceOp } from '../../data/useFinance'
@@ -35,6 +37,18 @@ const EXAMPLE: Record<LaunchKind, string> = {
   entrada: 'Ex.: Freela, reembolso',
 }
 
+const FROM_KEY = 'aerarium.lancar.saiuDe'
+
+/** The last "Saiu de" chosen, while it is still a known one. */
+function rememberedFrom() {
+  try {
+    const saved = localStorage.getItem(FROM_KEY)
+    return paidFromName(saved) ? saved : null
+  } catch {
+    return null /* private mode */
+  }
+}
+
 function rememberedWhere(finance: Finance) {
   let saved: string | null = null
   try {
@@ -68,6 +82,7 @@ export function LaunchModal({
   const [where, setWhere] = useState(() => rememberedWhere(finance))
   const [paid, setPaid] = useState(true)
   const [forOther, setForOther] = useState(false)
+  const [paidFrom, setPaidFrom] = useState(rememberedFrom)
   // Follows the card's closing day until the person picks a month themselves.
   const [pickedMonth, setPickedMonth] = useState<Month | null>(null)
   // Follows the suggestion from the description until the person picks one.
@@ -140,6 +155,7 @@ export function LaunchModal({
         categoryId: usesCard ? categoryId : null,
         occurredAt,
         forOther: canMarkOther && forOther,
+        paidFrom: kind === 'gasto' && where === NO_CARD ? paidFrom : null,
       })
     } catch (reason) {
       return setError((reason as Error).message)
@@ -147,6 +163,8 @@ export function LaunchModal({
     if (usesCard)
       try {
         localStorage.setItem(WHERE_KEY, where)
+        if (kind === 'gasto' && where === NO_CARD)
+          localStorage.setItem(FROM_KEY, paidFrom ?? '')
       } catch {
         /* private mode: not remembered */
       }
@@ -278,6 +296,14 @@ export function LaunchModal({
             value={categoryId}
             onChange={(id) => setPickedCategory({ id })}
             name="lancar-categoria"
+          />
+        )}
+
+        {kind === 'gasto' && where === NO_CARD && (
+          <PaidFromField
+            cards={finance.cards}
+            value={paidFrom}
+            onChange={setPaidFrom}
           />
         )}
 
