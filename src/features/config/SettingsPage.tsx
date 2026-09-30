@@ -126,207 +126,215 @@ export function SettingsPage() {
     <div className="settings">
       <h2 className="settings-title">Ajustes</h2>
 
-      <div className="settings-account">
-        <span className="settings-avatar" aria-hidden="true">
-          {(user?.email ?? '?').charAt(0).toUpperCase()}
-        </span>
-        <span className="settings-text">
-          <small>Conectado como</small>
-          <b>{user?.email}</b>
-        </span>
-      </div>
+      {/* Wide screen: account and tabs in a column, the tab beside them. */}
+      <div className="settings-layout">
+        <div className="settings-side">
+          {/* Wide screen only: both columns start with a label. */}
+          <h3 className="settings-label side-label" aria-hidden="true">
+            Sua conta
+          </h3>
+          <div className="settings-account">
+            <span className="settings-avatar" aria-hidden="true">
+              {(user?.email ?? '?').charAt(0).toUpperCase()}
+            </span>
+            <span className="settings-text">
+              <small>Conectado como</small>
+              <b>{user?.email}</b>
+            </span>
+          </div>
 
-      <nav className="settings-tabs" aria-label="Partes dos ajustes">
-        {tabs.map(([key, label]) => (
-          <Link
-            key={key}
-            to={key === 'geral' ? '/config' : `/config?aba=${key}`}
-            aria-current={tab === key ? 'page' : undefined}
-            replace
-          >
-            {label}
-          </Link>
-        ))}
-      </nav>
+          <nav className="settings-tabs" aria-label="Partes dos ajustes">
+            {tabs.map(([key, label]) => (
+              <Link
+                key={key}
+                to={key === 'geral' ? '/config' : `/config?aba=${key}`}
+                aria-current={tab === key ? 'page' : undefined}
+                replace
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-      {/* Wide screen: the tab's groups side by side. */}
-      <div className="settings-body">
-        {tab === 'geral' && (
-          <>
-            <section aria-labelledby="ajustes-categorias">
-              <h3 id="ajustes-categorias" className="settings-label">
-                Categorias
-              </h3>
-              <ul className="settings-card">
-                <li>
-                  <button
-                    type="button"
-                    className="settings-row action"
-                    aria-label="Editar categorias"
-                    disabled={!finance}
-                    onClick={() => setEditingCategories(true)}
-                  >
-                    <span className="settings-stack" aria-hidden="true">
-                      {categories.slice(0, 5).map((item) => (
-                        <CategoryBadge
-                          key={item.id}
-                          category={item}
-                          shape="round"
-                        />
-                      ))}
-                    </span>
-                    <span className="settings-text">
-                      <b>Editar categorias</b>
-                      <small>
-                        {!finance
-                          ? 'Carregando…'
-                          : categories.length === 1
-                            ? '1 categoria'
-                            : `${categories.length} categorias`}
-                      </small>
-                    </span>
-                    <Chevron />
-                  </button>
-                </li>
-              </ul>
-            </section>
+        <div className="settings-body">
+          {tab === 'geral' && (
+            <>
+              <section aria-labelledby="ajustes-categorias">
+                <h3 id="ajustes-categorias" className="settings-label">
+                  Categorias
+                </h3>
+                <ul className="settings-card">
+                  <li>
+                    <button
+                      type="button"
+                      className="settings-row action"
+                      aria-label="Editar categorias"
+                      disabled={!finance}
+                      onClick={() => setEditingCategories(true)}
+                    >
+                      <span className="settings-stack" aria-hidden="true">
+                        {categories.slice(0, 5).map((item) => (
+                          <CategoryBadge
+                            key={item.id}
+                            category={item}
+                            shape="round"
+                          />
+                        ))}
+                      </span>
+                      <span className="settings-text">
+                        <b>Editar categorias</b>
+                        <small>
+                          {!finance
+                            ? 'Carregando…'
+                            : categories.length === 1
+                              ? '1 categoria'
+                              : `${categories.length} categorias`}
+                        </small>
+                      </span>
+                      <Chevron />
+                    </button>
+                  </li>
+                </ul>
+              </section>
 
-            <section aria-labelledby="ajustes-dados">
-              <h3 id="ajustes-dados" className="settings-label">
-                Seus dados
-              </h3>
-              <ul className="settings-card">
-                <li>
-                  <button
-                    type="button"
-                    className="settings-row action"
-                    aria-label="Baixar meus dados"
-                    disabled={busy}
-                    onClick={download}
-                  >
-                    <Row
-                      icon={<DownloadIcon />}
-                      tone="muted"
-                      title="Baixar meus dados"
-                      detail="Uma cópia de tudo, num arquivo JSON"
-                      end={<Chevron />}
-                    />
-                  </button>
-                </li>
-                <li>
-                  <Link
-                    className="settings-row action"
-                    to="/privacidade"
-                    aria-label="Política de privacidade"
-                  >
-                    <Row
-                      icon={<ShieldIcon />}
-                      tone="muted"
-                      title="Política de privacidade"
-                      detail="O que o app guarda e onde"
-                      end={<Chevron />}
-                    />
-                  </Link>
-                </li>
-              </ul>
-            </section>
-          </>
-        )}
-        {tab === 'bancos' && finance && <BankSection finance={finance} />}
-        {tab === 'pai' && finance && <OtherPersonSection finance={finance} />}
-        {tab === 'conta' && (
-          <>
-            <section aria-labelledby="ajustes-entrar">
-              <h3 id="ajustes-entrar" className="settings-label">
-                Formas de entrar
-              </h3>
-              <ul className="settings-card">
-                {hasPassword && (
+              <section aria-labelledby="ajustes-dados">
+                <h3 id="ajustes-dados" className="settings-label">
+                  Seus dados
+                </h3>
+                <ul className="settings-card">
+                  <li>
+                    <button
+                      type="button"
+                      className="settings-row action"
+                      aria-label="Baixar meus dados"
+                      disabled={busy}
+                      onClick={download}
+                    >
+                      <Row
+                        icon={<DownloadIcon />}
+                        tone="muted"
+                        title="Baixar meus dados"
+                        detail="Uma cópia de tudo, num arquivo JSON"
+                        end={<Chevron />}
+                      />
+                    </button>
+                  </li>
+                  <li>
+                    <Link
+                      className="settings-row action"
+                      to="/privacidade"
+                      aria-label="Política de privacidade"
+                    >
+                      <Row
+                        icon={<ShieldIcon />}
+                        tone="muted"
+                        title="Política de privacidade"
+                        detail="O que o app guarda e onde"
+                        end={<Chevron />}
+                      />
+                    </Link>
+                  </li>
+                </ul>
+              </section>
+            </>
+          )}
+          {tab === 'bancos' && finance && <BankSection finance={finance} />}
+          {tab === 'pai' && finance && <OtherPersonSection finance={finance} />}
+          {tab === 'conta' && (
+            <>
+              <section aria-labelledby="ajustes-entrar">
+                <h3 id="ajustes-entrar" className="settings-label">
+                  Formas de entrar
+                </h3>
+                <ul className="settings-card">
+                  {hasPassword && (
+                    <li className="settings-row">
+                      <Row
+                        icon={<LockIcon />}
+                        tone="muted"
+                        title="E-mail e senha"
+                        detail="Ativo"
+                      />
+                    </li>
+                  )}
                   <li className="settings-row">
                     <Row
-                      icon={<LockIcon />}
-                      tone="muted"
-                      title="E-mail e senha"
-                      detail="Ativo"
+                      icon={<GoogleIcon />}
+                      tone="google"
+                      title="Google"
+                      detail={
+                        googleEmail ?? (google ? 'Conectado' : 'Não conectado')
+                      }
+                      end={
+                        !google && (
+                          <button
+                            type="button"
+                            className="btn small"
+                            aria-label="Conectar conta Google"
+                            disabled={busy}
+                            onClick={() => run(linkGoogle)}
+                          >
+                            Conectar
+                          </button>
+                        )
+                      }
                     />
                   </li>
-                )}
-                <li className="settings-row">
-                  <Row
-                    icon={<GoogleIcon />}
-                    tone="google"
-                    title="Google"
-                    detail={
-                      googleEmail ?? (google ? 'Conectado' : 'Não conectado')
-                    }
-                    end={
-                      !google && (
-                        <button
-                          type="button"
-                          className="btn small"
-                          aria-label="Conectar conta Google"
-                          disabled={busy}
-                          onClick={() => run(linkGoogle)}
-                        >
-                          Conectar
-                        </button>
-                      )
-                    }
-                  />
-                </li>
-              </ul>
-            </section>
+                </ul>
+              </section>
 
-            <section aria-labelledby="ajustes-sair">
-              <h3 id="ajustes-sair" className="settings-label">
-                Neste aparelho
-              </h3>
-              <ul className="settings-card">
-                <li>
-                  <button
-                    type="button"
-                    className="settings-row action"
-                    aria-label="Sair"
-                    disabled={busy}
-                    onClick={() => run(signOut)}
-                  >
-                    <Row
-                      icon={<LogoutIcon />}
-                      tone="muted"
-                      title="Sair"
-                      detail="Sai só deste aparelho"
-                    />
-                  </button>
-                </li>
-              </ul>
-            </section>
+              <section aria-labelledby="ajustes-sair">
+                <h3 id="ajustes-sair" className="settings-label">
+                  Neste aparelho
+                </h3>
+                <ul className="settings-card">
+                  <li>
+                    <button
+                      type="button"
+                      className="settings-row action"
+                      aria-label="Sair"
+                      disabled={busy}
+                      onClick={() => run(signOut)}
+                    >
+                      <Row
+                        icon={<LogoutIcon />}
+                        tone="muted"
+                        title="Sair"
+                        detail="Sai só deste aparelho"
+                      />
+                    </button>
+                  </li>
+                </ul>
+              </section>
 
-            <section aria-labelledby="ajustes-perigo">
-              <h3 id="ajustes-perigo" className="settings-label">
-                Cuidado
-              </h3>
-              <ul className="settings-card danger">
-                <li>
-                  <button
-                    type="button"
-                    className="settings-row action"
-                    aria-label="Apagar minha conta e meus dados"
-                    disabled={busy}
-                    onClick={() => setDeleting(true)}
-                  >
-                    <Row
-                      icon={<TrashIcon />}
-                      tone="neg"
-                      title="Apagar minha conta e meus dados"
-                      detail="Apaga tudo, sem volta"
-                      end={<Chevron />}
-                    />
-                  </button>
-                </li>
-              </ul>
-            </section>
-          </>
-        )}
+              <section aria-labelledby="ajustes-perigo">
+                <h3 id="ajustes-perigo" className="settings-label">
+                  Cuidado
+                </h3>
+                <ul className="settings-card danger">
+                  <li>
+                    <button
+                      type="button"
+                      className="settings-row action"
+                      aria-label="Apagar minha conta e meus dados"
+                      disabled={busy}
+                      onClick={() => setDeleting(true)}
+                    >
+                      <Row
+                        icon={<TrashIcon />}
+                        tone="neg"
+                        title="Apagar minha conta e meus dados"
+                        detail="Apaga tudo, sem volta"
+                        end={<Chevron />}
+                      />
+                    </button>
+                  </li>
+                </ul>
+              </section>
+            </>
+          )}
+        </div>
       </div>
       <p className="form-error" role="alert">
         {error}

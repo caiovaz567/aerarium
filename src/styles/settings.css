@@ -372,3 +372,73 @@
     color: var(--ink);
   }
 }
+
+/* Ajustes on a wide screen: account and tabs in a side column, like a
+   system's settings; the tab in one column of a comfortable width. */
+.settings-layout,
+.settings-side,
+.settings-body {
+  display: contents;
+}
+.side-label {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .settings-layout {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 900px);
+    align-items: start;
+    gap: 24px;
+  }
+  .settings-side {
+    position: sticky;
+    top: calc(var(--top-h, 64px) + 8px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .settings-body > section:first-child {
+    margin-top: 0;
+  }
+  /* Same start as the first group on the right: label, 6px, card. */
+  .side-label {
+    display: block;
+    margin-bottom: -6px;
+  }
+  .settings-account .settings-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .settings-account .settings-text b {
+    font-size: 14px;
+  }
+  .settings-tabs {
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 6px;
+    border-bottom: 0;
+    border-radius: 18px;
+    background: var(--surface);
+  }
+  .settings-tabs a {
+    margin: 0;
+    padding: 11px 12px;
+    border-bottom: 0;
+    border-radius: 12px;
+  }
+  .settings-tabs a[aria-current='page'] {
+    background: var(--surface-2);
+    color: var(--accent);
+  }
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 1100px) {
+  .settings-tabs a:not([aria-current='page']):hover {
+    color: var(--ink);
+  }
+}
