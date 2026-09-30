@@ -12,11 +12,18 @@ export interface ChartPoint {
   readonly invoiceId: string | null
 }
 
+/**
+ * Whose part of a card's invoices: all of it, the owner's (without what is the
+ * other person's) or the other person's (Fase 13.3, the Eu | Pai views).
+ */
+export type CardPart = 'total' | 'mine' | 'other'
+
 /** At least +/-6 months. As in v1, projections extend at most 12 months. */
 export function chartSeries(
   cardId: string,
   current: Month,
   data: FinancialData,
+  part: CardPart = 'total',
 ): ChartPoint[] {
   month(current)
   const invoices = data.invoices.filter((item) => item.cardId === cardId)
@@ -45,15 +52,13 @@ export function chartSeries(
     if (invoice)
       return {
         month: target,
-        total: invoiceTotals(invoice, data).total,
+        total: partOf(invoiceTotals(invoice, data), part),
         kind: invoice.paid || !invoice.estimated ? 'real' : 'forecast',
         paid: invoice.paid,
         invoiceId: invoice.id,
       }
     const total =
-      target >= current
-        ? sumMoney(Object.values(fixedCardAmounts(cardId, target, data)))
-        : cents(0)
+      target >= current ? forecastPart(cardId, target, data, part) : cents(0)
     return {
       month: target,
       total,
@@ -103,4 +108,44 @@ export function chartComparison(
     percentage:
       previous.total > 0 ? (Math.abs(difference) / previous.total) * 100 : null,
   }
+}
+
+/** The part of an invoice's totals. */
+export function partOf(
+  totals: {
+    readonly total: Cents
+    readonly mine: Cents
+    readonly otherShare: Cents
+  },
+  part: CardPart,
+): Cents {
+  return part === 'mine'
+    ? totals.mine
+    : part === 'other'
+      ? totals.otherShare
+      : totals.total
+}
+
+/**
+ * A month with no invoice yet: its installments and subscriptions. The other
+ * person's part is only their installments; the subscriptions are the owner's.
+ */
+function forecastPart(
+  cardId: string,
+  target: Month,
+  data: FinancialData,
+  part: CardPart,
+): Cents {
+  const fixed = fixedCardAmounts(cardId, target, data)
+  if (part === 'total') return sumMoney(Object.values(fixed))
+  const theirs = sumMoney(
+    data.plans
+      .filter((plan) => plan.cardId === cardId && plan.forOther)
+      .flatMap((plan) => installmentSchedule(plan, data.payments))
+      .filter((item) => item.month === target)
+      .map((item) => item.amount),
+  )
+  return part === 'other'
+    ? theirs
+    : cents(fixed.installmentsAmount - theirs + fixed.subscriptionsAmount)
 }

@@ -6,13 +6,7 @@ import { isoDate, month } from '../../domain/months'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp } from '../../test/renderApp'
-import {
-  cardStats,
-  cardsView,
-  dayLabel,
-  pointStatus,
-  purchaseDays,
-} from './cardView'
+import { cardsView, dayLabel, pointStatus, purchaseDays } from './cardView'
 
 const fake = vi.hoisted(() => ({
   current: null as ReturnType<
@@ -58,19 +52,6 @@ describe('contas das telas de cartão', () => {
       'Dentista',
     ])
     expect(view.archived).toEqual([])
-  })
-
-  it('números do cartão: em aberto, última parcela e assinaturas', () => {
-    expect(cardStats('c1', finance)).toEqual({
-      outstanding: 108000,
-      lastMonth: '2027-05',
-      subscriptions: 3990,
-    })
-    expect(cardStats('c2', finance)).toEqual({
-      outstanding: 0,
-      lastMonth: null,
-      subscriptions: 0,
-    })
   })
 
   it('compras da fatura por dia, a mais nova primeiro', () => {
@@ -149,7 +130,7 @@ describe('Cartões, uma tela só', () => {
     )
     // Purchases first (newest on top), then what comes every month.
     expect(feed()).toBe(
-      'Tudo · 4Compras · 1Parcelas · 1Assinaturas · 1qui, 03/09UberúltimaTransporteR$ 12,00Todo mêsNotebookparcela 2/10R$ 120,00Streamingassinatura · dia 10R$ 39,90Outros gastos não detalhadosiPhone 2/12R$ 271,02',
+      'Tudo · 4Compras · 1Parcelas · 1Assinaturas · 1qui, 03/09UberúltimaTransporteR$ 12,00Todo mêsNotebookCompras · parcela 2/10 · faltam 9R$ 120,00StreamingAssinaturas · dia 10R$ 39,90Outros gastos não detalhadosiPhone 2/12R$ 271,02',
     )
     expect(screen.getByRole('button', { name: /^Uber/ })).toHaveClass('newest')
   })
@@ -177,13 +158,9 @@ describe('Cartões, uma tela só', () => {
     renderApp('/cartoes?mes=2026-08')
     expect(hero()).toContain('Fatura de agosto · pagaR$ 359,90Fatura paga')
     fireEvent.click(screen.getByRole('button', { name: /^Parcelas/ }))
-    fireEvent.click(screen.getByRole('button', { name: 'Pago: Notebook' }))
-    expect(
-      screen.getByText(
-        'Essa parcela foi paga junto com a fatura. Pra desfazer, desmarca a fatura.',
-      ),
-    ).toBeVisible()
-    expect(fake.current!.calls).toEqual([])
+    expect(screen.getByRole('button', { name: /^Notebook/ })).toHaveTextContent(
+      'parcela 1/10',
+    )
   })
 
   it('marcar a fatura como paga, direto no cartão', async () => {
@@ -234,13 +211,10 @@ describe('Cartões, uma tela só', () => {
         .getByRole('region', { name: 'Parcelas' })
         .querySelector('.list-meta'),
     ).toHaveTextContent('1 em aberto · R$ 1.080,00 até maio 2027')
-    // Each piece is kept whole; wrapping happens only between pieces.
-    const info = document.querySelector('.desc .sub')!
+    // Same style as the purchases: category, installment, what is left.
     expect(
-      [...info.querySelectorAll('.part')].map((part) =>
-        spaced(part.textContent),
-      ),
-    ).toEqual(['2/10', 'faltam 9', 'R$ 1.080,00 no total'])
+      spaced(screen.getByRole('button', { name: /^Notebook/ }).textContent),
+    ).toBe('NotebookCompras · parcela 2/10 · faltam 9R$ 120,00')
     const archive = screen.getByRole('button', { name: /Arquivados/ })
     expect(archive).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(archive)
@@ -277,7 +251,7 @@ describe('Cartões, uma tela só', () => {
       })),
     })
     expect(feed()).toContain(
-      'Streamingassinatura · dia 10 · entra a partir de outubro 2026',
+      'StreamingAssinaturas · dia 10 · entra a partir de outubro 2026',
     )
     expect(screen.getByRole('button', { name: /^Streaming/ })).toHaveClass(
       'later',
@@ -357,14 +331,35 @@ describe('Cartões, uma tela só', () => {
     expect(hero()).toContain('Total no bancoR$ 500,00Parte do PaiR$ 57,08')
   })
 
-  it('compra do pai ganha a etiqueta dele', () => {
+  it('Eu | Pai: a sua visão só tem o seu; a do pai, só o dele', () => {
+    localStorage.removeItem('aerarium.perfil')
     const finance = financeFixture()
     renderApp('/cartoes?mes=2026-09', undefined, {
       ...finance,
       otherPerson: 'Pai',
       expenses: finance.expenses.map((item) => ({ ...item, forOther: true })),
     })
-    expect(feed()).toContain('UberúltimaPai')
+    // Yours: no Uber (his), your part everywhere.
+    expect(feed()).toContain('Nenhuma compra lançada em setembro')
+    expect(spaced(document.querySelector('.all-invoices')!.textContent)).toBe(
+      'Sua parte das faturas R$ 430,92',
+    )
+    const switcher = screen.getByRole('group', { name: 'Ver gastos de' })
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Pai' }))
+    // His: only the Uber; no subscriptions or rest, those are yours.
+    expect(feed()).toBe(
+      'Tudo · 1Compras · 1Parcelas · 0Assinaturas · 0qui, 03/09UberúltimaTransporteR$ 12,00',
+    )
+    expect(hero()).toContain(
+      'Parte do Pai na fatura de setembro · a pagarR$ 12,00',
+    )
+    expect(spaced(document.querySelector('.all-invoices')!.textContent)).toBe(
+      'Do Pai nas faturas R$ 12,00',
+    )
+    fireEvent.click(screen.getByRole('button', { name: /^Assinaturas/ }))
+    expect(feed()).toContain('As assinaturas são suas')
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
+    localStorage.removeItem('aerarium.perfil')
     // 442,92 on the card: 12,00 his, the rest yours.
     expect(hero()).toContain(
       'Sua parte da fatura de setembro · a pagarR$ 430,92',

@@ -5,6 +5,7 @@ import {
   chartAverage,
   chartComparison,
   chartSeries,
+  type CardPart,
 } from '../../domain/chartSeries'
 import { cents, formatMoney } from '../../domain/money'
 import { monthLabel, monthShort, type Month } from '../../domain/months'
@@ -32,15 +33,18 @@ export function CardChartBlock({
   card,
   finance,
   month,
+  part = 'total',
 }: {
   readonly card: Card
   readonly finance: Finance
   readonly month: Month
+  /** Eu | Pai: whose part of each invoice. */
+  readonly part?: CardPart
 }) {
   const now = currentMonth()
   const points = useMemo(
-    () => chartSeries(card.id, now, finance),
-    [finance, card.id, now],
+    () => chartSeries(card.id, now, finance, part),
+    [finance, card.id, now, part],
   )
   // A month picked here counts only until the page's month changes.
   const [pick, setPick] = useState<{ from: Month; month: Month } | null>(null)

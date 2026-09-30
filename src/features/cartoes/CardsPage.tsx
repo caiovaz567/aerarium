@@ -8,11 +8,14 @@ import {
   useSearchParams,
 } from 'react-router'
 import { HeaderSlot } from '../../app/headerSlot'
+import { useProfile } from '../../app/profileContext'
 import { currentMonth, parseMonth } from '../../app/paths'
 import type { ExpenseRow } from '../../data/finance'
 import { ops } from '../../data/financeOps'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
-import { cents, formatMoney } from '../../domain/money'
+import { partOf, type CardPart } from '../../domain/chartSeries'
+import { invoiceTotals } from '../../domain/invoices'
+import { cents, formatMoney, sumMoney } from '../../domain/money'
 import { dateBR, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
 import { AddButton, TrashButton } from '../../ui/controls'
@@ -26,6 +29,7 @@ import { PlanRow } from '../cartao/PlanRow'
 import { useEditor } from '../editar/editorContext'
 import { ExpenseModal } from '../meses/EditModals'
 import { MonthNav } from '../meses/MonthNav'
+import { ProfileSwitch } from '../meses/ProfileSwitch'
 import { defaultMonth } from '../meses/monthView'
 import { CardDetail } from './CardDetail'
 import { OtherModal } from './OtherModal'
@@ -67,6 +71,7 @@ export function CardsPage() {
   const run = useFinanceOp()
   const toast = useToast()
   const editor = useEditor()
+  const { profile } = useProfile(query.data?.otherPerson)
   const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
   const [dialog, setDialog] = useState<{
     kind: 'expense' | 'invoice'
@@ -118,6 +123,21 @@ export function CardsPage() {
     )
 
   const view = cardsView(finance, selected)
+  // Eu | Pai, like Meses: your part of each invoice, or theirs.
+  const part: CardPart = !finance.otherPerson
+    ? 'total'
+    : profile === 'other'
+      ? 'other'
+      : 'mine'
+  const shown = new Map(
+    view.blocks.map((block) => [
+      block.card.id,
+      block.invoice
+        ? partOf(invoiceTotals(block.invoice, finance), part)
+        : cents(0),
+    ]),
+  )
+  const allInvoices = sumMoney([...shown.values()])
   const looseTotal = cents(
     view.loose.reduce((sum, line) => sum + line.amount, 0),
   )
@@ -171,8 +191,14 @@ export function CardsPage() {
           pathFor={(month) => pathFor(month)}
         />
         <p className="all-invoices">
-          Todas as faturas <b>{formatMoney(view.totals.total)}</b>
+          {part === 'other'
+            ? `Do ${finance.otherPerson} nas faturas`
+            : part === 'mine'
+              ? 'Sua parte das faturas'
+              : 'Todas as faturas'}{' '}
+          <b>{formatMoney(allInvoices)}</b>
         </p>
+        {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
       </HeaderSlot>
 
       {fromMonths && (
@@ -186,7 +212,7 @@ export function CardsPage() {
         </button>
       )}
       <div className="card-strip" role="group" aria-label="Escolher cartão">
-        {view.blocks.map(({ card, invoice, total }) => (
+        {view.blocks.map(({ card, invoice }) => (
           <button
             type="button"
             key={card.id}
@@ -196,7 +222,11 @@ export function CardsPage() {
             <CardArt card={card} size="xs" />
             <span className="pick-name">
               <b>{card.name}</b>
-              <small>{invoice ? formatMoney(total) : 'sem fatura'}</small>
+              <small>
+                {invoice
+                  ? formatMoney(shown.get(card.id) ?? cents(0))
+                  : 'sem fatura'}
+              </small>
             </span>
           </button>
         ))}
@@ -235,6 +265,7 @@ export function CardsPage() {
           card={block.card}
           finance={finance}
           month={selected}
+          part={part}
           onExpense={(item) => setDialog({ kind: 'expense', id: item.id })}
           onOther={() =>
             block.invoice &&

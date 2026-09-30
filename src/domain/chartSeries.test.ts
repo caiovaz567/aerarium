@@ -4,6 +4,7 @@ import {
   chartAverage,
   chartComparison,
   chartSeries,
+  type CardPart,
   type ChartPoint,
 } from './chartSeries'
 import { cents } from './money'
@@ -165,4 +166,39 @@ describe('série do gráfico', () => {
         emptyData({ invoices: [invoice(), invoice()] }),
       ),
     ).toThrow())
+})
+
+describe('série do gráfico por parte (Eu | Pai)', () => {
+  const data = emptyData({
+    otherPerson: 'Pai',
+    invoices: [invoice({ otherAmount: cents(3000) })],
+    expenses: [
+      { invoiceId: 'invoice', amount: cents(500), forOther: true },
+      { invoiceId: 'invoice', amount: cents(700) },
+    ],
+    plans: [
+      plan({ id: 'his', forOther: true, installmentAmount: cents(1000) }),
+      plan({ id: 'mine', installmentAmount: cents(2000) }),
+    ],
+    subscriptions: [
+      { id: 's', cardId: 'card', active: true, amount: cents(400) },
+    ],
+  })
+  const at = (part: CardPart, ref: string) =>
+    chartSeries('card', month('2026-09'), data, part).find(
+      (item) => item.month === ref,
+    )!.total
+
+  it('fatura: tudo, a sua (sem o dele) e a dele', () => {
+    // 1000 + 2000 + 400 + 500 + 700 + 3000.
+    expect(at('total', '2026-09')).toBe(7600)
+    expect(at('mine', '2026-09')).toBe(6100)
+    expect(at('other', '2026-09')).toBe(1500)
+  })
+
+  it('previsão: as parcelas dele são dele; o resto, seu', () => {
+    expect(at('total', '2026-10')).toBe(3400)
+    expect(at('mine', '2026-10')).toBe(2400)
+    expect(at('other', '2026-10')).toBe(1000)
+  })
 })

@@ -28,27 +28,6 @@ import type {
   PlanRow,
 } from '../../data/finance'
 
-/** The three numbers on the card page. */
-export function cardStats(cardId: string, finance: Finance) {
-  const statuses = finance.plans
-    .filter((plan) => plan.cardId === cardId)
-    .map((plan) => installmentStatus(plan, finance.payments))
-  const open = statuses.filter((item) => !item.settled)
-  return {
-    outstanding: sumMoney(open.map((item) => item.outstanding)),
-    lastMonth:
-      open
-        .map((item) => item.lastMonth)
-        .sort()
-        .pop() ?? null,
-    subscriptions: sumMoney(
-      finance.subscriptions
-        .filter((item) => item.cardId === cardId && item.active)
-        .map((item) => item.amount),
-    ),
-  }
-}
-
 /** "9 out" and "9 de outubro". */
 export const shortDate = (date: ISODate) =>
   `${Number(date.slice(8, 10))} ${monthName(date.slice(0, 7) as Month)
