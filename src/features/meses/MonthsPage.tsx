@@ -260,8 +260,10 @@ export function MonthsPage() {
         </section>
       )}
       {newMonthDialog}
+      {/* One column on phones; on a wide screen, the summary and Saídas on
+          the left, what the other person owes and Entradas beside them. */}
       <div
-        className={forecast ? 'forecast-view' : undefined}
+        className={forecast ? 'month-grid forecast-view' : 'month-grid'}
         onClickCapture={forecast ? onlyLook : undefined}
       >
         {profile === 'other' ? (
@@ -284,22 +286,6 @@ export function MonthsPage() {
                 }}
               />
             )}
-            <IncomesBlock
-              incomes={view.incomes}
-              total={view.balance.incomes}
-              carryHint={view.carryHint}
-              onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
-              onDelete={deleteIncome}
-              onUseCarry={(hint) => {
-                run(
-                  ops.updateIncome(hint.income, {
-                    description: hint.income.description,
-                    amount: hint.available,
-                  }),
-                )
-                toast(`Sobra de ${monthName(hint.previous)} colocada`)
-              }}
-            />
             <OutflowViews
               finance={shown}
               month={selected}
@@ -320,6 +306,22 @@ export function MonthsPage() {
                 run(ops.billPaid(item, paid, today()))
               }
               onBillDelete={deleteBill}
+            />
+            <IncomesBlock
+              incomes={view.incomes}
+              total={view.balance.incomes}
+              carryHint={view.carryHint}
+              onEdit={(item) => setDialog({ kind: 'income', id: item.id })}
+              onDelete={deleteIncome}
+              onUseCarry={(hint) => {
+                run(
+                  ops.updateIncome(hint.income, {
+                    description: hint.income.description,
+                    amount: hint.available,
+                  }),
+                )
+                toast(`Sobra de ${monthName(hint.previous)} colocada`)
+              }}
             />
           </>
         )}

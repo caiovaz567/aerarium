@@ -736,6 +736,14 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
+  background: var(--warn-soft);
+}
+.owed-block .owed-text b {
+  color: var(--warn);
+}
+.owed-block .btn.primary {
+  background: var(--warn);
+  color: var(--bg);
 }
 .owed-text {
   display: flex;
@@ -791,4 +799,44 @@
     transparent 0 14px,
     rgb(255 255 255 / 0.04) 14px 28px
   );
+}
+
+/* Meses: one column on phones; two on a wide screen (the owner's layout). */
+.month-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+@media (min-width: 1100px) {
+  .app-content:has(.month-grid) {
+    max-width: 1120px;
+  }
+  .month-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-areas:
+      'sum owed'
+      'out in';
+    align-items: start;
+    gap: 12px;
+  }
+  .month-grid > .hero {
+    grid-area: sum;
+  }
+  .month-grid > .owed-block {
+    grid-area: owed;
+    align-self: stretch;
+  }
+  .month-grid > [aria-labelledby='saidas'] {
+    grid-area: out;
+  }
+  .month-grid > [aria-labelledby='entradas'] {
+    grid-area: in;
+  }
+  /* Without anyone else, Entradas moves up beside the summary. */
+  .month-grid:not(:has(> .owed-block)) {
+    grid-template-areas:
+      'sum in'
+      'out in';
+  }
 }
