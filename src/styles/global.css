@@ -155,8 +155,23 @@ body.has-stuck .app-header.scrolled {
   height: 64px;
   padding: 0 4px;
   border-radius: 20px;
-  background: var(--surface);
+  /* Glass, like the iPhone's own bars. */
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
   box-shadow: 0 0 0 1px var(--line-strong);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+}
+/* Phones: the page fades into the background before the floating bar, so no
+   row shows under it or between it and the bottom of the screen. */
+.tabs-fade {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 19;
+  height: calc(96px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to bottom, transparent, var(--bg) 55%);
+  pointer-events: none;
 }
 .brand-side {
   display: none;
@@ -408,9 +423,15 @@ body.has-stuck .app-header.scrolled {
   .theme-toggle {
     display: flex;
   }
+  .tabs-fade {
+    display: none;
+  }
   .app-tabs {
     position: sticky;
     top: 12px;
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
     right: auto;
     bottom: auto;
     left: auto;

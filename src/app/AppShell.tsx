@@ -145,6 +145,8 @@ export function AppShell() {
           </a>
           <div className="shell">
             <Header onSlot={setSlot} />
+            {/* Phones: the list fades out before the floating bar. */}
+            <div className="tabs-fade" aria-hidden="true" />
             <nav className="app-tabs" aria-label="Seções">
               {/* On a computer the bar is a side column headed by the wordmark. */}
               <Brand heading={false} />
