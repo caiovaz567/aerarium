@@ -547,30 +547,6 @@
   align-self: flex-start;
   font-size: 13.5px;
 }
-/* Installments and subscriptions of the invoice, one row that opens the card. */
-.invoice-auto {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  color: var(--ink);
-  text-decoration: none;
-}
-.invoice-auto small {
-  color: var(--accent);
-}
-.invoice-list li:has(> .invoice-auto) {
-  padding: 0;
-}
-.invoice-list .invoice-auto {
-  padding: 10px 12px;
-}
-@media (hover: hover) and (pointer: fine) {
-  .invoice-auto:hover {
-    background: var(--surface-2);
-  }
-}
 .invoice-list {
   margin: 0;
   padding: 0;

@@ -73,8 +73,8 @@ test('resumo da fatura e lista de meses sem rolagem lateral', async ({
   await page.goto('/meses/2026-09')
   await page.getByRole('button', { name: /^Nubank Teste/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-  await expect(dialog).toContainText('Entram sozinhas')
-  await expect(dialog).toContainText('Outros gastos')
+  await expect(dialog).toContainText('Total da fatura')
+  await expect(dialog).toContainText('Ver tudo desse cartão')
   expect(
     await dialog.evaluate((node) => node.scrollWidth - node.clientWidth),
   ).toBe(0)

@@ -198,14 +198,10 @@ describe('Lançar com categoria', () => {
 })
 
 describe('gasto lançado', () => {
-  it('no resumo da fatura, tocar no gasto abre pra editar valor e categoria', async () => {
+  it('em Por data, tocar no gasto abre pra editar valor e categoria', async () => {
     const { client } = renderApp('/meses/2026-09')
-    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
-    fireEvent.click(
-      within(dialog('Fatura Nubank Teste')).getByRole('button', {
-        name: /^Uber/,
-      }),
-    )
+    fireEvent.click(screen.getByRole('button', { name: 'Por data' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Uber/ }))
     const form = dialog('Editar gasto')
     expect(within(form).getByLabelText('Transporte')).toBeChecked()
     fireEvent.change(within(form).getByLabelText('Valor (R$)'), {

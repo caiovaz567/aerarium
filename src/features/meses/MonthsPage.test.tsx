@@ -238,27 +238,36 @@ describe('Resumo da fatura', () => {
     return screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
   }
 
-  it('mostra o que entra sozinho, os gastos e o total', () => {
+  it('só os números: total, sem as listas, e o caminho pro cartão', () => {
     const dialog = open()
-    // Installments and subscriptions in one line; the card's page lists them.
-    const auto = within(dialog).getByRole('link', { name: /Entram sozinhas/ })
-    expect(text(auto.textContent)).toBe(
-      '1 parcela · 1 assinaturaEntram sozinhas · ver no cartãoR$ 159,90',
-    )
-    expect(auto).toHaveAttribute('href', expect.stringMatching(/^\/cartoes\//))
-    expect(
-      within(dialog).queryByRole('checkbox', { name: /Já paguei/ }),
-    ).toBeNull()
-    expect(within(dialog).getByText('03/09')).toBeVisible()
     expect(
       text(
         within(dialog).getByText('Total da fatura').nextSibling!.textContent,
       ),
     ).toBe('R$ 442,92')
+    // What is in it lives on the card's page.
+    expect(within(dialog).queryByText('Uber')).toBeNull()
+    expect(within(dialog).queryByText('Notebook')).toBeNull()
+    expect(
+      within(dialog).getByRole('link', { name: 'Ver tudo desse cartão' }),
+    ).toHaveAttribute('href', '/cartoes/c1')
+    // Outros gastos and the note only when asked for.
+    expect(within(dialog).queryByLabelText('Outros gastos')).toBeNull()
+    fireEvent.click(
+      within(dialog).getByRole('button', {
+        name: 'Editar outros gastos e observação',
+      }),
+    )
+    expect(within(dialog).getByLabelText('Outros gastos')).toHaveValue('271,02')
   })
 
   it('"Sei o total" recusa valor menor que o fixo e aceita o resto', async () => {
     const dialog = open()
+    fireEvent.click(
+      within(dialog).getByRole('button', {
+        name: 'Editar outros gastos e observação',
+      }),
+    )
     fireEvent.click(
       within(dialog).getByRole('button', { name: 'Sei o total da fatura' }),
     )
@@ -287,15 +296,19 @@ describe('Resumo da fatura', () => {
   })
 
   it('remover gasto lançado tem Desfazer', async () => {
-    const dialog = open()
+    renderApp('/meses/2026-09')
+    fireEvent.click(screen.getByRole('button', { name: 'Por data' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Uber/ }))
+    const edit = screen.getByRole('dialog', { name: 'Editar gasto' })
+    fireEvent.click(within(edit).getByRole('button', { name: 'Excluir' }))
     fireEvent.click(
-      within(dialog).getByRole('button', { name: 'Remover Uber' }),
+      within(edit).getByRole('button', { name: 'Toca de novo pra confirmar' }),
     )
     await settle()
-    expect(within(dialog).queryByText('Uber')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Uber/ })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
     await settle()
-    expect(within(dialog).getByText('Uber')).toBeVisible()
+    expect(screen.getByRole('button', { name: /^Uber/ })).toBeVisible()
     await waitFor(() =>
       expect(writes().map((call) => call.op)).toEqual(['delete', 'insert']),
     )
@@ -456,19 +469,23 @@ describe('Pai usa os cartões', () => {
     expect(text(owed.textContent)).toContain('Já devolveu R$ 12,00')
   })
 
-  it('na fatura, o que é dele fica à parte, com a divisão; dá pra marcar como sua', async () => {
+  it('na fatura, a divisão: o que é dele e o resto seu', () => {
     renderApp('/meses/2026-09', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
     const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-    const his = within(invoice).getByText('Do Pai').closest('.invoice-sec')!
-    const uber = within(his as HTMLElement).getByRole('button', {
-      name: /^Uber/,
-    })
     // 442,92 on the card: 12,00 his, the rest yours.
     expect(text(invoice.querySelector('.invoice-split')!.textContent)).toBe(
       'Sua parte R$ 430,92Pai R$ 12,00',
     )
-    fireEvent.click(uber)
+  })
+
+  it('na visão do Pai, um gasto dele pode voltar a ser seu', async () => {
+    localStorage.removeItem('aerarium.perfil')
+    renderApp('/meses/2026-09', undefined, withDad())
+    const switcher = screen.getByRole('group', { name: 'Ver gastos de' })
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Pai' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Por data' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Uber/ }))
     const edit = screen.getByRole('dialog', { name: 'Editar gasto' })
     const who = within(edit).getByRole('group', { name: 'De quem' })
     expect(within(who).getByRole('button', { name: 'Pai' })).toHaveAttribute(
@@ -485,11 +502,7 @@ describe('Pai usa os cartões', () => {
         payload: expect.objectContaining({ for_other: false }),
       }),
     )
-    expect(
-      text(
-        screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,
-      ),
-    ).toContain('R$ 0,00')
+    localStorage.removeItem('aerarium.perfil')
   })
 
   it('seletor Eu | Pai: a visão do pai mostra só os gastos dele', () => {

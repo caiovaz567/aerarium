@@ -1,7 +1,6 @@
-import { chargedIn } from '../../domain/cardDates'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import type { Card, ExpenseRow, Finance, InvoiceRow } from '../../data/finance'
+import type { Card, Finance, InvoiceRow } from '../../data/finance'
 import { installmentSchedule } from '../../domain/installments'
 import {
   bankFillsOther,
@@ -16,13 +15,11 @@ import {
   sumMoney,
   type Cents,
 } from '../../domain/money'
-import { dayMonth, monthLabel } from '../../domain/months'
+import { monthLabel } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
 import { MoneyField, TextField } from '../../ui/controls'
-import { CloseIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
-import { isFreshFromBank } from './outflowText'
 import { visibleNote } from './monthView'
 
 export interface InvoiceChanges {
@@ -34,9 +31,6 @@ export interface InvoiceChanges {
   readonly bankTotal?: Cents | null
 }
 
-const count = (value: number, one: string, many: string) =>
-  value ? `${value} ${value === 1 ? one : many}` : null
-
 /** Invoice summary: what comes by itself, launched expenses and the rest. */
 export function InvoiceModal({
   invoice,
@@ -44,20 +38,12 @@ export function InvoiceModal({
   finance,
   onClose,
   onSave,
-  onRemoveExpense,
-  onOpenExpense,
-  onOpenPlan,
 }: {
   readonly invoice: InvoiceRow
   readonly card: Card
   readonly finance: Finance
   readonly onClose: () => void
   readonly onSave: (changes: InvoiceChanges) => void
-  readonly onRemoveExpense: (expense: ExpenseRow) => void
-  /** Fase 11: edit a launched expense (description, value, category). */
-  readonly onOpenExpense: (expense: ExpenseRow) => void
-  /** Tapping an item opens it. */
-  readonly onOpenPlan: (id: string) => void
 }) {
   const parts = invoiceTotals(invoice, finance)
   const fixed = sumMoney([
@@ -79,77 +65,25 @@ export function InvoiceModal({
     invoice.bankTotal == null ? '' : formatMoneyInput(invoice.bankTotal),
   )
 
-  const installments = finance.plans
-    .filter((plan) => plan.cardId === invoice.cardId)
-    .flatMap((plan) =>
-      installmentSchedule(plan, finance.payments)
-        .filter((item) => item.month === invoice.month)
-        .map((item) => ({ plan, item })),
-    )
-  const subscriptions = finance.subscriptions.filter(
-    (item) => item.cardId === invoice.cardId && chargedIn(item, invoice.month),
-  )
-  const expenses = finance.expenses.filter(
-    (item) => item.invoiceId === invoice.id,
-  )
-
-  // Fase 13.3, owner only: what the other person bought is listed apart.
+  // Fase 13.3, owner only: what was marked the other person's.
   const isOther = (forOther: boolean | undefined) =>
     Boolean(finance.otherPerson && forOther)
-  const mineInstallments = installments.filter(
-    ({ plan }) => !isOther(plan.forOther),
-  )
-  const otherInstallments = installments.filter(({ plan }) =>
-    isOther(plan.forOther),
-  )
-  const automatic = sumMoney([
-    ...mineInstallments.map(({ item }) => item.amount),
-    ...subscriptions.map((item) => item.amount),
+  const his = sumMoney([
+    ...finance.plans
+      .filter(
+        (plan) => plan.cardId === invoice.cardId && isOther(plan.forOther),
+      )
+      .flatMap((plan) =>
+        installmentSchedule(plan, finance.payments)
+          .filter((item) => item.month === invoice.month)
+          .map((item) => item.amount),
+      ),
+    ...finance.expenses
+      .filter((item) => item.invoiceId === invoice.id && isOther(item.forOther))
+      .map((item) => item.amount),
   ])
-  const mineExpenses = expenses.filter((item) => !isOther(item.forOther))
-  const otherExpenses = expenses.filter((item) => isOther(item.forOther))
-
-  const installmentRow = ({ plan, item }: (typeof installments)[number]) => (
-    <li key={plan.id} className="clickable">
-      <button type="button" onClick={() => onOpenPlan(plan.id)}>
-        <i className="dot installment" />
-        <span>
-          {plan.description}
-          <small>
-            {item.paidOn
-              ? `paga em ${dayMonth(item.paidOn)}`
-              : `parcela ${item.number}/${item.totalInstallments}`}
-          </small>
-        </span>
-        <b>{formatMoney(item.amount)}</b>
-      </button>
-    </li>
-  )
-  const expenseRow = (expense: (typeof expenses)[number]) => (
-    <li key={expense.id} className="clickable">
-      <button type="button" onClick={() => onOpenExpense(expense)}>
-        <i className="dot other" />
-        <span>
-          {expense.description}
-          {isFreshFromBank(expense) && <span className="fresh-pill">novo</span>}
-          <small>
-            {[expense.note, dayMonth(expense.spentOn)]
-              .filter(Boolean)
-              .join(' · ')}
-          </small>
-        </span>
-        <b>{formatMoney(expense.amount)}</b>
-      </button>
-      <button
-        type="button"
-        className="remove"
-        aria-label={`Remover ${expense.description}`}
-        onClick={() => onRemoveExpense(expense)}
-      >
-        <CloseIcon />
-      </button>
-    </li>
-  )
+  // Outros gastos and the note: tucked away, the bank fills most of it.
+  const [editing, setEditing] = useState(false)
 
   const safe = (text: string) => {
     try {
@@ -163,16 +97,7 @@ export function InvoiceModal({
   const shownTotal = typedTotal ?? sumMoney([fixed, typedOther as Cents])
   const impossible = typedTotal !== null && typedTotal < fixed
   // Yours: the total minus what was marked the other person's.
-  const minePart = cents(
-    Math.max(
-      0,
-      shownTotal -
-        sumMoney([
-          ...otherInstallments.map(({ item }) => item.amount),
-          ...otherExpenses.map((item) => item.amount),
-        ]),
-    ),
-  )
+  const minePart = cents(Math.max(0, shownTotal - his))
 
   // The other person's part, following the bank total as it is typed.
   const otherShare = shared
@@ -226,7 +151,7 @@ export function InvoiceModal({
       }
     >
       <div className="invoice">
-        {/* The total first; the card's name is already the title. */}
+        {/* Just the numbers; everything in it is on the card's page. */}
         <div className="invoice-top">
           <CardArt card={card} />
           <div>
@@ -257,70 +182,6 @@ export function InvoiceModal({
             </p>
           )}
 
-        {/* What makes it up, in one list: what comes by itself (listed on
-            the card's page), then what was launched. */}
-        {mineInstallments.length + subscriptions.length + mineExpenses.length >
-          0 && (
-          <ul className="invoice-list">
-            {mineInstallments.length + subscriptions.length > 0 && (
-              <li>
-                <Link className="invoice-auto" to={`/cartoes/${card.id}`}>
-                  <i className="dot installment" />
-                  <span>
-                    {[
-                      count(mineInstallments.length, 'parcela', 'parcelas'),
-                      count(subscriptions.length, 'assinatura', 'assinaturas'),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    <small>Entram sozinhas · ver no cartão</small>
-                  </span>
-                  <b>{formatMoney(automatic)}</b>
-                </Link>
-              </li>
-            )}
-            {mineExpenses.map(expenseRow)}
-          </ul>
-        )}
-
-        {otherInstallments.length + otherExpenses.length > 0 && (
-          <div className="invoice-sec">
-            <small>Do {finance.otherPerson}</small>
-            <ul className="invoice-list">
-              {otherInstallments.map(installmentRow)}
-              {otherExpenses.map(expenseRow)}
-            </ul>
-          </div>
-        )}
-
-        <div className="invoice-sec">
-          {totalMode ? (
-            <MoneyField
-              label="Total da fatura"
-              value={total}
-              onChange={setTotal}
-              hint="Os outros gastos são calculados a partir dele."
-              autoFocus
-            />
-          ) : (
-            <MoneyField
-              label="Outros gastos"
-              value={other}
-              onChange={setOther}
-            />
-          )}
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => {
-              setTotalMode(!totalMode)
-              setError('')
-            }}
-          >
-            {totalMode ? 'Digitar os outros gastos' : 'Sei o total da fatura'}
-          </button>
-        </div>
-
         {shared && (
           <MoneyField
             label="Total da fatura no banco"
@@ -330,15 +191,59 @@ export function InvoiceModal({
           />
         )}
 
-        <TextField
-          label="Observação (opcional)"
-          value={note}
-          onChange={setNote}
-          placeholder="Ex.: iPhone 2/12, Lucas me deve 365,67"
-        />
+        {editing ? (
+          <>
+            <div className="invoice-sec">
+              {totalMode ? (
+                <MoneyField
+                  label="Total da fatura"
+                  value={total}
+                  onChange={setTotal}
+                  hint="Os outros gastos são calculados a partir dele."
+                  autoFocus
+                />
+              ) : (
+                <MoneyField
+                  label="Outros gastos"
+                  value={other}
+                  onChange={setOther}
+                />
+              )}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => {
+                  setTotalMode(!totalMode)
+                  setError('')
+                }}
+              >
+                {totalMode
+                  ? 'Digitar os outros gastos'
+                  : 'Sei o total da fatura'}
+              </button>
+            </div>
+            <TextField
+              label="Observação (opcional)"
+              value={note}
+              onChange={setNote}
+              placeholder="Ex.: iPhone 2/12, Lucas me deve 365,67"
+            />
+          </>
+        ) : (
+          <button
+            type="button"
+            className="link-button self-start"
+            onClick={() => setEditing(true)}
+          >
+            Editar outros gastos e observação
+          </button>
+        )}
         <p className="form-error" role="alert">
           {error}
         </p>
+        <Link className="btn ghost" to={`/cartoes/${card.id}`}>
+          Ver tudo desse cartão
+        </Link>
       </div>
     </Modal>
   )

@@ -357,12 +357,12 @@ describe('Editar parcelamento', () => {
     )
   })
 
-  it('no resumo da fatura, as parcelas numa linha que leva ao cartão', async () => {
+  it('a janela da fatura leva à tela do cartão', async () => {
     renderApp('/meses/2026-09')
     fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
     fireEvent.click(
       within(dialog('Fatura Nubank Teste')).getByRole('link', {
-        name: /Entram sozinhas/,
+        name: 'Ver tudo desse cartão',
       }),
     )
     expect(

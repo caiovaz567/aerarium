@@ -50,6 +50,9 @@ test('"Sei o total" e a sobra do mês anterior ficam gravados', async ({
   await page.goto('/meses/2026-09')
   await page.getByRole('button', { name: /^Nubank Teste/ }).click()
   const dialog = page.getByRole('dialog', { name: 'Fatura Nubank Teste' })
+  await dialog
+    .getByRole('button', { name: 'Editar outros gastos e observação' })
+    .click()
   await dialog.getByRole('button', { name: 'Sei o total da fatura' }).click()
   await dialog.getByLabel('Total da fatura').fill('500')
   await dialog.getByRole('button', { name: 'Salvar' }).click()

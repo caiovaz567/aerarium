@@ -408,12 +408,6 @@ export function MonthsPage() {
           card={invoice.card}
           finance={finance}
           onClose={close}
-          onOpenPlan={(id) => {
-            close()
-            editor.plan(id)
-          }}
-          onRemoveExpense={removeExpense}
-          onOpenExpense={(row) => setDialog({ kind: 'expense', id: row.id })}
           onSave={({ paid, bankTotal, ...changes }) => {
             run(ops.updateInvoice(invoice.invoice, changes))
             if (
