@@ -28,8 +28,8 @@ const user = {
   identities: [{ provider: 'email', identity_data: {} }],
 } as unknown as User
 
-const openSettings = () =>
-  renderApp('/config', {
+const openSettings = (tab = '') =>
+  renderApp(`/config${tab}`, {
     status: 'signed-in',
     recovery: false,
     session: { user } as Session,
@@ -107,7 +107,7 @@ describe('apagar minha conta', () => {
   })
 
   const openModal = () => {
-    openSettings()
+    openSettings('?aba=conta')
     fireEvent.click(
       screen.getByRole('button', { name: 'Apagar minha conta e meus dados' }),
     )

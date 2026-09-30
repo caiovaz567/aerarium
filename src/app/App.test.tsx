@@ -114,7 +114,7 @@ describe('esqueleto', () => {
   })
 
   it('ajustes mostram a conta, as formas de entrar e o botão de sair', () => {
-    renderApp('/config', {
+    renderApp('/config?aba=conta', {
       status: 'signed-in',
       recovery: false,
       session: {
@@ -133,7 +133,7 @@ describe('esqueleto', () => {
   })
 
   it('com Google conectado, mostra a conta e esconde o botão', () => {
-    renderApp('/config', {
+    renderApp('/config?aba=conta', {
       status: 'signed-in',
       recovery: false,
       session: {

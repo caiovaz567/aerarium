@@ -30,7 +30,7 @@ test('apagar minha conta: digita APAGAR, a conta some e não entra mais', async 
 }) => {
   await signIn(page)
   await expect(page).toHaveURL(/\/meses/)
-  await page.goto('/config')
+  await page.goto('/config?aba=conta')
   await page
     .getByRole('button', { name: 'Apagar minha conta e meus dados' })
     .click()

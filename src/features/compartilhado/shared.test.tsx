@@ -207,7 +207,7 @@ describe('do lado do dono', () => {
 
   it('compartilha com a conta do pai, com a chave Pix, e grava a cópia', async () => {
     fake.current!.functionResults.share = { found: true }
-    renderApp('/config', undefined, withDad())
+    renderApp('/config?aba=pai', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: 'Compartilhar' }))
     const dialog = screen.getByRole('dialog', {
       name: 'Compartilhar com o Pai',
@@ -274,24 +274,20 @@ describe('do lado do dono', () => {
     expect(
       await screen.findByText(/Compartilhado com pai@example.test/),
     ).toBeVisible()
-    // Grouped: the bank, and apart, who uses the cards.
+    // Ajustes in tabs; the bank and the other person have their own.
     expect(
-      screen
-        .getAllByRole('heading', { level: 3 })
+      within(screen.getByRole('navigation', { name: 'Partes dos ajustes' }))
+        .getAllByRole('link')
         .map((item) => item.textContent),
-    ).toEqual([
-      'Categorias',
-      'Bancos conectados',
-      'Quem usa seus cartões',
-      'Formas de entrar',
-      'Seus dados',
-      'Cuidado',
-    ])
+    ).toEqual(['Geral', 'Bancos', 'Pai', 'Conta'])
+    expect(
+      screen.getByRole('link', { name: 'Pai', current: 'page' }),
+    ).toBeVisible()
   })
 
   it('e-mail sem conta no Aerarium: avisa pra ele criar primeiro', async () => {
     fake.current!.functionResults.share = { found: false }
-    renderApp('/config', undefined, withDad())
+    renderApp('/config?aba=pai', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: 'Compartilhar' }))
     const dialog = screen.getByRole('dialog', {
       name: 'Compartilhar com o Pai',

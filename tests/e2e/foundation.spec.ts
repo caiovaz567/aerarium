@@ -73,6 +73,7 @@ test('entra, cai no mês atual e sai', async ({ page }) => {
   await expect(page).toHaveURL(/\/meses\/\d{4}-\d{2}$/)
   await page.getByRole('link', { name: 'Ajustes' }).click()
   await expect(page.getByText(process.env.E2E_EMAIL!)).toBeVisible()
+  await page.getByRole('link', { name: 'Conta' }).click()
   await page.getByRole('button', { name: 'Sair' }).click()
   await expect(page).toHaveURL(/\/login$/)
   await page.goto('/cartoes')

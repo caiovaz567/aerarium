@@ -57,7 +57,7 @@ describe('cartões do banco, agrupados', () => {
       availableLimit: null,
       limitAt: null,
     })
-    renderApp('/config', undefined, {
+    renderApp('/config?aba=bancos', undefined, {
       ...finance,
       bankAccounts: [
         account('a1', 'NUBANK ROXINHO', 'c1'),
@@ -86,7 +86,7 @@ describe('cartões do banco, agrupados', () => {
 describe('resumo por e-mail às 9h', () => {
   it('ligar passa pelo servidor, que manda o primeiro; desligar grava direto', async () => {
     fake.setup.mockResolvedValue(3)
-    renderApp('/config')
+    renderApp('/config?aba=bancos')
     const toggle = screen.getByRole('checkbox', {
       name: /Resumo por e-mail às 9h/,
     })
@@ -114,7 +114,7 @@ describe('resumo por e-mail às 9h', () => {
 
   it('sem conseguir ligar, fica desligado e avisa', async () => {
     fake.setup.mockRejectedValue(new Error('Não consegui ligar o e-mail.'))
-    renderApp('/config')
+    renderApp('/config?aba=bancos')
     const toggle = screen.getByRole('checkbox', {
       name: /Resumo por e-mail às 9h/,
     })

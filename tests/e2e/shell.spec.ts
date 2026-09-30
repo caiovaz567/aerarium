@@ -40,6 +40,11 @@ test('abas navegam, sem rolagem lateral em nenhuma tela', async ({
     })
   }
   await page.getByRole('link', { name: 'Ajustes' }).click()
+  await expect(
+    page.getByRole('button', { name: 'Editar categorias' }),
+  ).toBeVisible()
+  await page.getByRole('link', { name: 'Conta' }).click()
+  await expect(page).toHaveURL(/\/config\?aba=conta$/)
   await expect(page.getByRole('button', { name: 'Sair' })).toBeVisible()
   await noSideScroll(page)
   expect(errors).toEqual([])

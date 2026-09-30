@@ -29,6 +29,11 @@ test('ajustes e o modal de apagar conta, sem rolagem lateral', async ({
     fullPage: true,
   })
 
+  // Deleting lives in the Conta tab.
+  await page
+    .getByRole('navigation', { name: 'Partes dos ajustes' })
+    .getByRole('link', { name: 'Conta' })
+    .click()
   await page
     .getByRole('button', { name: 'Apagar minha conta e meus dados' })
     .click()
