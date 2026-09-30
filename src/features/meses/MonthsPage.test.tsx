@@ -305,7 +305,16 @@ describe('Criar e excluir mês', () => {
     expect(
       within(block('Entradas')).getByText('Sobrou do mês passado'),
     ).toBeVisible()
-    expect(document.querySelector('.forecast-view')).toHaveAttribute('inert')
+    // Only for looking: rows open nothing, but the views switch.
+    fireEvent.click(within(block('Entradas')).getByText('Salário'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    const saidas = block('Saídas')
+    fireEvent.click(within(saidas).getByRole('button', { name: 'Por data' }))
+    expect(
+      within(saidas).getByRole('button', { name: 'Por data' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    fireEvent.click(within(saidas).getByText('Notebook'))
+    expect(screen.queryByRole('dialog')).toBeNull()
     // Past the last installment (Notebook 10/10 in May 2027), no more months.
     renderApp('/meses/2027-05')
     expect(

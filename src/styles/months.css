@@ -758,6 +758,15 @@
 .forecast-note b {
   color: var(--accent);
 }
+.forecast-view .check,
+.forecast-view .trash {
+  visibility: hidden;
+}
+.forecast-view button.row-main,
+.forecast-view .timeline-row,
+.forecast-view .row-main {
+  cursor: default;
+}
 .forecast-view .hero {
   background-image: repeating-linear-gradient(
     135deg,

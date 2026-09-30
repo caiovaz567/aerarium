@@ -1,5 +1,5 @@
 import { useProfile } from '../../app/profileContext'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { currentMonth, monthPath, parseMonth } from '../../app/paths'
 import type {
@@ -143,6 +143,14 @@ export function MonthsPage() {
     )
 
   const shown = forecast ? forecastFinance(finance, selected) : finance
+  // A forecast is only for looking: its rows are not saved, so nothing opens.
+  // Switching views, filtering and opening a card's items still work.
+  const onlyLook = (event: MouseEvent) => {
+    const target = event.target as HTMLElement
+    if (target.closest('.segmented, .card-filter, [aria-expanded]')) return
+    event.preventDefault()
+    event.stopPropagation()
+  }
   const view = monthView(shown, selected)
 
   const deleteIncome = (income: IncomeRow) => {
@@ -249,7 +257,10 @@ export function MonthsPage() {
         </section>
       )}
       {newMonthDialog}
-      <div inert={forecast} className={forecast ? 'forecast-view' : undefined}>
+      <div
+        className={forecast ? 'forecast-view' : undefined}
+        onClickCapture={forecast ? onlyLook : undefined}
+      >
         {profile === 'other' ? (
           <OtherMonth finance={shown} month={selected} onOpen={openOutflow} />
         ) : (
