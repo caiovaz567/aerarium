@@ -48,14 +48,17 @@ test('"Sei o total" e a sobra do mês anterior ficam gravados', async ({
   page,
 }) => {
   await page.goto('/meses/2026-09')
+  // The card opens in Cartões; its "Outros gastos" take the invoice total.
   await page.getByRole('button', { name: /^Nubank Teste/ }).click()
-  const dialog = page.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-  await dialog
-    .getByRole('button', { name: 'Editar outros gastos e observação' })
-    .click()
+  await page.getByRole('button', { name: /^Outros gastos/ }).click()
+  const dialog = page.getByRole('dialog', {
+    name: 'Outros gastos · Nubank Teste',
+  })
   await dialog.getByRole('button', { name: 'Sei o total da fatura' }).click()
   await dialog.getByLabel('Total da fatura').fill('500')
   await dialog.getByRole('button', { name: 'Salvar' }).click()
+  await saved(page)
+  await page.goto('/meses/2026-09')
   await page.getByRole('button', { name: 'Usar esse valor' }).click()
   await saved(page)
 

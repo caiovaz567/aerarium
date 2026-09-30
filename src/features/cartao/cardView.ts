@@ -93,6 +93,8 @@ export function cardInvoiceView(
     final: cardFinal(account?.number),
     status: !invoice ? 'none' : invoice.paid ? 'paid' : 'open',
     total: totals?.total ?? cents(0),
+    /** With someone else using the cards: the total minus what is theirs. */
+    mine: totals?.mine ?? cents(0),
     due,
     dueText: due && invoice && !invoice.paid ? dueText(due, today) : null,
     nextDue: card.dueDay

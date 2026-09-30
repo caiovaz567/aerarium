@@ -41,14 +41,15 @@ for (const [name, path, ready] of SCREENS)
     await audit(page)
   })
 
-test('acessibilidade: Lançar e resumo da fatura', async ({ page }) => {
+test('acessibilidade: Lançar e outros gastos da fatura', async ({ page }) => {
   await page.goto('/meses/2026-09')
   await page.getByRole('button', { name: 'Lançar gasto ou entrada' }).click()
   await expect(page.getByRole('dialog', { name: 'Lançar' })).toBeVisible()
   await audit(page)
   await page.keyboard.press('Escape')
-  // The row opens the summary; its check button is named "Marcar como pago…".
-  await page.getByRole('button', { name: /^Nubank Teste/ }).click()
+  // In Cartões, "Outros gastos" opens its window.
+  await page.goto('/cartoes?mes=2026-09')
+  await page.getByRole('button', { name: /^Outros gastos/ }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await audit(page)
 })

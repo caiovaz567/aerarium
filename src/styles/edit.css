@@ -219,29 +219,6 @@
   min-height: 48px;
 }
 
-/* Invoice summary items that open the plan or subscription */
-.invoice-list li.clickable {
-  padding: 0;
-}
-.invoice-list li.clickable > button {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 10px 12px;
-  border: 0;
-  background: none;
-  color: var(--ink);
-  font: inherit;
-  text-align: left;
-}
-@media (hover: hover) and (pointer: fine) {
-  .invoice-list li.clickable > button:hover {
-    background: var(--surface-2);
-  }
-}
-
 /* Assinaturas */
 .summary {
   display: flex;

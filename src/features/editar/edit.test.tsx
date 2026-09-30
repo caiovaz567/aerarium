@@ -359,25 +359,6 @@ describe('Editar parcelamento', () => {
       }),
     )
   })
-
-  it('a janela da fatura leva à tela do cartão', async () => {
-    renderApp('/meses/2026-09')
-    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
-    fireEvent.click(
-      within(dialog('Fatura Nubank Teste')).getByRole('link', {
-        name: 'Ver tudo desse cartão',
-      }),
-    )
-    expect(
-      await screen.findByRole('button', {
-        name: /^Nubank Teste/,
-        pressed: true,
-      }),
-    ).toBeVisible()
-    expect(
-      screen.queryByRole('dialog', { name: 'Fatura Nubank Teste' }),
-    ).toBeNull()
-  })
 })
 
 describe('Excel', () => {

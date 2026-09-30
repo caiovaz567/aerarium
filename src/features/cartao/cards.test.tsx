@@ -149,7 +149,7 @@ describe('Cartões, uma tela só', () => {
     )
     // Purchases first (newest on top), then what comes every month.
     expect(feed()).toBe(
-      'Tudo · 4Compras · 1Parcelas · 1Assinaturas · 1qui, 03/09UberúltimaTransporteR$ 12,00Todo mêsNotebookparcela 2/10R$ 120,00Streamingassinatura · dia 10R$ 39,90Outros gastos não detalhadoso resto da faturaR$ 271,02',
+      'Tudo · 4Compras · 1Parcelas · 1Assinaturas · 1qui, 03/09UberúltimaTransporteR$ 12,00Todo mêsNotebookparcela 2/10R$ 120,00Streamingassinatura · dia 10R$ 39,90Outros gastos não detalhadosiPhone 2/12R$ 271,02',
     )
     expect(screen.getByRole('button', { name: /^Uber/ })).toHaveClass('newest')
   })
@@ -220,9 +220,6 @@ describe('Cartões, uma tela só', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /^Outros gastos/ }))
     const invoice = screen.getByRole('dialog')
-    expect(
-      within(invoice).queryByRole('link', { name: 'Ver tudo desse cartão' }),
-    ).toBeNull()
     fireEvent.click(within(invoice).getByRole('button', { name: 'Salvar' }))
     expect(screen.queryByRole('dialog')).toBeNull()
   })
@@ -368,6 +365,57 @@ describe('Cartões, uma tela só', () => {
       expenses: finance.expenses.map((item) => ({ ...item, forOther: true })),
     })
     expect(feed()).toContain('UberúltimaPai')
+    // 442,92 on the card: 12,00 his, the rest yours.
+    expect(hero()).toContain(
+      'Sua parte da fatura de setembro · a pagarR$ 430,92',
+    )
+    expect(hero()).toContain('Parte do PaiR$ 12,00')
+  })
+
+  it('outros gastos: "Sei o total" recusa menos que o fixo e aceita o resto', async () => {
+    renderApp('/cartoes?mes=2026-09')
+    fireEvent.click(screen.getByRole('button', { name: /^Outros gastos/ }))
+    const dialog = screen.getByRole('dialog', {
+      name: 'Outros gastos · Nubank Teste',
+    })
+    expect(within(dialog).getByLabelText('Outros gastos')).toHaveValue('271,02')
+    fireEvent.click(
+      within(dialog).getByRole('button', { name: 'Sei o total da fatura' }),
+    )
+    const total = within(dialog).getByLabelText('Total da fatura')
+    fireEvent.change(total, { target: { value: '100,00' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'O total não pode ser menor que parcelas + assinaturas + gastos lançados (R$ 171,90).',
+    )
+    fireEvent.change(total, { target: { value: '500,00' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
+    expect(fake.current!.calls).toContainEqual(
+      expect.objectContaining({
+        table: 'invoices',
+        payload: {
+          other_amount: '328.10',
+          estimated: false,
+          note: 'iPhone 2/12',
+        },
+      }),
+    )
+  })
+
+  it('outros gastos zerado: aparece apagado, pra poder colocar', () => {
+    const finance = financeFixture()
+    renderApp('/cartoes?mes=2026-09', undefined, {
+      ...finance,
+      invoices: finance.invoices.map((item) => ({
+        ...item,
+        otherAmount: cents(0),
+        note: null,
+      })),
+    })
+    const row = screen.getByRole('button', { name: /^Outros gastos/ })
+    expect(row).toHaveClass('later')
+    expect(row).toHaveTextContent('nenhum, toque pra colocar')
   })
 
   it('a partir de outubro: só a parte do pai, sem digitar o total do banco', () => {

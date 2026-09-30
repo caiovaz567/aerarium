@@ -422,10 +422,6 @@ a.row-main {
   width: 24px;
   height: 24px;
 }
-.invoice-top .bank-logo {
-  width: 44px;
-  height: 44px;
-}
 
 /* First import preview: one collapsible block per card. */
 .preview-card {

@@ -18,11 +18,10 @@ import { usePlanActions } from '../cartao/planActions'
 import { PlanRow } from '../cartao/PlanRow'
 import { useEditor } from '../editar/editorContext'
 import { ExpenseModal } from '../meses/EditModals'
-import { InvoiceModal } from '../meses/InvoiceModal'
 import { MonthNav } from '../meses/MonthNav'
 import { defaultMonth } from '../meses/monthView'
-import { useSaveInvoice } from '../meses/useSaveInvoice'
 import { CardDetail } from './CardDetail'
+import { OtherModal } from './OtherModal'
 
 const ARCHIVE_KEY = 'aerarium.arquivados'
 /** The installments paid apart from any card, picked like a card. */
@@ -52,7 +51,6 @@ export function CardsPage() {
   const run = useFinanceOp()
   const toast = useToast()
   const editor = useEditor()
-  const saveInvoice = useSaveInvoice()
   const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
   const [dialog, setDialog] = useState<{
     kind: 'expense' | 'invoice'
@@ -209,7 +207,7 @@ export function CardsPage() {
           finance={finance}
           month={selected}
           onExpense={(item) => setDialog({ kind: 'expense', id: item.id })}
-          onInvoice={() =>
+          onOther={() =>
             block.invoice &&
             setDialog({ kind: 'invoice', id: block.invoice.id })
           }
@@ -337,15 +335,15 @@ export function CardsPage() {
         />
       )}
       {invoice?.invoice && (
-        <InvoiceModal
+        <OtherModal
           invoice={invoice.invoice}
           card={invoice.card}
           finance={finance}
-          cardLink={false}
           onClose={close}
           onSave={(changes) => {
-            saveInvoice(invoice.invoice!, changes)
+            run(ops.updateInvoice(invoice.invoice!, changes))
             close()
+            toast('Salvo')
           }}
         />
       )}

@@ -253,68 +253,20 @@ describe('Saiu de', () => {
   })
 })
 
-describe('Resumo da fatura', () => {
-  const open = () => {
+describe('Fatura do cartão', () => {
+  it('tocar no cartão abre Cartões nele, no mesmo mês', async () => {
     renderApp('/meses/2026-09')
     fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
-    return screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-  }
-
-  it('só os números: total, sem as listas, e o caminho pro cartão', () => {
-    const dialog = open()
     expect(
-      text(
-        within(dialog).getByText('Total da fatura').nextSibling!.textContent,
-      ),
-    ).toBe('R$ 442,92')
-    // What is in it lives on the card's page.
-    expect(within(dialog).queryByText('Uber')).toBeNull()
-    expect(within(dialog).queryByText('Notebook')).toBeNull()
+      await screen.findByRole('button', {
+        name: /^Nubank Teste/,
+        pressed: true,
+      }),
+    ).toBeVisible()
     expect(
-      within(dialog).getByRole('link', { name: 'Ver tudo desse cartão' }),
-    ).toHaveAttribute('href', '/cartoes?mes=2026-09&cartao=c1')
-    // Outros gastos and the note only when asked for.
-    expect(within(dialog).queryByLabelText('Outros gastos')).toBeNull()
-    fireEvent.click(
-      within(dialog).getByRole('button', {
-        name: 'Editar outros gastos e observação',
-      }),
-    )
-    expect(within(dialog).getByLabelText('Outros gastos')).toHaveValue('271,02')
-  })
-
-  it('"Sei o total" recusa valor menor que o fixo e aceita o resto', async () => {
-    const dialog = open()
-    fireEvent.click(
-      within(dialog).getByRole('button', {
-        name: 'Editar outros gastos e observação',
-      }),
-    )
-    fireEvent.click(
-      within(dialog).getByRole('button', { name: 'Sei o total da fatura' }),
-    )
-    const total = within(dialog).getByLabelText('Total da fatura')
-    fireEvent.change(total, { target: { value: '100,00' } })
-    expect(
-      within(dialog).getByText('Total da fatura', { selector: 'span' })
-        .nextSibling,
-    ).toHaveClass('bad')
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
-    expect(within(dialog).getByRole('alert')).toHaveTextContent(
-      'O total não pode ser menor que parcelas + assinaturas + gastos lançados (R$ 171,90).',
-    )
-    fireEvent.change(total, { target: { value: '500,00' } })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
-    await waitFor(() =>
-      expect(writes()[0]).toMatchObject({
-        table: 'invoices',
-        payload: {
-          other_amount: '328.10',
-          estimated: false,
-          note: 'iPhone 2/12',
-        },
-      }),
-    )
+      screen.getByRole('region', { name: 'Fatura de setembro' }),
+    ).toBeVisible()
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 
   it('remover gasto lançado tem Desfazer', async () => {
@@ -491,16 +443,6 @@ describe('Pai usa os cartões', () => {
     expect(text(owed.textContent)).toContain('Já devolveu R$ 12,00')
   })
 
-  it('na fatura, a divisão: o que é dele e o resto seu', () => {
-    renderApp('/meses/2026-09', undefined, withDad())
-    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
-    const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-    // 442,92 on the card: 12,00 his, the rest yours.
-    expect(text(invoice.querySelector('.invoice-split')!.textContent)).toBe(
-      'Sua parte R$ 430,92Pai R$ 12,00',
-    )
-  })
-
   it('na visão do Pai, um gasto dele pode voltar a ser seu', async () => {
     localStorage.removeItem('aerarium.perfil')
     renderApp('/meses/2026-09', undefined, withDad())
@@ -607,13 +549,8 @@ describe('Pai usa os cartões', () => {
     localStorage.removeItem('aerarium.perfil')
   })
 
-  it('a partir de outubro: a parte do pai é só o marcado, sem total do banco', () => {
+  it('a partir de outubro: a parte do pai é só o marcado', () => {
     renderApp('/meses/2026-09', undefined, withDad(month('2026-09')))
-    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
-    const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-    expect(
-      within(invoice).queryByLabelText('Total da fatura no banco'),
-    ).toBeNull()
     expect(
       text(
         screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,
@@ -621,27 +558,17 @@ describe('Pai usa os cartões', () => {
     ).toContain('R$ 12,00')
   })
 
-  it('meses antigos: total no banco menos o seu é a parte do pai', async () => {
-    renderApp('/meses/2026-09', undefined, withDad())
-    fireEvent.click(screen.getByRole('button', { name: /^Nubank Teste/ }))
-    const invoice = screen.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-    fireEvent.change(
-      within(invoice).getByLabelText('Total da fatura no banco'),
-      { target: { value: '1.000,00' } },
-    )
+  it('meses antigos: total no banco menos o seu é a parte do pai', () => {
+    const finance = withDad()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      invoices: finance.invoices.map((item) =>
+        item.cardId === 'c1' && item.month === month('2026-09')
+          ? { ...item, bankTotal: cents(1_000_00) }
+          : item,
+      ),
+    })
     // Yours: 442,92 minus his Uber 12,00.
-    // His part once, in the split line, following what is typed.
-    expect(invoice).toHaveTextContent(/Pai R\$\s569,08/)
-    expect(invoice).not.toHaveTextContent(/Parte do Pai/)
-    fireEvent.click(within(invoice).getByRole('button', { name: 'Salvar' }))
-    await settle()
-    expect(writes()).toContainEqual(
-      expect.objectContaining({
-        table: 'invoices',
-        op: 'update',
-        payload: { bank_total: '1000.00' },
-      }),
-    )
     expect(
       text(
         screen.getByRole('region', { name: 'O que o Pai te deve' }).textContent,

@@ -29,6 +29,7 @@ import {
 import { usePlanActions } from '../cartao/planActions'
 import { PlanRow } from '../cartao/PlanRow'
 import { useEditor } from '../editar/editorContext'
+import { visibleNote } from '../meses/monthView'
 import { CardChartBlock } from './CardChartBlock'
 
 type List = 'tudo' | 'compras' | 'parcelas' | 'assinaturas'
@@ -45,15 +46,15 @@ export function CardDetail({
   finance,
   month,
   onExpense,
-  onInvoice,
+  onOther,
   onPaid,
 }: {
   readonly card: Card
   readonly finance: Finance
   readonly month: Month
   readonly onExpense: (expense: ExpenseRow) => void
-  /** The invoice window, for the undetailed rest. */
-  readonly onInvoice: () => void
+  /** "Outros gastos" and the note of the invoice. */
+  readonly onOther: () => void
   readonly onPaid: (paid: boolean) => void
 }) {
   const editor = useEditor()
@@ -75,8 +76,9 @@ export function CardDetail({
   const subscriptions = finance.subscriptions.filter(
     (item) => item.cardId === card.id && item.active,
   )
-  const rest =
-    view.invoice && view.invoice.otherAmount > 0 ? view.invoice : null
+  // The invoice's rest: always there, so it can be filled in.
+  const rest = view.invoice
+  const restNote = rest && visibleNote(rest.note, card)
   const monthly = lines.length + subscriptions.length + (rest ? 1 : 0)
   const openPlans = finance.plans.filter(
     (plan) =>
@@ -197,7 +199,11 @@ export function CardDetail({
         })}
         {rest && (
           <li>
-            <button type="button" className="feed-row" onClick={onInvoice}>
+            <button
+              type="button"
+              className={`feed-row${rest.otherAmount > 0 ? '' : ' later'}`}
+              onClick={onOther}
+            >
               <span className="cat-badge round none" aria-hidden="true">
                 <CardIcon />
               </span>
@@ -205,7 +211,12 @@ export function CardDetail({
                 <span className="feed-name">
                   {purchases ? 'Outros gastos não detalhados' : 'Outros gastos'}
                 </span>
-                <small>o resto da fatura</small>
+                <small>
+                  {restNote ??
+                    (rest.otherAmount > 0
+                      ? 'o resto da fatura'
+                      : 'nenhum, toque pra colocar')}
+                </small>
               </span>
               <b>{formatMoney(rest.otherAmount)}</b>
             </button>
@@ -250,7 +261,7 @@ export function CardDetail({
                 {STATUS[view.status]}
               </span>
             </small>
-            <b>{formatMoney(view.total)}</b>
+            <b>{formatMoney(other ? view.mine : view.total)}</b>
             {view.due && view.dueText && (
               <small>
                 vence {shortDate(view.due)} · {view.dueText}

@@ -1,4 +1,4 @@
-/* Meses: month bar, summary, blocks, rows and the invoice summary. Measures from v1. */
+/* Meses: month bar, summary, blocks and rows. Measures from v1. */
 
 .icon-button[disabled] {
   opacity: 0.35;
@@ -505,80 +505,6 @@
   font-weight: 500;
 }
 
-/* Invoice summary */
-.invoice {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.invoice-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.invoice-top .card-art {
-  width: 56px;
-}
-.invoice-top > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.invoice-top b {
-  font-size: 16px;
-}
-.invoice-top small {
-  color: var(--muted);
-  font-size: 12.5px;
-}
-.invoice-sec {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.invoice-sec > small {
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-.invoice-sec .link-button {
-  align-self: flex-start;
-  font-size: 13.5px;
-}
-.invoice-list {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border-radius: 14px;
-  background: var(--bg);
-  list-style: none;
-}
-.invoice-list li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-}
-.invoice-list li + li {
-  border-top: 1px solid var(--line);
-}
-.invoice-list span {
-  flex: 1;
-  min-width: 0;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-.invoice-list small {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-}
-.invoice-list b {
-  font-size: 14px;
-  white-space: nowrap;
-}
 .dot {
   flex: none;
   width: 8px;
@@ -609,41 +535,6 @@
 .remove svg {
   width: 16px;
   height: 16px;
-}
-.invoice-sum {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: var(--accent-soft);
-}
-.invoice-sum span {
-  color: var(--accent);
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.invoice-sum b {
-  font: 800 22px / 1.1 var(--display);
-}
-.invoice-sum b.bad {
-  color: var(--neg);
-}
-/* Owner only: how the invoice splits between the owner and the other person. */
-.invoice-split {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 12px;
-  margin: -4px 0 0;
-  padding: 0 14px;
-  color: var(--muted);
-  font-size: 13px;
-}
-.invoice-split b {
-  color: var(--ink);
-  font-weight: 700;
 }
 
 .skel {

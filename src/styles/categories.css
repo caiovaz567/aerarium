@@ -274,14 +274,6 @@
   margin-top: 6px;
 }
 
-/* Launched expenses in the invoice summary: the row opens it, × removes it. */
-.invoice-list li.clickable > button.remove {
-  flex: none;
-  width: 30px;
-  margin-right: 8px;
-  padding: 0;
-}
-
 /* Category tile in the Saídas rows: same width as the card thumbnails, so
    every row's text starts at the same place. */
 .cat-badge {

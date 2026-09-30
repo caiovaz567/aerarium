@@ -71,16 +71,20 @@ test('resumo da fatura e lista de meses sem rolagem lateral', async ({
   page,
 }, testInfo) => {
   await page.goto('/meses/2026-09')
+  // The card opens in Cartões, on that card and month.
   await page.getByRole('button', { name: /^Nubank Teste/ }).click()
-  const dialog = page.getByRole('dialog', { name: 'Fatura Nubank Teste' })
-  await expect(dialog).toContainText('Total da fatura')
-  await expect(dialog).toContainText('Ver tudo desse cartão')
+  await expect(page).toHaveURL(/\/cartoes\?mes=2026-09&cartao=/)
+  await page.getByRole('button', { name: /^Outros gastos/ }).click()
+  const dialog = page.getByRole('dialog', {
+    name: 'Outros gastos · Nubank Teste',
+  })
   expect(
     await dialog.evaluate((node) => node.scrollWidth - node.clientWidth),
   ).toBe(0)
   await noSideScroll(page)
   await page.screenshot({ path: testInfo.outputPath('fatura.png') })
   await dialog.getByRole('button', { name: 'Cancelar' }).click()
+  await page.goto('/meses/2026-09')
 
   await page
     .getByRole('button', { name: 'Setembro 2026. Escolher mês' })

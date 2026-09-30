@@ -105,7 +105,7 @@ describe('Saídas por categoria', () => {
     ).toBe(categoryId('Moradia'))
   })
 
-  it('"Outros gastos das faturas" explica e abre a fatura', () => {
+  it('"Outros gastos das faturas" explica e abre o cartão', () => {
     renderApp('/meses/2026-09')
     fireEvent.click(
       within(block()).getByRole('button', {
@@ -118,7 +118,9 @@ describe('Saídas por categoria', () => {
     fireEvent.click(
       within(block()).getByRole('button', { name: /Fatura Nubank Teste/ }),
     )
-    expect(dialog('Fatura Nubank Teste')).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /^Nubank Teste/, pressed: true }),
+    ).toBeVisible()
   })
 
   it('mês sem saídas não mostra o bloco', () => {

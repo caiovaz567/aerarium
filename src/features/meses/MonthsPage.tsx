@@ -21,8 +21,6 @@ import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
 import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
-import { InvoiceModal } from './InvoiceModal'
-import { useSaveInvoice } from './useSaveInvoice'
 import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
 import { OwedBlock } from './OwedBlock'
@@ -44,7 +42,6 @@ import {
 type Dialog =
   | { readonly kind: 'income'; readonly id: string }
   | { readonly kind: 'bill'; readonly id: string }
-  | { readonly kind: 'invoice'; readonly id: string }
   | { readonly kind: 'expense'; readonly id: string }
   | {
       readonly kind: 'new'
@@ -69,7 +66,6 @@ export function MonthsPage() {
   const editor = useEditor()
   const wide = useWide()
   const { profile } = useProfile(query.data?.otherPerson)
-  const saveInvoice = useSaveInvoice()
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
   // Like v1: a new month starts from the top.
@@ -210,10 +206,11 @@ export function MonthsPage() {
     dialog?.kind === 'bill'
       ? view.bills.find((item) => item.id === dialog.id)
       : undefined
-  const invoice =
-    dialog?.kind === 'invoice'
-      ? view.cards.find((item) => item.invoice.id === dialog.id)
-      : undefined
+  // A card's invoice lives in Cartões, with everything in it.
+  const openInvoice = (invoiceId: string) => {
+    const row = finance.invoices.find((item) => item.id === invoiceId)
+    if (row) navigate(`/cartoes?mes=${row.month}&cartao=${row.cardId}`)
+  }
   const expense =
     dialog?.kind === 'expense'
       ? finance.expenses.find((item) => item.id === dialog.id)
@@ -229,8 +226,7 @@ export function MonthsPage() {
     if (item.source === 'bill') setDialog({ kind: 'bill', id: item.id })
     else if (item.source === 'expense')
       setDialog({ kind: 'expense', id: item.id })
-    else if (item.source === 'other')
-      setDialog({ kind: 'invoice', id: item.id })
+    else if (item.source === 'other') openInvoice(item.id)
     else if (item.source === 'installment') editor.plan(item.id)
     else editor.subscription(item.id)
   }
@@ -258,7 +254,7 @@ export function MonthsPage() {
       onOpen={openOutflow}
       view={view}
       categories={finance.categories}
-      onInvoice={(item) => setDialog({ kind: 'invoice', id: item.invoice.id })}
+      onInvoice={(item) => openInvoice(item.invoice.id)}
       onInvoicePaid={(item, paid) =>
         run(ops.invoicePaid(item.invoice, paid, today()))
       }
@@ -402,18 +398,6 @@ export function MonthsPage() {
             run(ops.updateExpense(expense, changes))
             close()
             toast('Salvo')
-          }}
-        />
-      )}
-      {invoice && (
-        <InvoiceModal
-          invoice={invoice.invoice}
-          card={invoice.card}
-          finance={finance}
-          onClose={close}
-          onSave={(changes) => {
-            saveInvoice(invoice.invoice, changes)
-            close()
           }}
         />
       )}
