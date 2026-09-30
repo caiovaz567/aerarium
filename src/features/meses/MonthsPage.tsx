@@ -412,10 +412,6 @@ export function MonthsPage() {
             close()
             editor.plan(id)
           }}
-          onOpenSubscription={(id) => {
-            close()
-            editor.subscription(id)
-          }}
           onRemoveExpense={removeExpense}
           onOpenExpense={(row) => setDialog({ kind: 'expense', id: row.id })}
           onSave={({ paid, bankTotal, ...changes }) => {

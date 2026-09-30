@@ -240,9 +240,15 @@ describe('Resumo da fatura', () => {
 
   it('mostra o que entra sozinho, os gastos e o total', () => {
     const dialog = open()
-    expect(within(dialog).getByText('Já entram sozinhas')).toBeVisible()
-    expect(within(dialog).getByText('parcela 2/10')).toBeVisible()
-    expect(within(dialog).getByText('assinatura · dia 10')).toBeVisible()
+    // Installments and subscriptions in one line; the card's page lists them.
+    const auto = within(dialog).getByRole('link', { name: /Entram sozinhas/ })
+    expect(text(auto.textContent)).toBe(
+      '1 parcela · 1 assinaturaEntram sozinhas · ver no cartãoR$ 159,90',
+    )
+    expect(auto).toHaveAttribute('href', expect.stringMatching(/^\/cartoes\//))
+    expect(
+      within(dialog).queryByRole('checkbox', { name: /Já paguei/ }),
+    ).toBeNull()
     expect(within(dialog).getByText('03/09')).toBeVisible()
     expect(
       text(
@@ -589,7 +595,9 @@ describe('Pai usa os cartões', () => {
       { target: { value: '1.000,00' } },
     )
     // Yours: 442,92 minus his Uber 12,00.
-    expect(invoice).toHaveTextContent(/Parte do Pai: R\$\s569,08/)
+    // His part once, in the split line, following what is typed.
+    expect(invoice).toHaveTextContent(/Pai R\$\s569,08/)
+    expect(invoice).not.toHaveTextContent(/Parte do Pai/)
     fireEvent.click(within(invoice).getByRole('button', { name: 'Salvar' }))
     await settle()
     expect(writes()).toContainEqual(

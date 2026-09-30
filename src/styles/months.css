@@ -543,6 +543,38 @@
   align-self: flex-start;
   font-size: 13.5px;
 }
+/* Installments and subscriptions of the invoice, in one line. */
+.invoice-auto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  text-decoration: none;
+}
+.invoice-auto span {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.invoice-auto small {
+  display: block;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+.invoice-auto b {
+  font-size: 14px;
+  white-space: nowrap;
+}
+@media (hover: hover) and (pointer: fine) {
+  .invoice-auto:hover {
+    background: var(--surface-2);
+  }
+}
 .invoice-list {
   margin: 0;
   padding: 0;

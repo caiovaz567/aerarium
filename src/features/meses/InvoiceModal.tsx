@@ -18,7 +18,7 @@ import {
 } from '../../domain/money'
 import { dayMonth, monthLabel } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
-import { CheckField, MoneyField, TextField } from '../../ui/controls'
+import { MoneyField, TextField } from '../../ui/controls'
 import { CloseIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
@@ -34,6 +34,9 @@ export interface InvoiceChanges {
   readonly bankTotal?: Cents | null
 }
 
+const count = (value: number, one: string, many: string) =>
+  value ? `${value} ${value === 1 ? one : many}` : null
+
 /** Invoice summary: what comes by itself, launched expenses and the rest. */
 export function InvoiceModal({
   invoice,
@@ -44,7 +47,6 @@ export function InvoiceModal({
   onRemoveExpense,
   onOpenExpense,
   onOpenPlan,
-  onOpenSubscription,
 }: {
   readonly invoice: InvoiceRow
   readonly card: Card
@@ -56,7 +58,6 @@ export function InvoiceModal({
   readonly onOpenExpense: (expense: ExpenseRow) => void
   /** Tapping an item opens it. */
   readonly onOpenPlan: (id: string) => void
-  readonly onOpenSubscription: (id: string) => void
 }) {
   const parts = invoiceTotals(invoice, finance)
   const fixed = sumMoney([
@@ -70,7 +71,6 @@ export function InvoiceModal({
     formatMoneyInput(sumMoney([fixed, invoice.otherAmount])),
   )
   const [note, setNote] = useState(visibleNote(invoice.note, card) ?? '')
-  const [paid, setPaid] = useState(invoice.paid)
   const [error, setError] = useState('')
   // Fase 13.3, owner only: in old months the bank total gives the other
   // person the rest of the invoice.
@@ -102,6 +102,10 @@ export function InvoiceModal({
   const otherInstallments = installments.filter(({ plan }) =>
     isOther(plan.forOther),
   )
+  const automatic = sumMoney([
+    ...mineInstallments.map(({ item }) => item.amount),
+    ...subscriptions.map((item) => item.amount),
+  ])
   const mineExpenses = expenses.filter((item) => !isOther(item.forOther))
   const otherExpenses = expenses.filter((item) => isOther(item.forOther))
 
@@ -170,6 +174,11 @@ export function InvoiceModal({
     ),
   )
 
+  // The other person's part, following the bank total as it is typed.
+  const otherShare = shared
+    ? invoiceTotals({ ...invoice, bankTotal: safe(bank) }, finance).otherShare
+    : parts.otherShare
+
   const save = () => {
     let otherAmount: Cents
     if (totalMode) {
@@ -196,7 +205,7 @@ export function InvoiceModal({
       otherAmount,
       estimated: invoice.estimated && !typed,
       note: note.trim() || null,
-      paid,
+      paid: invoice.paid,
       ...(shared && { bankTotal }),
     })
   }
@@ -233,28 +242,20 @@ export function InvoiceModal({
           </div>
         </div>
 
+        {/* What comes by itself, in one line: the card's page lists it. */}
         {mineInstallments.length + subscriptions.length > 0 ? (
-          <div className="invoice-sec">
-            <small>Já entram sozinhas</small>
-            <ul className="invoice-list">
-              {mineInstallments.map(installmentRow)}
-              {subscriptions.map((item) => (
-                <li key={item.id} className="clickable">
-                  <button
-                    type="button"
-                    onClick={() => onOpenSubscription(item.id)}
-                  >
-                    <i className="dot subscription" />
-                    <span>
-                      {item.name}
-                      <small>assinatura · dia {item.chargeDay}</small>
-                    </span>
-                    <b>{formatMoney(item.amount)}</b>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Link className="invoice-auto" to={`/cartoes/${card.id}`}>
+            <span>
+              {[
+                count(mineInstallments.length, 'parcela', 'parcelas'),
+                count(subscriptions.length, 'assinatura', 'assinaturas'),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              <small>Entram sozinhas · ver no cartão</small>
+            </span>
+            <b>{formatMoney(automatic)}</b>
+          </Link>
         ) : (
           <p className="muted small">
             Nenhuma parcela ou assinatura nesse cartão este mês.
@@ -307,17 +308,28 @@ export function InvoiceModal({
           </button>
         </div>
 
+        {shared && (
+          <div className="invoice-sec">
+            <small>Com o {finance.otherPerson}</small>
+            <MoneyField
+              label="Total da fatura no banco"
+              value={bank}
+              onChange={setBank}
+              hint={`O total com o que é seu e o que é do ${finance.otherPerson}. Com Open Finance, vem sozinho.`}
+            />
+          </div>
+        )}
         <div className="invoice-sum">
           <span>Total da fatura</span>
           <b className={impossible ? 'bad' : ''}>{formatMoney(shownTotal)}</b>
         </div>
-        {finance.otherPerson && parts.otherShare > 0 && (
+        {finance.otherPerson && otherShare > 0 && (
           <p className="invoice-split">
             <span>
               Sua parte <b>{formatMoney(minePart)}</b>
             </span>
             <span>
-              {finance.otherPerson} <b>{formatMoney(parts.otherShare)}</b>
+              {finance.otherPerson} <b>{formatMoney(otherShare)}</b>
             </span>
           </p>
         )}
@@ -330,39 +342,15 @@ export function InvoiceModal({
             </p>
           )}
 
-        {shared && (
-          <div className="invoice-sec">
-            <small>Com o {finance.otherPerson}</small>
-            <MoneyField
-              label="Total da fatura no banco"
-              value={bank}
-              onChange={setBank}
-              hint={
-                safe(bank) === null
-                  ? `O total com o que é seu e o que é do ${finance.otherPerson}. Com Open Finance, vem sozinho.`
-                  : `Parte do ${finance.otherPerson}: ${formatMoney(
-                      invoiceTotals(
-                        { ...invoice, bankTotal: safe(bank) },
-                        finance,
-                      ).otherShare,
-                    )}`
-              }
-            />
-          </div>
-        )}
         <TextField
           label="Observação (opcional)"
           value={note}
           onChange={setNote}
           placeholder="Ex.: iPhone 2/12, Lucas me deve 365,67"
         />
-        <CheckField label="Já paguei" checked={paid} onChange={setPaid} />
         <p className="form-error" role="alert">
           {error}
         </p>
-        <Link className="btn ghost self-start" to={`/cartoes/${card.id}`}>
-          Ver cartão
-        </Link>
       </div>
     </Modal>
   )
