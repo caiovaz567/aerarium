@@ -659,6 +659,8 @@ a.row-main {
 /* Back to Meses, when a card there opened this screen. */
 .back-link {
   display: inline-flex;
+  align-self: flex-start;
+  width: fit-content;
   align-items: center;
   gap: 4px;
   min-height: 36px;

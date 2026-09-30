@@ -6,6 +6,7 @@ import { currentMonth, parseMonth } from '../../app/paths'
 import type { SharedView } from '../../data/shared'
 import { useSharedWithMe } from '../../data/useShared'
 import { BANKS, bankName } from '../../domain/banks'
+import { CheckIcon } from '../../ui/icons'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 import { pixKeyKind, pixKeyText, pixKeyValue } from '../../domain/pix'
@@ -119,11 +120,19 @@ function SharedMonths({
                   : `${monthName(selected)} com ${view.ownerName}`}
               </div>
               <p className="hero-num">{formatMoney(month.due)}</p>
-              <p className="bar-cap">
-                Nos cartões do {view.ownerName}: {formatMoney(month.owed)}
-                {month.paid > 0 &&
-                  ` · você já pagou ${formatMoney(month.paid)}`}
-              </p>
+              {month.owed > 0 && month.due === 0 ? (
+                <p className="paid-status">
+                  <CheckIcon />
+                  Você pagou tudo de {monthName(selected).toLowerCase()} (
+                  {formatMoney(month.owed)}).
+                </p>
+              ) : (
+                <p className="bar-cap">
+                  Nos cartões do {view.ownerName}: {formatMoney(month.owed)}
+                  {month.paid > 0 &&
+                    ` · você já pagou ${formatMoney(month.paid)}`}
+                </p>
+              )}
             </section>
 
             {view.pixKey && <PixBlock view={view} due={month.due} />}

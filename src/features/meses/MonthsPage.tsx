@@ -25,6 +25,7 @@ import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
 import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
 import { OwedBlock } from './OwedBlock'
+import { paidBack } from './paidBack'
 import { ProfileSwitch } from './ProfileSwitch'
 import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
@@ -237,19 +238,32 @@ export function MonthsPage() {
   }
 
   const summary = <MonthSummary month={selected} balance={view.balance} />
+  // "Pai pagou", in your view and in his: settles his part of the month.
+  const otherPaid = (income: IncomeRow) => {
+    run(ops.restoreIncome(income))
+    toast(`${income.description}: parte dele acertada`, {
+      label: 'Desfazer',
+      onClick: () => run(ops.removeIncome(income)),
+    })
+  }
+  const undoPaid = () => {
+    const back = paidBack(finance, selected)
+    for (const income of back) run(ops.removeIncome(income))
+    toast(`${finance.otherPerson} pagou: desfeito`, {
+      label: 'Refazer',
+      onClick: () => {
+        for (const income of back) run(ops.restoreIncome(income))
+      },
+    })
+  }
   const owed = finance.otherPerson && (
     <OwedBlock
       finance={shown}
       month={selected}
       owed={view.balance.otherOwed}
       due={view.balance.otherDue}
-      onPaid={(income) => {
-        run(ops.restoreIncome(income))
-        toast(`${income.description}: parte dele acertada`, {
-          label: 'Desfazer',
-          onClick: () => run(ops.removeIncome(income)),
-        })
-      }}
+      onPaid={otherPaid}
+      onUndo={undoPaid}
     />
   )
   const outflows = (
@@ -336,7 +350,15 @@ export function MonthsPage() {
         onClickCapture={forecast ? onlyLook : undefined}
       >
         {profile === 'other' ? (
-          <OtherMonth finance={shown} month={selected} onOpen={openOutflow} />
+          <OtherMonth
+            finance={shown}
+            month={selected}
+            owed={view.balance.otherOwed}
+            due={view.balance.otherDue}
+            onOpen={openOutflow}
+            onPaid={otherPaid}
+            onUndo={undoPaid}
+          />
         ) : (
           <>
             {wide ? (

@@ -457,8 +457,62 @@ describe('Pai usa os cartões', () => {
     // Settles his part; it is not your income.
     expect(heroValue('Entradas')).toBe('R$ 5.100,00')
     expect(screen.queryByText('Pai pagou', { selector: 'span' })).toBeNull()
-    expect(text(owed.textContent)).toContain('R$ 0,00')
-    expect(text(owed.textContent)).toContain('Já devolveu R$ 12,00')
+    // Green, with a check: he paid all of September.
+    expect(text(owed.textContent)).toBe(
+      'Pai pagou SetembroR$ 12,00Devolveu tudo.Desfazer',
+    )
+    expect(owed).toHaveClass('settled')
+    // His view says so too.
+    const switcher = screen.getByRole('group', { name: 'Ver gastos de' })
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Pai' }))
+    const dad = screen.getByRole('region', { name: 'Resumo do Pai' })
+    expect(text(dad.textContent)).toContain('Pagou tudo de setembro.')
+    // Undo from there: owes again, in both views.
+    fireEvent.click(within(dad).getByRole('button', { name: 'Desfazer' }))
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({ table: 'incomes', op: 'delete' }),
+    )
+    expect(text(dad.textContent)).toContain('Falta ele te devolver R$ 12,00.')
+    fireEvent.click(within(dad).getByRole('button', { name: 'Pai pagou' }))
+    await settle()
+    expect(text(dad.textContent)).toContain('Pagou tudo de setembro.')
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
+    localStorage.removeItem('aerarium.perfil')
+  })
+
+  it('devolveu uma parte: diz quanto falta, e dá pra desfazer', async () => {
+    const finance = withDad()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      incomes: [
+        ...finance.incomes,
+        {
+          id: 'volta',
+          monthId: finance.months.find((item) => item.ref === '2026-09')!.id,
+          month: month('2026-09'),
+          description: 'Pai pagou',
+          amount: cents(500),
+          kind: 'from_other',
+          sortOrder: 9,
+        },
+      ],
+    })
+    const owed = screen.getByRole('region', { name: 'O que o Pai te deve' })
+    expect(text(owed.textContent)).toContain('Já devolveu R$ 5,00 de R$ 12,00')
+    fireEvent.click(within(owed).getByRole('button', { name: 'Desfazer' }))
+    await settle()
+    expect(text(owed.textContent)).toContain('Parte dele nas faturas: R$ 12,00')
+    fireEvent.click(screen.getByRole('button', { name: 'Refazer' }))
+    await settle()
+    expect(text(owed.textContent)).toContain('Já devolveu R$ 5,00')
+    const switcher = screen.getByRole('group', { name: 'Ver gastos de' })
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Pai' }))
+    expect(
+      text(screen.getByRole('region', { name: 'Resumo do Pai' }).textContent),
+    ).toContain('Falta ele te devolver R$ 7,00 (já devolveu R$ 5,00).')
+    fireEvent.click(within(switcher).getByRole('button', { name: 'Eu' }))
+    localStorage.removeItem('aerarium.perfil')
   })
 
   it('na visão do Pai, um gasto dele pode voltar a ser seu', async () => {

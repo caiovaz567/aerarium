@@ -634,6 +634,38 @@
 .owed-block .btn {
   flex: none;
 }
+/* All sent back: green, with a check. */
+.owed-block.settled {
+  background: color-mix(in srgb, var(--pos) 12%, transparent);
+}
+.owed-block.settled .owed-text b {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--pos);
+}
+.owed-block.settled .owed-text b svg,
+.paid-status svg {
+  width: 20px;
+  height: 20px;
+}
+.paid-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--pos);
+  font-weight: 600;
+}
+.paid-status .link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
 
 /* A month not created yet, shown as a forecast (read only). */
 .forecast-note {

@@ -193,6 +193,25 @@ describe('Cartões do Caio, na conta de quem usa', () => {
     ).toContain('R$ 89,95')
   })
 
+  it('pagou tudo do mês: a tela diz que está pago', async () => {
+    const { ownerName, pixKey, pixBank, ...data } = raw
+    fake.current!.tableResults.shares = [
+      {
+        owner_name: ownerName,
+        pix_key: pixKey,
+        pix_bank: pixBank,
+        data: { ...data, paidBack: [{ month: '2026-09', amount: '149.95' }] },
+      },
+    ]
+    renderApp('/compartilhado')
+    const hero = await screen.findByRole('region', {
+      name: 'O que você deve ao Caio',
+    })
+    expect(text(hero.textContent)).toContain(
+      'Você pagou tudo de setembro (R$ 149,95).',
+    )
+  })
+
   it('sem nada compartilhado: Meses de sempre, e a tela diz que não tem nada', async () => {
     renderApp('/meses/2026-09')
     await settle()
