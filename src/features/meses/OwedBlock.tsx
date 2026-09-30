@@ -2,7 +2,6 @@ import type { Finance, IncomeRow } from '../../data/finance'
 import { paidIncome } from './paidBack'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
-import { CheckIcon } from '../../ui/icons'
 
 /**
  * Fase 13.3: the owner pays the whole invoice and the other person sends
@@ -39,10 +38,7 @@ export function OwedBlock({
             ? `${name} pagou ${monthName(month)}`
             : `${name} te deve em ${monthName(month)}`}
         </small>
-        <b>
-          {settled && <CheckIcon />}
-          {formatMoney(settled ? owed : due)}
-        </b>
+        <b>{formatMoney(settled ? owed : due)}</b>
         <small>
           {owed === 0
             ? 'Nada dele nos cartões este mês.'

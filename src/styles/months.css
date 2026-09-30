@@ -639,15 +639,7 @@
   background: color-mix(in srgb, var(--pos) 12%, transparent);
 }
 .owed-block.settled .owed-text b {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   color: var(--pos);
-}
-.owed-block.settled .owed-text b svg,
-.paid-status svg {
-  width: 20px;
-  height: 20px;
 }
 .paid-status {
   display: flex;

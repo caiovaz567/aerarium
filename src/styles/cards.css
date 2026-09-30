@@ -810,28 +810,6 @@ a.row-main {
   font-size: 16px;
   white-space: nowrap;
 }
-.card-hero-pay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 42px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--surface-2);
-  color: var(--ink);
-  font: inherit;
-  font-weight: 600;
-}
-.card-hero-pay svg {
-  width: 16px;
-  height: 16px;
-  color: var(--pos);
-}
-.card-hero-pay[aria-pressed='true'] {
-  background: color-mix(in srgb, var(--pos) 14%, transparent);
-  color: var(--pos);
-}
 .card-hero-limit small b {
   color: var(--ink);
 }

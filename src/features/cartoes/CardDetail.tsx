@@ -16,7 +16,8 @@ import { instantToSaoPaulo } from '../../domain/timeline'
 import { CardArt } from '../../ui/CardArt'
 import { CategoryBadge } from '../../ui/CategoryBadge'
 import { AddButton } from '../../ui/controls'
-import { CardIcon, CheckIcon, RepeatIcon } from '../../ui/icons'
+import { Button } from '@heroui/react'
+import { CardIcon, RepeatIcon } from '../../ui/icons'
 import { PageColumns } from '../../ui/PageColumns'
 import { BankTotalModal } from '../cartao/BankTotalModal'
 import {
@@ -347,15 +348,15 @@ export function CardDetail({
             </div>
           )}
           {view.invoice && (
-            <button
-              type="button"
-              className="card-hero-pay"
-              aria-pressed={view.invoice.paid}
-              onClick={() => onPaid(!view.invoice!.paid)}
+            <Button
+              variant={view.invoice.paid ? 'tertiary' : 'secondary'}
+              fullWidth
+              onPress={() => onPaid(!view.invoice!.paid)}
             >
-              <CheckIcon />
-              {view.invoice.paid ? 'Fatura paga' : 'Marcar fatura como paga'}
-            </button>
+              {view.invoice.paid
+                ? 'Fatura paga · desmarcar'
+                : 'Marcar fatura como paga'}
+            </Button>
           )}
           {view.limit && (
             <div className="card-hero-limit" aria-label="Limite">

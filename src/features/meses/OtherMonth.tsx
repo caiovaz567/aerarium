@@ -2,7 +2,6 @@ import { useState } from 'react'
 import type { Finance, IncomeRow } from '../../data/finance'
 import { monthOutflowItems, type OutflowItem } from '../../domain/categories'
 import { cents, formatMoney, sumMoney, type Cents } from '../../domain/money'
-import { CheckIcon } from '../../ui/icons'
 import { paidIncome } from './paidBack'
 import { monthName, type Month } from '../../domain/months'
 import { OtherByType } from './OtherByType'
@@ -54,7 +53,6 @@ export function OtherMonth({
         <p className="hero-num">{formatMoney(total)}</p>
         {owed > 0 && due === 0 ? (
           <p className="paid-status">
-            <CheckIcon />
             Pagou tudo de {monthName(month).toLowerCase()}.
             <button type="button" className="link-button" onClick={onUndo}>
               Desfazer
