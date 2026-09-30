@@ -143,7 +143,7 @@ body.has-stuck .app-header.scrolled {
 }
 
 /* Tabs: a floating bar at the bottom on phones, a side column on computers. */
-.tabs {
+.app-tabs {
   position: fixed;
   right: max(12px, env(safe-area-inset-right, 0px));
   bottom: calc(10px + env(safe-area-inset-bottom, 0px));
@@ -258,6 +258,67 @@ body.has-stuck .app-header.scrolled {
   height: 17px;
 }
 
+/* Two columns on a wide screen (PageColumns); one on phones. */
+.page-cols,
+.page-main,
+.page-side {
+  display: contents;
+}
+@media (min-width: 1100px) {
+  .page-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+  .page-cols.side-left {
+    grid-template-columns: minmax(340px, 1fr) minmax(0, 2fr);
+  }
+  .page-main,
+  .page-side {
+    display: flex;
+    flex-direction: column;
+    grid-row: 1;
+    gap: 12px;
+    min-width: 0;
+  }
+  .page-main {
+    grid-column: 1;
+  }
+  .page-side {
+    grid-column: 2;
+  }
+  .side-left .page-main {
+    grid-column: 2;
+  }
+  .side-left .page-side {
+    grid-column: 1;
+  }
+}
+
+/* Wide screen: cards (Cartões) and the tab's groups (Ajustes) side by side. */
+.cards-grid,
+.settings-body {
+  display: contents;
+}
+@media (min-width: 1100px) {
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+    align-items: start;
+    gap: 12px;
+  }
+  .settings-body {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px 12px;
+  }
+  .settings-body > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
 /* A page's own bar, lifted into the header's row on a wide screen. */
 .header-slot:empty {
   display: none;
@@ -277,21 +338,24 @@ body.has-stuck .app-header.scrolled {
     background: none;
     box-shadow: none;
   }
+  /* The two arrows together, then the month; Eu | Pai right after it. */
   .header-slot .monthbar {
     order: -1;
   }
-  /* Wide enough for the longest month: the arrows never move. */
-  .header-slot .monthname {
+  .header-slot .monthbar .monthname {
+    order: 1;
     flex: none;
-    width: 290px;
-    font-size: 30px;
+    margin-left: 6px;
+    font-size: 28px;
   }
+  /* Eu | Pai at the right, beside Salvo: it never moves with the month. */
   .header-slot .profile-switch {
-    width: 240px;
+    width: 200px;
     margin: 0 0 0 auto;
   }
   .header-slot .profile-switch button {
-    min-height: 36px;
+    min-height: 32px;
+    padding-block: 0;
     font-size: 14px;
   }
   .app-header:has(.header-slot:not(:empty)) .app-header-inner {
@@ -333,10 +397,38 @@ body.has-stuck .app-header.scrolled {
   .theme-cycle {
     display: none;
   }
+  /* Every control in the header's row: 40px tall, same corner and outline. */
+  .app-header .icon-button,
+  .app-header .segmented,
+  .app-header .theme-toggle,
+  .app-header .excel-button {
+    height: 40px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .app-header .icon-button[disabled] {
+    box-shadow: none;
+  }
+  .app-header .icon-button.plus {
+    background: var(--accent);
+    box-shadow: none;
+  }
+  .app-header .theme-toggle {
+    padding: 4px;
+  }
+  .app-header .theme-toggle button {
+    height: 32px;
+  }
+  .app-header .excel-button {
+    padding: 0 14px;
+    font-size: 14px;
+  }
   .theme-toggle {
     display: flex;
   }
-  .tabs {
+  .app-tabs {
     position: sticky;
     top: 12px;
     right: auto;
@@ -400,6 +492,12 @@ body.has-stuck .app-header.scrolled {
     width: 100%;
     max-width: calc(var(--page-width) + 16px);
     padding: 4px 8px 48px;
+  }
+}
+/* After the rule above: from 1100px, every page takes the same wide width. */
+@media (min-width: 1100px) {
+  .shell {
+    --page-width: var(--page-wide);
   }
 }
 @media (hover: hover) and (pointer: fine) {
@@ -520,7 +618,7 @@ body.has-stuck .app-header.scrolled {
   width: 18px;
   height: 18px;
 }
-.link {
+.link-button {
   padding: 6px 2px;
   border: 0;
   background: none;
@@ -712,7 +810,7 @@ body.has-stuck .app-header.scrolled {
 }
 
 /* Toast */
-.toast {
+.app-toast {
   position: fixed;
   bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   left: 50%;
@@ -733,7 +831,7 @@ body.has-stuck .app-header.scrolled {
   transform: translateX(-50%);
   animation: up 0.2s ease-out;
 }
-.toast button {
+.app-toast button {
   padding: 4px 6px;
   border: 0;
   background: none;
@@ -741,15 +839,15 @@ body.has-stuck .app-header.scrolled {
   font-weight: 700;
 }
 /* Sits above the undo toast, so both fit at once. */
-.toast.update-toast {
+.app-toast.update-toast {
   z-index: 59;
   bottom: calc(140px + env(safe-area-inset-bottom, 0px));
 }
 @media (min-width: 760px) {
-  .toast {
+  .app-toast {
     bottom: 24px;
   }
-  .toast.update-toast {
+  .app-toast.update-toast {
     bottom: 80px;
   }
 }

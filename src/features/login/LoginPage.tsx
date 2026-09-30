@@ -165,14 +165,14 @@ export function LoginPage() {
             <>
               <button
                 type="button"
-                className="link"
+                className="link-button"
                 onClick={() => switchTo('esqueci')}
               >
                 Esqueci a senha
               </button>
               <button
                 type="button"
-                className="link"
+                className="link-button"
                 onClick={() => switchTo('criar')}
               >
                 Criar conta
@@ -182,7 +182,7 @@ export function LoginPage() {
           {mode !== 'entrar' && (
             <button
               type="button"
-              className="link"
+              className="link-button"
               onClick={() => switchTo('entrar')}
             >
               Já tenho conta

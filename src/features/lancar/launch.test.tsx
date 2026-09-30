@@ -332,7 +332,7 @@ describe('modal Lançar', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Lançar' }))
     await settle()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(spaced(document.querySelector('.toast')?.textContent)).toContain(
+    expect(spaced(document.querySelector('.app-toast')?.textContent)).toContain(
       'R$ 12,00 na fatura Nubank Teste',
     )
     await waitFor(() =>

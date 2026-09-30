@@ -29,9 +29,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext value={show}>
       {children}
       {/* Always mounted so screen readers announce changes. */}
-      <div className="toast-region" role="status" aria-live="polite">
+      <div className="app-toasts" role="status" aria-live="polite">
         {toast && (
-          <div className="toast" key={toast.id}>
+          <div className="app-toast" key={toast.id}>
             <span>{toast.message}</span>
             {toast.action && (
               <button

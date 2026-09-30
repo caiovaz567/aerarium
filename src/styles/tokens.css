@@ -42,6 +42,8 @@
   --space-6: 24px;
   --space-8: 32px;
   --content-width: 720px;
+  /* Every page on a wide screen (1100px or more): one width for all. */
+  --page-wide: 1800px;
 
   /*
    * HeroUI's own names, pointed at the app's colors. Declared once here: they

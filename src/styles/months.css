@@ -407,7 +407,7 @@
   );
   pointer-events: none;
 }
-.card-art .chip {
+.card-art .card-chip {
   position: absolute;
   top: 30%;
   left: 13%;
@@ -539,7 +539,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.invoice-sec .link {
+.invoice-sec .link-button {
   align-self: flex-start;
   font-size: 13.5px;
 }
@@ -808,21 +808,15 @@
   gap: 16px;
 }
 @media (min-width: 1100px) {
-  .shell:has(.month-grid) {
-    --page-width: 1800px;
+  .month-grid.page-cols {
+    display: grid;
   }
-  .month-grid {
+  /* Profile "Pai" has no PageColumns: its two blocks, side by side. */
+  .month-grid:not(.page-cols) {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
     align-items: start;
     gap: 12px;
-  }
-  .month-main,
-  .month-side {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 0;
   }
   /* Profile "Pai": the purchases on the left, the summary beside them. */
   .month-grid > .hero {

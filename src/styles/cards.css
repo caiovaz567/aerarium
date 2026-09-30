@@ -219,7 +219,7 @@ a.row-main {
   border-radius: 14px;
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 14%);
 }
-.card-art.lg .chip {
+.card-art.lg .card-chip {
   top: 34%;
   left: 9%;
   width: 13%;
@@ -550,7 +550,7 @@ a.row-main {
   display: block;
   max-width: none;
 }
-.chart-strip .grid {
+.chart-strip .grid-lines {
   stroke: var(--line);
   stroke-dasharray: 2 6;
   stroke-opacity: 0.6;
@@ -880,7 +880,7 @@ a.row-main {
   padding-top: 10px;
   border-top: 1px solid var(--line);
 }
-.invoice-parts .bank-total .link {
+.invoice-parts .bank-total .link-button {
   padding: 0;
   border: 0;
   background: none;

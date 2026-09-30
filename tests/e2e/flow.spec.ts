@@ -117,7 +117,7 @@ test('lançar um Uber de R$ 12 no cartão em menos de 5 segundos e desfazer', as
   await dialog.getByLabel('Descrição').fill('Uber')
   await dialog.getByText('Nubank Teste').click()
   await dialog.getByRole('button', { name: 'Lançar' }).click()
-  const toast = page.locator('.toast')
+  const toast = page.locator('.app-toast')
   await expect(toast).toContainText('na fatura Nubank Teste')
   expect(Date.now() - start).toBeLessThan(5000)
   // Two Ubers now, shown together in the composition.

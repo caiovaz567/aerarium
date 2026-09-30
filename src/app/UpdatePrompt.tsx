@@ -30,7 +30,7 @@ export function UpdatePrompt() {
 
 export function UpdateBanner({ onUpdate }: { readonly onUpdate: () => void }) {
   return (
-    <div className="toast update-toast" role="status">
+    <div className="app-toast update-toast" role="status">
       <span>Nova versão disponível.</span>
       <button type="button" onClick={onUpdate}>
         Atualizar

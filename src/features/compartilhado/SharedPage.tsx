@@ -1,3 +1,5 @@
+import { PageColumns } from '../../ui/PageColumns'
+import { HeaderSlot } from '../../app/headerSlot'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { currentMonth, parseMonth } from '../../app/paths'
@@ -95,79 +97,88 @@ function SharedMonths({
   const pathFor = (ref: Month) => `${base}?mes=${ref}`
   return (
     <>
-      <MonthBar
-        selected={selected}
-        months={refs}
-        pathFor={pathFor}
-        onOpenList={nothing}
-        onCreateNext={nothing}
-        canCreate={false}
-      />
-      <section
-        className="hero"
-        aria-label={`O que você deve ao ${view.ownerName}`}
-      >
-        <div className="hero-label">
-          {month.due > 0
-            ? `Falta pagar ao ${view.ownerName} em ${monthName(selected)}`
-            : `${monthName(selected)} com ${view.ownerName}`}
-        </div>
-        <p className="hero-num">{formatMoney(month.due)}</p>
-        <p className="bar-cap">
-          Nos cartões do {view.ownerName}: {formatMoney(month.owed)}
-          {month.paid > 0 && ` · você já pagou ${formatMoney(month.paid)}`}
-        </p>
-        {month.cards.length > 0 && (
-          <ul className="other-cards">
-            {month.cards.map(({ card, amount }) => (
-              <li key={card.id}>
-                <CardArt card={card} size="xs" />
-                <span>{card.name}</span>
-                <b>{formatMoney(amount)}</b>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {view.pixKey && <PixBlock view={view} due={month.due} />}
-
-      <section className="block" aria-labelledby="suas-compras">
-        <div className="block-head">
-          <h2 id="suas-compras">Suas compras</h2>
-          <span className="sum neg">{formatMoney(month.owed)}</span>
-        </div>
-        <div
-          className="segmented views"
-          role="group"
-          aria-label="Ver suas compras"
-        >
-          {VIEWS.map(([key, label]) => (
-            <button
-              type="button"
-              key={key}
-              aria-pressed={tab === key}
-              onClick={() => setTab(key)}
+      <HeaderSlot>
+        <MonthBar
+          selected={selected}
+          months={refs}
+          pathFor={pathFor}
+          onOpenList={nothing}
+          onCreateNext={nothing}
+          canCreate={false}
+        />
+      </HeaderSlot>
+      <PageColumns
+        side={
+          <>
+            <section
+              className="hero"
+              aria-label={`O que você deve ao ${view.ownerName}`}
             >
-              {label}
-            </button>
-          ))}
-        </div>
-        {tab === 'tipo' && (
-          <OtherByType
-            finance={finance}
-            month={selected}
-            onOpen={nothing}
-            empty="Nenhuma compra sua neste mês."
-          />
-        )}
-        {tab === 'data' && (
-          <TimelineView finance={finance} month={selected} onOpen={nothing} />
-        )}
-        {tab === 'categoria' && (
-          <SpendingList finance={finance} month={selected} onOpen={nothing} />
-        )}
-      </section>
+              <div className="hero-label">
+                {month.due > 0
+                  ? `Falta pagar ao ${view.ownerName} em ${monthName(selected)}`
+                  : `${monthName(selected)} com ${view.ownerName}`}
+              </div>
+              <p className="hero-num">{formatMoney(month.due)}</p>
+              <p className="bar-cap">
+                Nos cartões do {view.ownerName}: {formatMoney(month.owed)}
+                {month.paid > 0 &&
+                  ` · você já pagou ${formatMoney(month.paid)}`}
+              </p>
+              {month.cards.length > 0 && (
+                <ul className="other-cards">
+                  {month.cards.map(({ card, amount }) => (
+                    <li key={card.id}>
+                      <CardArt card={card} size="xs" />
+                      <span>{card.name}</span>
+                      <b>{formatMoney(amount)}</b>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {view.pixKey && <PixBlock view={view} due={month.due} />}
+          </>
+        }
+      >
+        <section className="block" aria-labelledby="suas-compras">
+          <div className="block-head">
+            <h2 id="suas-compras">Suas compras</h2>
+            <span className="sum neg">{formatMoney(month.owed)}</span>
+          </div>
+          <div
+            className="segmented views"
+            role="group"
+            aria-label="Ver suas compras"
+          >
+            {VIEWS.map(([key, label]) => (
+              <button
+                type="button"
+                key={key}
+                aria-pressed={tab === key}
+                onClick={() => setTab(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {tab === 'tipo' && (
+            <OtherByType
+              finance={finance}
+              month={selected}
+              onOpen={nothing}
+              empty="Nenhuma compra sua neste mês."
+            />
+          )}
+          {tab === 'data' && (
+            <TimelineView finance={finance} month={selected} onOpen={nothing} />
+          )}
+          {tab === 'categoria' && (
+            <SpendingList finance={finance} month={selected} onOpen={nothing} />
+          )}
+        </section>
+      </PageColumns>
     </>
   )
 }

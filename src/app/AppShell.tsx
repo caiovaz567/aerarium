@@ -145,7 +145,7 @@ export function AppShell() {
           </a>
           <div className="shell">
             <Header onSlot={setSlot} />
-            <nav className="tabs" aria-label="Seções">
+            <nav className="app-tabs" aria-label="Seções">
               {/* On a computer the bar is a side column headed by the wordmark. */}
               <Brand heading={false} />
               <NavLink className="tab" to="/meses">

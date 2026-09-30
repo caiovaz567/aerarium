@@ -323,7 +323,13 @@ export function MonthsPage() {
       {/* One column on phones; on a wide screen, the summary and Saídas on
           the left, what the other person owes and Entradas beside them. */}
       <div
-        className={forecast ? 'month-grid forecast-view' : 'month-grid'}
+        className={[
+          'month-grid',
+          wide && profile !== 'other' && 'page-cols',
+          forecast && 'forecast-view',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         onClickCapture={forecast ? onlyLook : undefined}
       >
         {profile === 'other' ? (
@@ -332,11 +338,11 @@ export function MonthsPage() {
           <>
             {wide ? (
               <>
-                <div className="month-main">
+                <div className="page-main">
                   {summary}
                   {outflows}
                 </div>
-                <div className="month-side">
+                <div className="page-side">
                   {owed}
                   {incomes}
                   <MoneyPlaces finance={shown} month={selected} />

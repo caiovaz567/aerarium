@@ -314,7 +314,7 @@ describe('Editar parcelamento', () => {
       within(form).getByRole('button', { name: 'Registrar pagamento' }),
     )
     await settle()
-    expect(spaced(document.querySelector('.toast')!.textContent)).toContain(
+    expect(spaced(document.querySelector('.app-toast')!.textContent)).toContain(
       'Registrado, faltam 8',
     )
     await waitFor(() =>

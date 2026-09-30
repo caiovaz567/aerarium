@@ -17,7 +17,7 @@ export function CategoryBadge({
 }) {
   return (
     <span
-      className={`cat-badge ${shape}${category ? '' : ' none'}`}
+      className={`cat-badge${shape === 'round' ? ' round' : ''}${category ? '' : ' none'}`}
       style={category ? ({ '--cat': category.color } as CSSProperties) : {}}
       aria-hidden="true"
     >

@@ -142,14 +142,14 @@ export function ShareSettings({ other }: { readonly other: string }) {
           <span className="share-actions">
             <button
               type="button"
-              className="link"
+              className="link-button"
               onClick={() => setEditing(true)}
             >
               {current ? 'Editar' : 'Compartilhar'}
             </button>
             {current && (
               <ArmedButton
-                className="link"
+                className="link-button"
                 onConfirm={() => {
                   void stopSharing(userId, current.viewerEmail)
                     .then(() => {

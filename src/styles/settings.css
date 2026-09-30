@@ -199,7 +199,7 @@
 }
 
 /* Fase 13.3: someone else uses the cards. */
-.switch {
+.toggle {
   flex: none;
   position: relative;
   width: 46px;
@@ -213,7 +213,7 @@
   -webkit-appearance: none;
   transition: background 0.15s;
 }
-.switch::after {
+.toggle::after {
   content: '';
   position: absolute;
   top: 3px;
@@ -224,13 +224,13 @@
   background: #fff;
   transition: transform 0.15s;
 }
-.switch:checked {
+.toggle:checked {
   background: var(--accent);
 }
-.switch:checked::after {
+.toggle:checked::after {
   transform: translateX(18px);
 }
-.switch:focus-visible {
+.toggle:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
@@ -246,8 +246,8 @@
   font-size: 14px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .switch,
-  .switch::after {
+  .toggle,
+  .toggle::after {
     transition: none;
   }
 }
@@ -259,13 +259,13 @@
   gap: 4px 16px;
   margin-top: 4px;
 }
-.share-actions .link {
+.share-actions .link-button {
   padding: 4px 0;
   font-size: 14px;
   text-decoration: none;
   cursor: pointer;
 }
-.share-actions .link.armed {
+.share-actions .link-button.armed {
   color: var(--neg);
 }
 

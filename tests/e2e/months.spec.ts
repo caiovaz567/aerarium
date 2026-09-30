@@ -57,7 +57,8 @@ test('nome de cartão longo e composição quebram sem "…"', async ({ page }) 
 
 test('trocar de mês não mexe na barra nem no resumo', async ({ page }) => {
   await page.goto('/meses/2026-09')
-  const bar = page.locator('.stick')
+  // The arrows stay put, whatever the month's name.
+  const bar = page.locator('[aria-label="Mês anterior"]')
   const hero = page.getByRole('region', { name: 'Resumo do mês' })
   const before = [await box(bar), await box(hero)]
   await page.getByRole('link', { name: 'Mês anterior' }).click()

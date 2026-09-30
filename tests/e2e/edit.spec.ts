@@ -57,5 +57,5 @@ test('Excel baixa com o nome da data de hoje', async ({ page, isMobile }) => {
   await page.getByRole('button', { name: 'Baixar tudo em Excel' }).click()
   const file = await download
   expect(file.suggestedFilename()).toMatch(/^Aerarium_\d{4}-\d{2}-\d{2}\.xlsx$/)
-  await expect(page.locator('.toast')).toContainText('Excel baixado')
+  await expect(page.locator('.app-toast')).toContainText('Excel baixado')
 })

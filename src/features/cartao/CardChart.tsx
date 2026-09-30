@@ -176,7 +176,7 @@ export function CardChart({
               x2={layout.svgWidth}
               y1={y}
               y2={y}
-              className="grid"
+              className="grid-lines"
             />
           ))}
           <line

@@ -52,7 +52,7 @@ export function CardArt({
       onPointerMove={big ? tilt : undefined}
       onPointerLeave={big ? untilt : undefined}
     >
-      <i className="chip" />
+      <i className="card-chip" />
       {big && (
         <>
           {bank && <BankLogo bank={bank} className="on-card" />}

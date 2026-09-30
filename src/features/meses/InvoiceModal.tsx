@@ -297,7 +297,7 @@ export function InvoiceModal({
           )}
           <button
             type="button"
-            className="link"
+            className="link-button"
             onClick={() => {
               setTotalMode(!totalMode)
               setError('')

@@ -209,7 +209,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
           <input
             id="email-diario"
             type="checkbox"
-            className="switch"
+            className="toggle"
             checked={Boolean(finance.dailyEmail)}
             disabled={mailing}
             onChange={(event) => void toggleEmail(event.target.checked)}
@@ -324,7 +324,7 @@ export function OtherPersonSection({ finance }: { readonly finance: Finance }) {
           <input
             id="outra-pessoa"
             type="checkbox"
-            className="switch"
+            className="toggle"
             checked={Boolean(finance.otherPerson)}
             onChange={(event) =>
               run(

@@ -1,3 +1,5 @@
+import { HeaderSlot } from '../../app/headerSlot'
+import { PageColumns } from '../../ui/PageColumns'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { currentMonth } from '../../app/paths'
@@ -165,307 +167,322 @@ export function CardPage() {
 
   return (
     <>
-      <StickyBar className="page-bar">
-        <Link
-          className="icon-button"
-          to="/cartoes"
-          aria-label="Voltar pros cartões"
-        >
-          <ChevronLeftIcon />
-        </Link>
-        <h2 className="page-title">{card.name}</h2>
-        <button
-          type="button"
-          className="pill-button"
-          onClick={() => editor.card(card.id)}
-          aria-label={`Editar ${card.name}`}
-        >
-          Editar
-        </button>
-      </StickyBar>
+      <HeaderSlot>
+        <StickyBar className="page-bar">
+          <Link
+            className="icon-button"
+            to="/cartoes"
+            aria-label="Voltar pros cartões"
+          >
+            <ChevronLeftIcon />
+          </Link>
+          <h2 className="page-title">{card.name}</h2>
+          <button
+            type="button"
+            className="pill-button"
+            onClick={() => editor.card(card.id)}
+            aria-label={`Editar ${card.name}`}
+          >
+            Editar
+          </button>
+        </StickyBar>
+      </HeaderSlot>
 
-      <section className="card-hero" aria-label="Fatura atual">
-        <div className="card-hero-head">
-          <CardArt card={card} />
-          <div>
-            <b>{card.name}</b>
-            {view.final && <small>final {view.final}</small>}
+      {/* Wide screen: the card's facts on the left, the chart and lists beside. */}
+      <PageColumns
+        sideLeft
+        side={
+          <>
+            <section className="card-hero" aria-label="Fatura atual">
+              <div className="card-hero-head">
+                <CardArt card={card} />
+                <div>
+                  <b>{card.name}</b>
+                  {view.final && <small>final {view.final}</small>}
+                </div>
+              </div>
+              <div className="card-hero-grid">
+                <div>
+                  <small>Vencimento</small>
+                  <b>{view.due ? shortDate(view.due) : 'sem dia'}</b>
+                  {view.dueText && <small>{view.dueText}</small>}
+                </div>
+                <div>
+                  <small>Fatura de {monthName(now).toLowerCase()}</small>
+                  <b>{formatMoney(view.total)}</b>
+                  <span className={`status-pill ${view.status}`}>
+                    {STATUS[view.status]}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            {view.limit && (
+              <section className="block limit-block" aria-label="Limite">
+                <div>
+                  <small>Limite disponível</small>
+                  <b>{formatMoney(view.limit.available)}</b>
+                  <small>de {formatMoney(view.limit.total)}</small>
+                </div>
+                <LimitRing share={view.limit.share} />
+              </section>
+            )}
+
+            {view.nextDue || view.bestDay ? (
+              <dl className="block card-dates">
+                <div>
+                  <dt>Próxima fatura</dt>
+                  <dd>
+                    {view.nextDue ? longDate(view.nextDue) : 'sem vencimento'}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Melhor dia pra comprar</dt>
+                  <dd>
+                    {view.bestDay ? `dia ${view.bestDay}` : 'sem fechamento'}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="block card-dates-hint">
+                Coloca o dia de fechamento e o de vencimento em{' '}
+                <button type="button" onClick={() => editor.card(card.id)}>
+                  Editar
+                </button>{' '}
+                pra ver o vencimento e o melhor dia pra comprar.
+              </p>
+            )}
+
+            {(view.parts.length > 0 ||
+              (finance.otherPerson && view.invoice)) && (
+              <section
+                className="block invoice-parts"
+                aria-labelledby="resumo-fatura"
+              >
+                <div className="block-head">
+                  <h2 id="resumo-fatura">Resumo da fatura</h2>
+                </div>
+                <dl>
+                  {view.parts.map((part) => (
+                    <div key={part.label}>
+                      <dt>{part.label}</dt>
+                      <dd>{formatMoney(part.amount)}</dd>
+                    </div>
+                  ))}
+                  <div className="total">
+                    <dt>Total</dt>
+                    <dd>{formatMoney(view.total)}</dd>
+                  </div>
+                  {finance.otherPerson && view.invoice && (
+                    <>
+                      {bankFillsOther(view.invoice.month, finance) && (
+                        <div className="bank-total">
+                          <dt>Total no banco</dt>
+                          <dd>
+                            <button
+                              type="button"
+                              className="link-button"
+                              onClick={() => setTypingBank(true)}
+                            >
+                              {view.bankTotal === null
+                                ? 'Digitar'
+                                : formatMoney(view.bankTotal)}
+                            </button>
+                          </dd>
+                        </div>
+                      )}
+                      <div>
+                        <dt>Parte do {finance.otherPerson}</dt>
+                        <dd>{formatMoney(view.otherShare)}</dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+              </section>
+            )}
+            {typingBank && view.invoice && finance.otherPerson && (
+              <BankTotalModal
+                invoice={view.invoice}
+                other={finance.otherPerson}
+                onClose={() => setTypingBank(false)}
+              />
+            )}
+          </>
+        }
+      >
+        <section className="block card-chart" aria-label="Fatura por mês">
+          <div className="chart-top">
+            <div className="chart-head" aria-live="polite">
+              <small>
+                {monthLabel(selected)} ·{' '}
+                <span className={status.tone}>{status.text}</span>
+              </small>
+              <b>{formatMoney(point.total)}</b>
+              <div className="change-row">
+                {comparison &&
+                  (comparison.direction === 'equal' ? (
+                    <span className="change equal">
+                      igual a {monthShort(comparison.previousMonth).slice(0, 3)}
+                    </span>
+                  ) : (
+                    <span className={`change ${comparison.direction}`}>
+                      <Triangle up={comparison.direction === 'up'} />
+                      {formatMoney(cents(Math.abs(comparison.difference)))}
+                      {comparison.percentage !== null &&
+                        ` (${percent.format(comparison.percentage)}%)`}
+                      <small>
+                        vs {monthShort(comparison.previousMonth).slice(0, 3)}
+                      </small>
+                    </span>
+                  ))}
+              </div>
+            </div>
+            <div className="chart-nav">
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Mês anterior"
+                disabled={index <= 0}
+                onClick={() => step(-1)}
+              >
+                <ChevronLeftIcon />
+              </button>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Próximo mês"
+                disabled={index >= points.length - 1}
+                onClick={() => step(1)}
+              >
+                <ChevronRightIcon />
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="card-hero-grid">
-          <div>
-            <small>Vencimento</small>
-            <b>{view.due ? shortDate(view.due) : 'sem dia'}</b>
-            {view.dueText && <small>{view.dueText}</small>}
-          </div>
-          <div>
-            <small>Fatura de {monthName(now).toLowerCase()}</small>
-            <b>{formatMoney(view.total)}</b>
-            <span className={`status-pill ${view.status}`}>
-              {STATUS[view.status]}
+          {average && (
+            <p className="average">
+              média {average.count} meses <b>{formatMoney(average.amount)}</b>
+            </p>
+          )}
+          <CardChart
+            points={points}
+            selected={selected}
+            current={now}
+            onSelect={setPicked}
+          />
+        </section>
+
+        <section
+          className="month-detail"
+          aria-label={`O que tem em ${monthName(selected).toLowerCase()}`}
+        >
+          <small>O que tem em {monthName(selected).toLowerCase()}</small>
+          <ul>
+            {detail.items.map((item) => (
+              <li key={item.key}>
+                <i className={`dot ${item.kind}`} />
+                <span>
+                  {item.name}
+                  <small>{item.sub}</small>
+                </span>
+                <b>{formatMoney(item.amount)}</b>
+              </li>
+            ))}
+            {detail.warning !== null && (
+              <li className="warn">
+                <span>
+                  Foi paga com {formatMoney(detail.warning)} a menos do que as
+                  partes somam hoje
+                </span>
+              </li>
+            )}
+            {detail.emptyText && (
+              <li className="none">
+                <span>{detail.emptyText}</span>
+              </li>
+            )}
+          </ul>
+        </section>
+
+        <section className="block" aria-labelledby="parcelas-cartao">
+          <div className="block-head">
+            <h2 id="parcelas-cartao">Parcelas</h2>
+            <span className="meta">
+              {plans.length
+                ? `${plans.length} em aberto · ${formatMoney(stats.outstanding)}${
+                    stats.lastMonth
+                      ? ` até ${monthLabel(stats.lastMonth).toLowerCase()}`
+                      : ''
+                  }`
+                : 'nenhuma'}
             </span>
           </div>
-        </div>
-      </section>
-
-      {view.limit && (
-        <section className="block limit-block" aria-label="Limite">
-          <div>
-            <small>Limite disponível</small>
-            <b>{formatMoney(view.limit.available)}</b>
-            <small>de {formatMoney(view.limit.total)}</small>
-          </div>
-          <LimitRing share={view.limit.share} />
-        </section>
-      )}
-
-      {view.nextDue || view.bestDay ? (
-        <dl className="block card-dates">
-          <div>
-            <dt>Próxima fatura</dt>
-            <dd>{view.nextDue ? longDate(view.nextDue) : 'sem vencimento'}</dd>
-          </div>
-          <div>
-            <dt>Melhor dia pra comprar</dt>
-            <dd>{view.bestDay ? `dia ${view.bestDay}` : 'sem fechamento'}</dd>
-          </div>
-        </dl>
-      ) : (
-        <p className="block card-dates-hint">
-          Coloca o dia de fechamento e o de vencimento em{' '}
-          <button type="button" onClick={() => editor.card(card.id)}>
-            Editar
-          </button>{' '}
-          pra ver o vencimento e o melhor dia pra comprar.
-        </p>
-      )}
-
-      {(view.parts.length > 0 || (finance.otherPerson && view.invoice)) && (
-        <section
-          className="block invoice-parts"
-          aria-labelledby="resumo-fatura"
-        >
-          <div className="block-head">
-            <h2 id="resumo-fatura">Resumo da fatura</h2>
-          </div>
-          <dl>
-            {view.parts.map((part) => (
-              <div key={part.label}>
-                <dt>{part.label}</dt>
-                <dd>{formatMoney(part.amount)}</dd>
-              </div>
-            ))}
-            <div className="total">
-              <dt>Total</dt>
-              <dd>{formatMoney(view.total)}</dd>
-            </div>
-            {finance.otherPerson && view.invoice && (
-              <>
-                {bankFillsOther(view.invoice.month, finance) && (
-                  <div className="bank-total">
-                    <dt>Total no banco</dt>
-                    <dd>
-                      <button
-                        type="button"
-                        className="link"
-                        onClick={() => setTypingBank(true)}
-                      >
-                        {view.bankTotal === null
-                          ? 'Digitar'
-                          : formatMoney(view.bankTotal)}
-                      </button>
-                    </dd>
-                  </div>
-                )}
-                <div>
-                  <dt>Parte do {finance.otherPerson}</dt>
-                  <dd>{formatMoney(view.otherShare)}</dd>
-                </div>
-              </>
-            )}
-          </dl>
-        </section>
-      )}
-      {typingBank && view.invoice && finance.otherPerson && (
-        <BankTotalModal
-          invoice={view.invoice}
-          other={finance.otherPerson}
-          onClose={() => setTypingBank(false)}
-        />
-      )}
-
-      <section className="block card-chart" aria-label="Fatura por mês">
-        <div className="chart-top">
-          <div className="chart-head" aria-live="polite">
-            <small>
-              {monthLabel(selected)} ·{' '}
-              <span className={status.tone}>{status.text}</span>
-            </small>
-            <b>{formatMoney(point.total)}</b>
-            <div className="change-row">
-              {comparison &&
-                (comparison.direction === 'equal' ? (
-                  <span className="change equal">
-                    igual a {monthShort(comparison.previousMonth).slice(0, 3)}
-                  </span>
+          {plans.length > 0 && (
+            <ul className="rows">
+              {plans.map((plan) => {
+                const line = planLine(plan, selected, finance)
+                return line ? (
+                  <PlanRow
+                    key={plan.id}
+                    line={line}
+                    onToggle={() => actions.toggle(line, selected)}
+                    onOpen={() => editor.plan(plan.id)}
+                  />
                 ) : (
-                  <span className={`change ${comparison.direction}`}>
-                    <Triangle up={comparison.direction === 'up'} />
-                    {formatMoney(cents(Math.abs(comparison.difference)))}
-                    {comparison.percentage !== null &&
-                      ` (${percent.format(comparison.percentage)}%)`}
-                    <small>
-                      vs {monthShort(comparison.previousMonth).slice(0, 3)}
-                    </small>
-                  </span>
-                ))}
+                  <li className="row" key={plan.id}>
+                    <span className="check-space" />
+                    <button
+                      type="button"
+                      className="row-main"
+                      onClick={() => editor.plan(plan.id)}
+                    >
+                      <span className="desc">
+                        {plan.description}
+                        <span className="sub">
+                          nenhuma parcela em {monthShort(selected)}
+                        </span>
+                      </span>
+                    </button>
+                    <span className="trash-space" />
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+          <AddButton onClick={() => editor.plan(null, { cardId: card.id })}>
+            Parcela neste cartão
+          </AddButton>
+        </section>
+
+        {subscriptions.length > 0 && (
+          <section className="block" aria-labelledby="assinaturas-cartao">
+            <div className="block-head">
+              <h2 id="assinaturas-cartao">Assinaturas</h2>
+              <span className="sum">{formatMoney(stats.subscriptions)}</span>
             </div>
-          </div>
-          <div className="chart-nav">
-            <button
-              type="button"
-              className="icon-button"
-              aria-label="Mês anterior"
-              disabled={index <= 0}
-              onClick={() => step(-1)}
-            >
-              <ChevronLeftIcon />
-            </button>
-            <button
-              type="button"
-              className="icon-button"
-              aria-label="Próximo mês"
-              disabled={index >= points.length - 1}
-              onClick={() => step(1)}
-            >
-              <ChevronRightIcon />
-            </button>
-          </div>
-        </div>
-        {average && (
-          <p className="average">
-            média {average.count} meses <b>{formatMoney(average.amount)}</b>
-          </p>
-        )}
-        <CardChart
-          points={points}
-          selected={selected}
-          current={now}
-          onSelect={setPicked}
-        />
-      </section>
-
-      <section
-        className="month-detail"
-        aria-label={`O que tem em ${monthName(selected).toLowerCase()}`}
-      >
-        <small>O que tem em {monthName(selected).toLowerCase()}</small>
-        <ul>
-          {detail.items.map((item) => (
-            <li key={item.key}>
-              <i className={`dot ${item.kind}`} />
-              <span>
-                {item.name}
-                <small>{item.sub}</small>
-              </span>
-              <b>{formatMoney(item.amount)}</b>
-            </li>
-          ))}
-          {detail.warning !== null && (
-            <li className="warn">
-              <span>
-                Foi paga com {formatMoney(detail.warning)} a menos do que as
-                partes somam hoje
-              </span>
-            </li>
-          )}
-          {detail.emptyText && (
-            <li className="none">
-              <span>{detail.emptyText}</span>
-            </li>
-          )}
-        </ul>
-      </section>
-
-      <section className="block" aria-labelledby="parcelas-cartao">
-        <div className="block-head">
-          <h2 id="parcelas-cartao">Parcelas</h2>
-          <span className="meta">
-            {plans.length
-              ? `${plans.length} em aberto · ${formatMoney(stats.outstanding)}${
-                  stats.lastMonth
-                    ? ` até ${monthLabel(stats.lastMonth).toLowerCase()}`
-                    : ''
-                }`
-              : 'nenhuma'}
-          </span>
-        </div>
-        {plans.length > 0 && (
-          <ul className="rows">
-            {plans.map((plan) => {
-              const line = planLine(plan, selected, finance)
-              return line ? (
-                <PlanRow
-                  key={plan.id}
-                  line={line}
-                  onToggle={() => actions.toggle(line, selected)}
-                  onOpen={() => editor.plan(plan.id)}
-                />
-              ) : (
-                <li className="row" key={plan.id}>
-                  <span className="check-space" />
+            <ul className="rows">
+              {subscriptions.map((item) => (
+                <li className="row" key={item.id}>
                   <button
                     type="button"
                     className="row-main"
-                    onClick={() => editor.plan(plan.id)}
+                    onClick={() => editor.subscription(item.id)}
                   >
-                    <span className="desc">
-                      {plan.description}
-                      <span className="sub">
-                        nenhuma parcela em {monthShort(selected)}
-                      </span>
+                    <span className="day">
+                      <small>dia</small>
+                      <b>{item.chargeDay}</b>
                     </span>
+                    <span className="desc">
+                      {item.name}
+                      {item.note && <span className="sub">{item.note}</span>}
+                    </span>
+                    <span className="val">{formatMoney(item.amount)}</span>
                   </button>
-                  <span className="trash-space" />
                 </li>
-              )
-            })}
-          </ul>
+              ))}
+            </ul>
+          </section>
         )}
-        <AddButton onClick={() => editor.plan(null, { cardId: card.id })}>
-          Parcela neste cartão
-        </AddButton>
-      </section>
-
-      {subscriptions.length > 0 && (
-        <section className="block" aria-labelledby="assinaturas-cartao">
-          <div className="block-head">
-            <h2 id="assinaturas-cartao">Assinaturas</h2>
-            <span className="sum">{formatMoney(stats.subscriptions)}</span>
-          </div>
-          <ul className="rows">
-            {subscriptions.map((item) => (
-              <li className="row" key={item.id}>
-                <button
-                  type="button"
-                  className="row-main"
-                  onClick={() => editor.subscription(item.id)}
-                >
-                  <span className="day">
-                    <small>dia</small>
-                    <b>{item.chargeDay}</b>
-                  </span>
-                  <span className="desc">
-                    {item.name}
-                    {item.note && <span className="sub">{item.note}</span>}
-                  </span>
-                  <span className="val">{formatMoney(item.amount)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      </PageColumns>
     </>
   )
 }
