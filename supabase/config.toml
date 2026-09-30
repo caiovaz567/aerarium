@@ -427,3 +427,7 @@ verify_jwt = false
 # both checked inside the function.
 [functions.daily-email]
 verify_jwt = false
+
+# share checks the session token itself (auth.getUser).
+[functions.share]
+verify_jwt = false

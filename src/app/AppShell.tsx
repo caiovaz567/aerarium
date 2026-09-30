@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useMatch } from 'react-router'
 import { categoryOps } from '../data/categoryOps'
 import { useBankAutoSync } from '../features/banco/useBank'
+import { useShareSync } from '../features/compartilhado/useShareSync'
 import { pendingReview } from '../features/banco/review'
 import { ReviewModal } from '../features/banco/ReviewModal'
 import type { Finance } from '../data/finance'
@@ -116,6 +117,7 @@ export function AppShell() {
   useCategorySetup(finance.data)
   const toast = useToast()
   useBankAutoSync(finance.data, toast)
+  useShareSync(finance.data)
   const review = useReview(finance.data)
   const inMonths = useMatch('/meses/:ym')
   const openLaunch = () => {

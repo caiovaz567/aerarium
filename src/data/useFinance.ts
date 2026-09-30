@@ -6,7 +6,7 @@ import { useToast } from '../ui/toastContext'
 import { financeKey, loadFinance, type Finance } from './finance'
 import type { FinanceOp } from './financeOps'
 
-function useUserId(): string {
+export function useUserId(): string {
   const auth = useAuth()
   if (auth.status !== 'signed-in') throw new Error('Precisa estar conectado.')
   return auth.session.user.id

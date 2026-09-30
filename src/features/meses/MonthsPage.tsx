@@ -14,6 +14,7 @@ import { today, useFinance, useFinanceOp } from '../../data/useFinance'
 import { monthLabel, monthName, type Month } from '../../domain/months'
 import { addMonths } from '../../domain/months'
 import { EmptyState } from '../../ui/EmptyState'
+import { SharedEntry } from '../compartilhado/SharedEntry'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
@@ -106,6 +107,7 @@ export function MonthsPage() {
     return (
       <>
         <h2 className="visually-hidden">Meses</h2>
+        <SharedEntry />
         <EmptyState
           title="Nenhum mês ainda"
           action={
@@ -230,6 +232,7 @@ export function MonthsPage() {
   return (
     <>
       <h2 className="visually-hidden">Meses</h2>
+      <SharedEntry />
       {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
       <MonthNav
         finance={finance}

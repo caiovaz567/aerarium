@@ -25,8 +25,8 @@ begin
   perform pg_temp.assert_true(actual = expected, label || ' [SQLSTATE ' || coalesce(actual, 'none') || ']');
 end $$;
 
-select pg_temp.assert_true((select count(*) = 13 from pg_class c join pg_namespace n on n.oid = c.relnamespace
-  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 13 tabelas');
+select pg_temp.assert_true((select count(*) = 14 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity), 'RLS ativo nas 14 tabelas');
 select pg_temp.assert_true((select count(*) = 3 from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind = 'v' and c.reloptions @> array['security_invoker=true']), '3 views usam security_invoker');
 select pg_temp.assert_true((select count(*) = 0 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -177,6 +177,14 @@ select pg_temp.expect_error($q$insert into public.incomes (month_id, description
 select pg_temp.expect_error($q$update public.user_settings set other_person = '   '$q$, '23514', 'Nome da outra pessoa nao e vazio');
 update public.invoice_expenses set reviewed_at = now() where for_other;
 select pg_temp.assert_true((select bool_and(reviewed_at is not null) from public.invoice_expenses where for_other), 'Gasto do banco guarda quando foi conferido');
+-- Sharing with the other person's account: only the Edge Function creates it.
+select pg_temp.expect_error($q$insert into public.shares (owner_id, viewer_id, viewer_email, owner_name) values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', 'b@example.test', 'A')$q$, '42501', 'App nao cria compartilhamento sozinho');
+reset role;
+insert into public.shares (owner_id, viewer_id, viewer_email, owner_name) values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-000000000002', 'b@example.test', 'A');
+set local role authenticated;
+update public.shares set data = '{"expenses": []}'::jsonb, owner_name = 'Dono' where viewer_id = '10000000-0000-4000-8000-000000000002';
+select pg_temp.assert_true((select owner_name = 'Dono' and data ? 'expenses' from public.shares), 'Dono grava a copia que a outra pessoa le');
+select pg_temp.expect_error($q$update public.shares set viewer_id = '10000000-0000-4000-8000-000000000001'$q$, '42501', 'Dono nao troca com quem compartilha');
 -- Switch to the second user. Every table and view must be empty to B.
 select set_config('request.jwt.claim.sub', '10000000-0000-4000-8000-000000000002', true);
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
@@ -191,6 +199,13 @@ do $$ declare t text; n bigint; begin
   end loop;
   select count(*) from public.user_settings into n;
   perform pg_temp.assert_true(n = 0, 'B nao le A: user_settings');
+  -- B reads the copy A shares with B, and cannot change or remove it.
+  select count(*) from public.shares where data ? 'expenses' into n;
+  perform pg_temp.assert_true(n = 1, 'Quem recebe le a copia compartilhada');
+  with changed as (update public.shares set data = '{}'::jsonb returning 1) select count(*) from changed into n;
+  perform pg_temp.assert_true(n = 0, 'Quem recebe nao altera a copia');
+  with changed as (delete from public.shares returning 1) select count(*) from changed into n;
+  perform pg_temp.assert_true(n = 0, 'Quem recebe nao apaga o compartilhamento');
   foreach t in array array['v_installment_schedule','v_invoice_totals','v_month_summary'] loop
     execute format('select count(*) from public.%I', t) into n;
     perform pg_temp.assert_true(n = 0, 'View respeita RLS: ' || t);

@@ -9,6 +9,8 @@ export interface Call {
 export function fakeSupabase() {
   const calls: Call[] = []
   let failNext = false
+  // What reads of a table answer (an empty list otherwise).
+  const tableResults: Record<string, unknown[]> = {}
   const from = (table: string) => {
     const call: Call = { table, op: 'select', filters: [] }
     const chain = {
@@ -52,6 +54,13 @@ export function fakeSupabase() {
           error: { message: string } | null
         }) => T,
       ) {
+        // Reads answer what a test set; they are not writes, so they are
+        // not recorded and never take a failure meant for a write.
+        if (call.op === 'select')
+          return Promise.resolve({
+            data: tableResults[table] ?? [],
+            error: null,
+          }).then(resolve)
         calls.push(call)
         const error = failNext ? { message: 'offline' } : null
         failNext = false
@@ -60,8 +69,23 @@ export function fakeSupabase() {
     }
     return chain
   }
+  // Edge Functions answer what a test sets (null otherwise).
+  const functionResults: Record<string, unknown> = {}
+  const functionCalls: { name: string; body: unknown }[] = []
+  const functions = {
+    invoke(name: string, options?: { body?: unknown }) {
+      functionCalls.push({ name, body: options?.body })
+      return Promise.resolve({
+        data: functionResults[name] ?? null,
+        error: null,
+      })
+    },
+  }
   return {
-    client: { from },
+    client: { from, functions },
+    tableResults,
+    functionResults,
+    functionCalls,
     calls,
     failNext: () => {
       failNext = true

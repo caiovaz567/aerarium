@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router'
 import { CardPage } from '../features/cartao/CardPage'
 import { CardsPage } from '../features/cartoes/CardsPage'
+import { SharedPage } from '../features/compartilhado/SharedPage'
 import { SettingsPage } from '../features/config/SettingsPage'
 import { LoginPage } from '../features/login/LoginPage'
 import { ResetPasswordPage } from '../features/login/ResetPasswordPage'
@@ -31,7 +32,7 @@ export function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
-      `n <Route path="/privacidade" element={<PrivacyPage />} />
+      <Route path="/privacidade" element={<PrivacyPage />} />
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
           <Route index element={<MonthsIndex />} />
@@ -41,6 +42,8 @@ export function AppRoutes() {
           <Route path="cartoes/:id" element={<CardPage />} />
           <Route path="assinaturas" element={<SubscriptionsPage />} />
           <Route path="config" element={<SettingsPage />} />
+          <Route path="compartilhado" element={<SharedPage />} />
+          <Route path="compartilhado/previa" element={<SharedPage preview />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Route>

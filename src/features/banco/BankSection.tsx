@@ -13,6 +13,7 @@ import {
 } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
+import { ShareSettings } from '../compartilhado/ShareSettings'
 import { PreviewCards } from './PreviewCards'
 import { importMessage, lastSync, useBankEnabled, useBankSync } from './useBank'
 
@@ -223,6 +224,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             }
           />
         </li>
+        {finance.otherPerson && <ShareSettings other={finance.otherPerson} />}
         <li className="settings-row">
           <span className="settings-icon accent" aria-hidden="true">
             <MailIcon />

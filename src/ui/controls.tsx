@@ -142,9 +142,11 @@ export function CheckField({
 export function ArmedButton({
   children,
   onConfirm,
+  className = 'btn danger',
 }: {
   readonly children: string
   readonly onConfirm: () => void
+  readonly className?: string
 }) {
   const [armed, setArmed] = useState(false)
   useEffect(() => {
@@ -155,7 +157,7 @@ export function ArmedButton({
   return (
     <button
       type="button"
-      className={`btn danger${armed ? ' armed' : ''}`}
+      className={`${className}${armed ? ' armed' : ''}`}
       onClick={() => (armed ? onConfirm() : setArmed(true))}
     >
       {armed ? 'Toca de novo pra confirmar' : children}

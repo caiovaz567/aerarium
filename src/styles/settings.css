@@ -252,3 +252,91 @@
     transition: none;
   }
 }
+
+/* Sharing the cards with the other person's own account. */
+.share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 4px;
+}
+.share-actions .link {
+  padding: 4px 0;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.share-actions .link.armed {
+  color: var(--neg);
+}
+
+/* In Meses of the other person's account: the way into "Cartões do Caio". */
+.shared-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  text-decoration: none;
+}
+.shared-entry-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.shared-entry-text b {
+  font-size: 15px;
+}
+.shared-entry-text small {
+  color: var(--muted);
+  font-size: 13px;
+}
+.shared-entry > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+/* "Pagar por Pix": one key for the whole amount. */
+.pix-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  padding: 4px 16px 16px;
+}
+.pix-body p {
+  flex: 1 1 200px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.pix-logo {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.pix-key {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.pix-body .btn {
+  flex: 1 1 100%;
+}
+@media (min-width: 560px) {
+  .pix-body .btn {
+    flex: none;
+  }
+}

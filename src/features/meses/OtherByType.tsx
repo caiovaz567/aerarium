@@ -45,11 +45,14 @@ export function OtherByType({
   finance,
   month,
   onOpen,
+  empty,
 }: {
   /** Seen as the other person's (viewAs: 'other'). */
   readonly finance: Finance
   readonly month: Month
   readonly onOpen: (item: OutflowItem) => void
+  /** Shown when the month has nothing. */
+  readonly empty?: string
 }) {
   const [open, setOpen] = useState<string | null>(null)
   // Newest first, like "Por data"; what has no date (installments) after.
@@ -120,7 +123,9 @@ export function OtherByType({
         </>
       )}
       {items.length === 0 && (
-        <p className="empty-hint">Nada do {finance.otherPerson} neste mês.</p>
+        <p className="empty-hint">
+          {empty ?? `Nada do ${finance.otherPerson} neste mês.`}
+        </p>
       )}
     </div>
   )
