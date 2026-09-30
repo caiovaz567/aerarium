@@ -260,6 +260,9 @@ export function OutflowsByType({
                     {paidFromName(bill.paidFrom) && (
                       <span className="sub">
                         {[
+                          // How it was paid, from where: the app does not
+                          // ask Pix or boleto, a bank means one of them.
+                          isBankKey(bill.paidFrom) && 'Pix ou boleto',
                           paidFromName(bill.paidFrom),
                           category(bill.categoryId)?.name,
                         ]

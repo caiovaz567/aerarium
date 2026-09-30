@@ -473,7 +473,9 @@ describe('modal Lançar', () => {
       }),
     )
     const row = screen.getByRole('button', { name: /^Pix pro pedreiro/ })
-    expect(spaced(row.textContent)).toContain('Pix pro pedreiroSantander')
+    expect(spaced(row.textContent)).toContain(
+      'Pix pro pedreiroPix ou boleto · Santander',
+    )
 
     dialog = open()
     fireEvent.click(
