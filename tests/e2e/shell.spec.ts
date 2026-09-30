@@ -45,7 +45,7 @@ test('abas navegam, sem rolagem lateral em nenhuma tela', async ({
   expect(errors).toEqual([])
 })
 
-test('celular: barra embaixo com 5 espaços iguais e o + no meio', async ({
+test('celular: barra flutuante embaixo, 5 espaços iguais e o + no meio', async ({
   page,
   isMobile,
 }) => {
@@ -55,7 +55,11 @@ test('celular: barra embaixo com 5 espaços iguais e o + no meio', async ({
   const nav = (await page
     .getByRole('navigation', { name: 'Seções' })
     .boundingBox())!
-  expect(Math.round(nav.y + nav.height)).toBe(viewport.height)
+  // Floats a little above the bottom edge, inset from the sides.
+  const gap = viewport.height - (nav.y + nav.height)
+  expect(gap).toBeGreaterThan(4)
+  expect(gap).toBeLessThan(20)
+  expect(nav.x).toBeGreaterThanOrEqual(12)
   const tabs = await page
     .locator('.tab')
     .evaluateAll((items) =>
@@ -69,32 +73,50 @@ test('celular: barra embaixo com 5 espaços iguais e o + no meio', async ({
   const add = (await page
     .getByRole('button', { name: 'Lançar gasto ou entrada' })
     .boundingBox())!
-  // Centered horizontally, raised above the bar, and never covering the tabs.
+  // Centered, inside the bar, never wider than a tab.
   expect(Math.abs(add.x + add.width / 2 - viewport.width / 2)).toBeLessThan(2)
-  expect(add.y).toBeLessThan(nav.y)
+  expect(add.y).toBeGreaterThanOrEqual(nav.y)
+  expect(add.y + add.height).toBeLessThanOrEqual(nav.y + nav.height)
   expect(add.width).toBeLessThanOrEqual(tabs[0]!)
+  // One theme button in the header.
+  await expect(
+    page.getByRole('button', { name: /^Tema: .* Tocar pra trocar$/ }),
+  ).toBeVisible()
 })
 
-test('computador: abas em pílula abaixo do cabeçalho com "Lançar" ao lado', async ({
+test('computador: coluna lateral com a marca, as abas e "Lançar" embaixo', async ({
   page,
   isMobile,
 }) => {
   test.skip(isMobile, 'Layout de computador.')
   await page.goto(SEPTEMBER)
-  const header = await page.getByRole('banner').boundingBox()
-  const nav = await page
+  const nav = (await page
     .getByRole('navigation', { name: 'Seções' })
-    .boundingBox()
-  expect(nav!.y).toBeGreaterThanOrEqual(header!.y + header!.height - 1)
+    .boundingBox())!
+  const content = (await page.locator('#conteudo').boundingBox())!
+  expect(nav.x).toBeLessThan(40)
+  expect(nav.height).toBeGreaterThan(500)
+  expect(content.x).toBeGreaterThan(nav.x + nav.width)
+  await expect(page.locator('.brand-side')).toBeVisible()
+  await expect(page.getByRole('banner').locator('.brand')).toBeHidden()
   const add = page.getByRole('button', { name: 'Lançar gasto ou entrada' })
   await expect(add).toContainText('Lançar')
-  const addBox = await add.boundingBox()
+  const addBox = (await add.boundingBox())!
   const tabs = await page
     .locator('.tab')
     .evaluateAll((items) =>
-      items.map((item) => item.getBoundingClientRect().right),
+      items.map((item) => item.getBoundingClientRect().bottom),
     )
-  expect(addBox!.x).toBeGreaterThan(Math.max(...tabs))
+  expect(addBox.y).toBeGreaterThan(Math.max(...tabs))
+  // Light, dark or automatic, in the main area.
+  const theme = page.getByRole('group', { name: 'Tema' })
+  await expect(theme.getByRole('button')).toHaveCount(3)
+  await theme.getByRole('button', { name: 'Claro' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await theme.getByRole('button', { name: 'Escuro' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await theme.getByRole('button', { name: 'Automático' }).click()
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.+/)
 })
 
 test('modal abre no centro, sem rolagem lateral, e fecha', async ({

@@ -19,11 +19,15 @@ import './styles/settings.css'
 import './styles/timeline.css'
 import { App } from './app/App'
 import { healStyles } from './app/healStyles'
+import { applyTheme, readTheme } from './app/theme'
 
 // In the built app the stylesheet is a separate file (in development, the
 // styles come with the code).
 if (import.meta.env.PROD)
   window.addEventListener('load', () => void healStyles())
+
+// The chosen light or dark theme, before the first paint.
+applyTheme(readTheme())
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Não foi possível encontrar a raiz do app.')

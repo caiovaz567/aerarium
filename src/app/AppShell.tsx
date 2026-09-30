@@ -13,6 +13,7 @@ import { LaunchModal } from '../features/lancar/LaunchModal'
 import { useToast } from '../ui/toastContext'
 import { parseMonth } from './paths'
 import { Brand } from '../ui/Brand'
+import { ThemeToggle } from './ThemeToggle'
 import {
   CalendarIcon,
   CardIcon,
@@ -67,6 +68,7 @@ function Header() {
       <div className="app-header-inner">
         <Brand />
         <SyncStatus />
+        <ThemeToggle />
         <ExcelButton />
         {/* On phones, Ajustes lives in the bottom bar instead. */}
         <Link
@@ -133,51 +135,55 @@ export function AppShell() {
         <a className="skip-link" href="#conteudo">
           Ir para o conteúdo
         </a>
-        <Header />
-        <nav className="tabs" aria-label="Seções">
-          <NavLink className="tab" to="/meses">
-            <CalendarIcon />
-            Meses
-          </NavLink>
-          <NavLink className="tab" to="/cartoes">
-            <CardIcon />
-            Cartões
-          </NavLink>
-          <button
-            type="button"
-            className="tab-add"
-            aria-label="Lançar gasto ou entrada"
-            onClick={openLaunch}
-          >
-            <PlusIcon />
-            <span>Lançar</span>
-          </button>
-          <NavLink className="tab" to="/assinaturas">
-            <RepeatIcon />
-            Assinaturas
-          </NavLink>
-          <NavLink className="tab tab-config" to="/config">
-            <GearIcon />
-            Ajustes
-          </NavLink>
-        </nav>
-        <main id="conteudo" className="app-content" tabIndex={-1}>
-          {review.pending > 0 && inMonths && (
+        <div className="shell">
+          <Header />
+          <nav className="tabs" aria-label="Seções">
+            {/* On a computer the bar is a side column headed by the wordmark. */}
+            <Brand heading={false} />
+            <NavLink className="tab" to="/meses">
+              <CalendarIcon />
+              Meses
+            </NavLink>
+            <NavLink className="tab" to="/cartoes">
+              <CardIcon />
+              Cartões
+            </NavLink>
             <button
               type="button"
-              className="review-banner"
-              onClick={() => review.setOpen(true)}
+              className="tab-add"
+              aria-label="Lançar gasto ou entrada"
+              onClick={openLaunch}
             >
-              <b>
-                {review.pending === 1
-                  ? '1 compra nova do banco'
-                  : `${review.pending} compras novas do banco`}
-              </b>
-              <span>Conferir</span>
+              <PlusIcon />
+              <span>Lançar</span>
             </button>
-          )}
-          <Outlet />
-        </main>
+            <NavLink className="tab" to="/assinaturas">
+              <RepeatIcon />
+              Assinaturas
+            </NavLink>
+            <NavLink className="tab tab-config" to="/config">
+              <GearIcon />
+              Ajustes
+            </NavLink>
+          </nav>
+          <main id="conteudo" className="app-content" tabIndex={-1}>
+            {review.pending > 0 && inMonths && (
+              <button
+                type="button"
+                className="review-banner"
+                onClick={() => review.setOpen(true)}
+              >
+                <b>
+                  {review.pending === 1
+                    ? '1 compra nova do banco'
+                    : `${review.pending} compras novas do banco`}
+                </b>
+                <span>Conferir</span>
+              </button>
+            )}
+            <Outlet />
+          </main>
+        </div>
         {review.open && finance.data && (
           <ReviewModal
             finance={finance.data}

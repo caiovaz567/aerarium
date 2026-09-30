@@ -65,9 +65,7 @@ button {
   transition: box-shadow 0.15s;
 }
 .app-header.scrolled {
-  box-shadow:
-    0 1px 0 var(--line),
-    0 6px 12px -8px rgb(0 0 0 / 25%);
+  box-shadow: 0 1px 0 var(--line);
 }
 body.has-stuck .app-header.scrolled {
   box-shadow: none;
@@ -144,72 +142,68 @@ body.has-stuck .app-header.scrolled {
   height: 20px;
 }
 
-/* Tabs: bottom bar on phones, pill switcher on wide screens */
+/* Tabs: a floating bar at the bottom on phones, a side column on computers. */
 .tabs {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
   z-index: 20;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   align-items: center;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--line);
+  height: 64px;
+  padding: 0 4px;
+  border-radius: 20px;
   background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+.brand-side {
+  display: none;
 }
 .tab {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: 6px 0;
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   text-decoration: none;
 }
 .tab svg {
-  width: 22px;
-  height: 22px;
+  width: 21px;
+  height: 21px;
 }
 .tab[aria-current='page'] {
   color: var(--accent);
 }
-/* Phones: raised, in the middle of the bottom bar. */
+/* Phones: the accent square in the middle of the bar. */
 .tab-add {
   display: grid;
   place-items: center;
   justify-self: center;
-  width: 56px;
-  height: 56px;
-  margin-top: -22px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 0;
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--accent);
   color: var(--accent-ink);
-  box-shadow:
-    0 10px 24px -8px rgb(0 0 0 / 55%),
-    0 4px 10px -4px var(--accent);
   transition: transform 0.15s;
 }
 .tab-add svg {
   display: block;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 .tab-add span {
   display: none;
 }
 .tab-add:active {
   transform: scale(0.94);
-}
-@media (hover: hover) and (pointer: fine) {
-  .tab-add:hover {
-    transform: translateY(-2px);
-  }
 }
 
 .app-content {
@@ -229,60 +223,122 @@ body.has-stuck .app-header.scrolled {
 /* Five slots get tight on the narrowest phones. */
 @media (max-width: 360px) {
   .tab {
-    font-size: 10.5px;
+    font-size: 10px;
   }
 }
 
-/* Ajustes: bottom bar on phones, header on wide screens. */
+/* Light, dark or the device's: one button on phones, three on computers. */
+.theme-toggle {
+  display: none;
+}
+.theme-toggle {
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line);
+}
+.theme-toggle button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+}
+.theme-toggle button[aria-pressed='true'] {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Ajustes: bottom bar on phones, side column on computers. */
 .header-config {
   display: none;
 }
 
-@media (min-width: 760px) {
-  .header-config {
+@media (min-width: 900px) {
+  .shell {
     display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 12px;
+    min-height: 100vh;
+    padding: 12px 12px 0;
   }
-  .tab-config {
+  .app-header {
+    grid-column: 2;
+    padding: 0 8px;
+  }
+  .app-header-inner {
+    justify-content: flex-end;
+    max-width: none;
+    padding-block: 6px 10px;
+  }
+  .app-header .brand {
     display: none;
   }
-  .tabs {
-    position: static;
+  .theme-cycle {
+    display: none;
+  }
+  .theme-toggle {
     display: flex;
+  }
+  .tabs {
+    position: sticky;
+    top: 12px;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    grid-row: 1 / span 2;
+    grid-column: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 4px;
-    width: max-content;
-    margin: 4px auto 8px;
-    padding: 4px;
-    border: 0;
-    border-radius: 12px;
-    background: var(--surface-2);
+    align-self: start;
+    height: calc(100vh - 24px);
+    padding: 18px 12px;
+    border-radius: 18px;
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .brand-side {
+    display: flex;
+    flex: none;
+    padding: 0 10px 18px;
+    font-size: 22px;
   }
   .tab {
     flex-direction: row;
-    gap: 8px;
-    padding: 8px 18px;
-    font-size: 14px;
+    gap: 12px;
+    height: 44px;
+    padding: 0 12px;
+    font-size: 14.5px;
   }
   .tab svg {
-    width: 18px;
-    height: 18px;
+    width: 19px;
+    height: 19px;
   }
   .tab[aria-current='page'] {
-    background: var(--surface);
-    color: var(--ink);
-    box-shadow: var(--shadow);
+    background: var(--surface-2);
+    color: var(--accent);
   }
   .tab-add {
     order: 9;
-    margin-top: 0;
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: auto;
-    height: auto;
-    margin-left: 6px;
-    padding: 8px 16px 8px 12px;
-    border-radius: 9px;
-    box-shadow: none;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 46px;
+    margin-top: auto;
+    border-radius: 12px;
   }
   .tab-add svg {
     width: 18px;
@@ -290,11 +346,21 @@ body.has-stuck .app-header.scrolled {
   }
   .tab-add span {
     display: inline;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
   }
   .app-content {
-    padding-bottom: 48px;
+    grid-column: 2;
+    width: 100%;
+    padding: 4px 8px 48px;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .tab:not([aria-current='page']):hover {
+    color: var(--ink);
+  }
+  .tab-add:hover {
+    background: color-mix(in srgb, var(--accent) 88%, var(--ink));
   }
 }
 

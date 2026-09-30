@@ -1,6 +1,8 @@
-export function Brand() {
+/** The wordmark: the page's heading in the header, plain text in the side bar. */
+export function Brand({ heading = true }: { readonly heading?: boolean }) {
+  const Tag = heading ? 'h1' : 'div'
   return (
-    <h1 className="brand">
+    <Tag className={heading ? 'brand' : 'brand brand-side'}>
       <svg
         className="brand-mark"
         viewBox="0 0 24 24"
@@ -16,6 +18,6 @@ export function Brand() {
         <rect x="2.5" y="19.7" width="19" height="2" rx=".6" />
       </svg>
       Aerarium
-    </h1>
+    </Tag>
   )
 }
