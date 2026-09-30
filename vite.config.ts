@@ -76,7 +76,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.{ts,mjs}'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'scripts/**/*.test.{ts,mjs}',
+      'supabase/functions/_shared/**/*.test.ts',
+    ],
     clearMocks: true,
     coverage: {
       provider: 'v8',

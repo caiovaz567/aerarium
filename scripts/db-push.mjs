@@ -13,7 +13,7 @@ const DEV = JSON.parse(
   readFileSync('supabase/development.json', 'utf8'),
 ).projectRef
 
-const FUNCTIONS = ['bank', 'delete-account']
+const FUNCTIONS = ['bank', 'delete-account', 'daily-email']
 
 // Fixed arguments only, so one command line is safe (and Windows needs it).
 const run = (args, options = {}) => {

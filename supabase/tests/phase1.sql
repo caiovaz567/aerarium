@@ -158,6 +158,9 @@ update public.invoice_expenses set for_other = true where id = (select id from p
 select pg_temp.assert_true((select bool_and(mine = total - other_share and other_share > 0) from public.v_invoice_totals where expenses_amount > 0 and not paid and invoice_id in (select invoice_id from public.invoice_expenses where for_other)), 'Parte de outra pessoa sai da fatura do dono');
 insert into public.user_settings (other_person) values ('Pai');
 select pg_temp.assert_true((select not due_next_month from public.user_settings), 'Convencao do mes seguinte comeca desligada');
+select pg_temp.assert_true((select not daily_email from public.user_settings), 'E-mail diario comeca desligado');
+select pg_temp.expect_error($q$select * from private.emailed_transactions$q$, '42501', 'O que o e-mail ja contou fica fora do alcance do app');
+select pg_temp.expect_error($q$select * from private.daily_email$q$, '42501', 'Segredo do e-mail diario fica fora do alcance do app');
 update public.invoices set bank_total = (select total + 100 from public.v_invoice_totals t where t.invoice_id = invoices.id) where id = (select invoice_id from public.v_invoice_totals where not paid and expenses_amount > 0 order by month limit 1);
 select pg_temp.assert_true((select other_share = total - mine from public.v_invoice_totals where invoice_id = (select id from public.invoices where bank_total is not null limit 1)), 'Com outra pessoa: so o que foi marcado dela, mesmo com o total do banco');
 update public.user_settings set other_bank_until = (select date_trunc('month', month + interval '1 month')::date from public.v_invoice_totals where invoice_id = (select id from public.invoices where bank_total is not null limit 1));

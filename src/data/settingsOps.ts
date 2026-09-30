@@ -17,4 +17,21 @@ export const settingsOps = {
       apply: (f) => ({ ...f, otherPerson: name }),
     }
   },
+
+  /**
+   * Fase 14.3: the daily email. Turning it on goes through the server first
+   * (setupDailyEmail), which also saves it; this keeps the app in step.
+   */
+  setDailyEmail(on: boolean): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('user_settings').upsert({
+            daily_email: on,
+            updated_at: new Date().toISOString(),
+          }),
+        ),
+      apply: (f) => ({ ...f, dailyEmail: on }),
+    }
+  },
 }

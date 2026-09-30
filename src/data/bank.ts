@@ -84,6 +84,19 @@ export async function fetchBank(from: ISODate): Promise<BankData> {
   return data as BankData
 }
 
+/**
+ * Fase 14.3: turns the daily email on (the server saves the switch and the
+ * daily job) and sends a first one; how many purchases it had.
+ */
+export async function setupDailyEmail(): Promise<number> {
+  const { data, error } = await supabase().functions.invoke('daily-email', {
+    body: { action: 'setup' },
+  })
+  if (error)
+    throw new Error('Não consegui ligar o e-mail. Tenta de novo daqui a pouco.')
+  return Number(data?.sent ?? 0)
+}
+
 /** Reais as the bank sends them → cents, without floating point surprises. */
 const toCents = (value: number): Cents => fromDecimal(value.toFixed(2))
 const dayOf = (value: string | null): ISODate | null =>

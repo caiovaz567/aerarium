@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { bankOps } from '../../data/bank'
+import { bankOps, setupDailyEmail } from '../../data/bank'
 import type { Finance } from '../../data/finance'
 import { useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
 import { settingsOps } from '../../data/settingsOps'
-import { BankIcon, PeopleIcon, RefreshIcon } from '../../ui/icons'
+import { BankIcon, MailIcon, PeopleIcon, RefreshIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { PreviewCards } from './PreviewCards'
@@ -59,7 +59,30 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
   const [error, setError] = useState('')
   const [preview, setPreview] = useState<ImportResult | null>(null)
   const [synced, setSynced] = useState(lastSync)
+  const [mailing, setMailing] = useState(false)
   if (!enabled) return null
+
+  const toggleEmail = async (on: boolean) => {
+    setError('')
+    if (!on) {
+      run(settingsOps.setDailyEmail(false))
+      return
+    }
+    setMailing(true)
+    try {
+      const sent = await setupDailyEmail()
+      run(settingsOps.setDailyEmail(true))
+      toast(
+        sent
+          ? `Ligado. Mandei um e-mail com ${sent} ${sent === 1 ? 'compra' : 'compras'} dos últimos dias.`
+          : 'Ligado. Mandei um e-mail de teste.',
+      )
+    } catch (reason) {
+      setError((reason as Error).message)
+    } finally {
+      setMailing(false)
+    }
+  }
 
   const update = async () => {
     setBusy(true)
@@ -143,6 +166,27 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
                 settingsOps.setOtherPerson(event.target.checked ? 'Pai' : null),
               )
             }
+          />
+        </li>
+        <li className="settings-row">
+          <span className="settings-icon accent" aria-hidden="true">
+            <MailIcon />
+          </span>
+          <label className="settings-text" htmlFor="email-diario">
+            <b>Resumo por e-mail às 9h</b>
+            <small>
+              {mailing
+                ? 'Ligando e mandando o primeiro…'
+                : 'As compras novas do banco, por cartão, no e-mail da sua conta. Só nos dias com compra nova.'}
+            </small>
+          </label>
+          <input
+            id="email-diario"
+            type="checkbox"
+            className="switch"
+            checked={Boolean(finance.dailyEmail)}
+            disabled={mailing}
+            onChange={(event) => void toggleEmail(event.target.checked)}
           />
         </li>
         <li>

@@ -422,3 +422,8 @@ verify_jwt = false
 # bank (Open Finance proxy) also checks the session token itself.
 [functions.bank]
 verify_jwt = false
+
+# daily-email: the owner's session (setup) or the daily job's secret (send),
+# both checked inside the function.
+[functions.daily-email]
+verify_jwt = false

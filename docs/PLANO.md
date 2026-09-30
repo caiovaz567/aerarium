@@ -62,7 +62,7 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 - No "Onde", cartões fora do Open Finance e "Pix, boleto ou dinheiro" primeiro. Ao escolher um cartão conectado: dica "As compras do Nubank chegam sozinhas no dia seguinte. Lança só se quiser ver agora."
 - Mantém a ligação automática (mesmo cartão e valor, até 3 dias) para não duplicar.
 
-### 14.3 E-mail diário às 9h
+### 14.3 E-mail diário às 9h (feito em 29/09/2026, sem importar no servidor: a função só lê o banco e avisa; o app importa ao abrir)
 
 - Prévia aprovada: um bloco por cartão (logo, nome, total), compra com nome exato do banco, descrição em azul, categoria, dia e hora; parcela mostra o valor da parcela e "Parcela 1 de 3 · total".
 - Envio pelo Resend (grátis; sem domínio só manda para o e-mail da conta, que é o do dono). Secret `RESEND_API_KEY`; nunca pedir a chave ao dono.
