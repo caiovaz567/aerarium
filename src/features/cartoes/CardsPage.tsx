@@ -1,4 +1,5 @@
-import { Masonry } from '../../ui/Masonry'
+import { useWide } from '../../app/headerSlotContext'
+import { PageColumns } from '../../ui/PageColumns'
 import { HeaderSlot } from '../../app/headerSlot'
 import { cardFinal } from '../../domain/banks'
 import { useState, type ReactNode } from 'react'
@@ -158,6 +159,8 @@ export function CardsPage() {
   const [params] = useSearchParams()
   const query = useFinance()
   const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
+  const [picked, setPicked] = useState<string | null>(null)
+  const wide = useWide()
   const editor = useEditor()
   const actions = usePlanActions(
     query.data ?? {
@@ -214,6 +217,129 @@ export function CardsPage() {
     }
   }
 
+  const newCard = (
+    <button
+      type="button"
+      className="new-card"
+      onClick={() => editor.card(null)}
+    >
+      <PlusIcon />
+      Novo cartão
+    </button>
+  )
+  // Every card's block, then what is paid apart from the cards.
+  const sections = [
+    ...view.blocks.map((block) => ({
+      key: block.card.id,
+      name: block.card.name,
+      detail: block.card.dueDay
+        ? `vence dia ${block.card.dueDay}`
+        : 'sem vencimento',
+      art: <CardArt card={block.card} size="xs" />,
+      total: block.invoice ? formatMoney(block.total) : '',
+      section: (
+        <CardSection
+          key={block.card.id}
+          block={block}
+          month={selected}
+          final={cardFinal(
+            finance.bankAccounts.find((item) => item.cardId === block.card.id)
+              ?.number,
+          )}
+          onEdit={() => editor.card(block.card.id)}
+        >
+          {(block.plans.length > 0 || block.subscriptionNames.length > 0) && (
+            <ul className="rows">
+              {block.plans.map((line) => (
+                <PlanRow
+                  key={line.plan.id}
+                  line={line}
+                  onToggle={() => actions.toggle(line, selected)}
+                  onOpen={() => editor.plan(line.plan.id)}
+                  onDelete={() => actions.remove(line.plan)}
+                />
+              ))}
+              {block.subscriptionNames.length > 0 && (
+                <li className="row">
+                  <span className="check-space" />
+                  <Link className="row-main" to="/assinaturas">
+                    <span className="desc">
+                      {block.subscriptionNames.length === 1
+                        ? '1 assinatura'
+                        : `${block.subscriptionNames.length} assinaturas`}
+                      <span className="sub link-button">
+                        {block.subscriptionNames.join(', ')}
+                      </span>
+                    </span>
+                    <span className="val">
+                      {formatMoney(block.subscriptions)}
+                    </span>
+                  </Link>
+                  <span className="trash-space" />
+                </li>
+              )}
+            </ul>
+          )}
+          <AddButton
+            onClick={() => editor.plan(null, { cardId: block.card.id })}
+          >
+            Parcela neste cartão
+          </AddButton>
+        </CardSection>
+      ),
+    })),
+    ...(view.loose.length > 0
+      ? [
+          {
+            key: 'fora',
+            name: 'Fora dos cartões',
+            detail: 'Parcelas pagas à parte',
+            art: <span className="card-art xs none" aria-hidden="true" />,
+            total: formatMoney(
+              cents(view.loose.reduce((sum, line) => sum + line.amount, 0)),
+            ),
+            section: (
+              <section
+                key="fora"
+                className="block card-block"
+                aria-label="Fora dos cartões"
+              >
+                <div className="card-head">
+                  <div className="card-title">
+                    <b>Fora dos cartões</b>
+                    <small>Parcelas pagas à parte</small>
+                  </div>
+                  <span className="sum">
+                    {formatMoney(
+                      cents(
+                        view.loose.reduce((sum, line) => sum + line.amount, 0),
+                      ),
+                    )}
+                  </span>
+                </div>
+                <ul className="rows">
+                  {view.loose.map((line) => (
+                    <PlanRow
+                      key={line.plan.id}
+                      line={line}
+                      onToggle={() => actions.toggle(line, selected)}
+                      onOpen={() => editor.plan(line.plan.id)}
+                      onDelete={() => actions.remove(line.plan)}
+                    />
+                  ))}
+                </ul>
+                <AddButton onClick={() => editor.plan(null, { cardId: null })}>
+                  Parcela fora de cartão
+                </AddButton>
+              </section>
+            ),
+          },
+        ]
+      : []),
+  ]
+  // Wide screen: the list on the left, one card at a time on the right.
+  const shown = sections.find((item) => item.key === picked) ?? sections[0]
+
   return (
     <>
       <h2 className="visually-hidden">Cartões</h2>
@@ -257,98 +383,41 @@ export function CardsPage() {
         </EmptyState>
       )}
 
-      {/* On a wide screen, the cards side by side. */}
-      <Masonry>
-        {view.blocks.map((block) => (
-          <CardSection
-            key={block.card.id}
-            block={block}
-            month={selected}
-            final={cardFinal(
-              finance.bankAccounts.find((item) => item.cardId === block.card.id)
-                ?.number,
-            )}
-            onEdit={() => editor.card(block.card.id)}
-          >
-            {(block.plans.length > 0 || block.subscriptionNames.length > 0) && (
-              <ul className="rows">
-                {block.plans.map((line) => (
-                  <PlanRow
-                    key={line.plan.id}
-                    line={line}
-                    onToggle={() => actions.toggle(line, selected)}
-                    onOpen={() => editor.plan(line.plan.id)}
-                    onDelete={() => actions.remove(line.plan)}
-                  />
-                ))}
-                {block.subscriptionNames.length > 0 && (
-                  <li className="row">
-                    <span className="check-space" />
-                    <Link className="row-main" to="/assinaturas">
-                      <span className="desc">
-                        {block.subscriptionNames.length === 1
-                          ? '1 assinatura'
-                          : `${block.subscriptionNames.length} assinaturas`}
-                        <span className="sub link-button">
-                          {block.subscriptionNames.join(', ')}
-                        </span>
+      {wide && sections.length > 0 ? (
+        <PageColumns
+          sideLeft
+          side={
+            <nav className="block card-picker" aria-label="Escolher cartão">
+              <ul>
+                {sections.map((item) => (
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      aria-pressed={item.key === shown?.key}
+                      onClick={() => setPicked(item.key)}
+                    >
+                      {item.art}
+                      <span className="pick-name">
+                        <b>{item.name}</b>
+                        <small>{item.detail}</small>
                       </span>
-                      <span className="val">
-                        {formatMoney(block.subscriptions)}
-                      </span>
-                    </Link>
-                    <span className="trash-space" />
+                      <span className="pick-sum">{item.total}</span>
+                    </button>
                   </li>
-                )}
+                ))}
               </ul>
-            )}
-            <AddButton
-              onClick={() => editor.plan(null, { cardId: block.card.id })}
-            >
-              Parcela neste cartão
-            </AddButton>
-          </CardSection>
-        ))}
-
-        {view.loose.length > 0 && (
-          <section className="block card-block" aria-label="Fora dos cartões">
-            <div className="card-head">
-              <div className="card-title">
-                <b>Fora dos cartões</b>
-                <small>Parcelas pagas à parte</small>
-              </div>
-              <span className="sum">
-                {formatMoney(
-                  cents(view.loose.reduce((sum, line) => sum + line.amount, 0)),
-                )}
-              </span>
-            </div>
-            <ul className="rows">
-              {view.loose.map((line) => (
-                <PlanRow
-                  key={line.plan.id}
-                  line={line}
-                  onToggle={() => actions.toggle(line, selected)}
-                  onOpen={() => editor.plan(line.plan.id)}
-                  onDelete={() => actions.remove(line.plan)}
-                />
-              ))}
-            </ul>
-            <AddButton onClick={() => editor.plan(null, { cardId: null })}>
-              Parcela fora de cartão
-            </AddButton>
-          </section>
-        )}
-      </Masonry>
-
-      <button
-        type="button"
-        className="new-card"
-        onClick={() => editor.card(null)}
-      >
-        <PlusIcon />
-        Novo cartão
-      </button>
+              {newCard}
+            </nav>
+          }
+        >
+          {shown?.section}
+        </PageColumns>
+      ) : (
+        <>
+          {sections.map((item) => item.section)}
+          {newCard}
+        </>
+      )}
 
       <section className="block">
         <button

@@ -54,6 +54,7 @@ async function openCard(page: Page) {
 
 test('aba Cartões: resumo, blocos e nome longo sem "…"', async ({
   page,
+  isMobile,
 }, testInfo) => {
   await page.goto('/cartoes?mes=2026-09')
   const hero = page.getByRole('region', { name: 'Resumo dos cartões' })
@@ -61,6 +62,14 @@ test('aba Cartões: resumo, blocos e nome longo sem "…"', async ({
   expect(
     (await hero.locator('.hero-num').textContent())?.replace(/\s/g, ' '),
   ).toBe('R$ 442,92')
+  if (!isMobile) {
+    // Wide screen: a list of cards, one open beside it.
+    const pick = page
+      .getByRole('navigation', { name: 'Escolher cartão' })
+      .getByRole('button', { name: new RegExp(LONG_CARD) })
+    await pick.click()
+    await expect(pick).toHaveAttribute('aria-pressed', 'true')
+  }
   const title = page.locator('.card-title b', { hasText: LONG_CARD })
   expect(
     await title.evaluate((node) => node.scrollWidth > node.clientWidth),

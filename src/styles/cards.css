@@ -890,3 +890,59 @@ a.row-main {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Cartões on a wide screen: every card in a list, the picked one beside it. */
+.card-picker ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+}
+.card-picker li button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+}
+.card-picker li button[aria-pressed='true'] {
+  background: var(--surface-2);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-picker li button:not([aria-pressed='true']):hover {
+    background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+  }
+}
+.card-picker .bank-logo.xs {
+  margin-inline: 3px;
+}
+.pick-name {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.pick-name b {
+  font-size: 14.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.pick-name small {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.pick-sum {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.card-picker .new-card {
+  width: calc(100% - 12px);
+  margin: 0 6px 6px;
+}
