@@ -1,3 +1,4 @@
+import { CategoryBadge } from '../../ui/CategoryBadge'
 import { chargedIn } from '../../domain/cardDates'
 import { HeaderSlot } from '../../app/headerSlot'
 import { PageColumns } from '../../ui/PageColumns'
@@ -22,7 +23,7 @@ import {
 import { CardArt } from '../../ui/CardArt'
 import { AddButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
-import { ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
+import { CardIcon, ChevronLeftIcon, ChevronRightIcon } from '../../ui/icons'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { StickyBar } from '../../ui/StickyBar'
 import { useEditor } from '../editar/editorContext'
@@ -413,16 +414,36 @@ export function CardPage() {
               aria-label={`O que tem em ${monthName(selected).toLowerCase()}`}
             >
               <ul>
-                {detail.items.map((item) => (
-                  <li key={item.key}>
-                    <i className={`dot ${item.kind}`} />
-                    <span>
-                      {item.name}
-                      <small>{item.sub}</small>
-                    </span>
-                    <b>{formatMoney(item.amount)}</b>
-                  </li>
-                ))}
+                {detail.items.map((item) => {
+                  const category =
+                    finance.categories.find(
+                      (entry) => entry.id === item.categoryId,
+                    ) ?? null
+                  return (
+                    <li key={item.key}>
+                      {item.key === 'other' ? (
+                        // The invoice's undetailed rest: the card, not a category.
+                        <span
+                          className="cat-badge round none"
+                          aria-hidden="true"
+                        >
+                          <CardIcon />
+                        </span>
+                      ) : (
+                        <CategoryBadge category={category} shape="round" />
+                      )}
+                      <span>
+                        {item.name}
+                        <small>
+                          {[item.sub, category?.name]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </small>
+                      </span>
+                      <b>{formatMoney(item.amount)}</b>
+                    </li>
+                  )
+                })}
                 {detail.warning !== null && (
                   <li className="warn">
                     <span>

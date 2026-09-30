@@ -128,6 +128,13 @@ export interface DetailItem {
   readonly name: string
   readonly sub: string
   readonly amount: Cents
+  /** Its category; null for the invoice's undetailed rest or none chosen. */
+  readonly categoryId: string | null
+}
+
+function sameCategory(items: readonly { categoryId?: string | null }[]) {
+  const ids = new Set(items.map((item) => item.categoryId ?? null))
+  return ids.size === 1 ? [...ids][0]! : null
 }
 
 /** "O que tem em outubro": what makes up the selected month. */
@@ -151,6 +158,7 @@ export function monthDetail(
               ? `paga em ${dayMonth(item.paidOn)}`
               : `parcela ${item.number}/${item.totalInstallments}`,
             amount: item.amount,
+            categoryId: plan.categoryId ?? null,
           })
     const subscriptions = finance.subscriptions.filter(
       (item) => item.cardId === cardId && chargedIn(item, point.month),
@@ -162,6 +170,8 @@ export function monthDetail(
         name: 'Assinaturas',
         sub: subscriptions.map((item) => item.name).join(', '),
         amount: sumMoney(subscriptions.map((item) => item.amount)),
+        // One category when they all share it.
+        categoryId: sameCategory(subscriptions),
       })
     const invoice = finance.invoices.find((item) => item.id === point.invoiceId)
     if (invoice) {
@@ -175,6 +185,7 @@ export function monthDetail(
           name: expense.description,
           sub: `gasto em ${dayMonth(expense.spentOn)}`,
           amount: expense.amount,
+          categoryId: expense.categoryId ?? null,
         })
       if (invoice.otherAmount > 0 && point.kind === 'real')
         items.push({
@@ -185,6 +196,7 @@ export function monthDetail(
             : 'Outros gastos',
           sub: 'o resto da fatura',
           amount: invoice.otherAmount,
+          categoryId: null,
         })
       const totals = invoiceTotals(invoice, finance)
       if (invoice.paid && totals.total < totals.calculatedTotal)

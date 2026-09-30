@@ -657,7 +657,7 @@ a.row-main {
 .month-detail li:first-child {
   border-top: 0;
 }
-.month-detail li span {
+.month-detail li > span:not(.cat-badge) {
   flex: 1;
   min-width: 0;
   font-size: 14px;
@@ -966,4 +966,13 @@ a.row-main {
 .row.later .val,
 .row.later .desc {
   color: var(--muted);
+}
+
+/* Category tiles in the month's list, a little bigger than in Meses. */
+.month-detail .cat-badge.round {
+  width: 30px;
+}
+.month-detail .cat-badge.round svg {
+  width: 15px;
+  height: 15px;
 }
