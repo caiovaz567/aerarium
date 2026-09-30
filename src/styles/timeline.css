@@ -1,7 +1,27 @@
 /* Fase 12: Saídas by date, type or category. */
 
+/* The views are tabs: an accent underline on the chosen one. */
 .segmented.views {
+  gap: 20px;
   margin: 4px 16px 12px;
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+}
+.segmented.views button {
+  flex: none;
+  min-height: 0;
+  margin-bottom: -1px;
+  padding: 8px 0 10px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+}
+.segmented.views button[aria-pressed='true'] {
+  border-bottom-color: var(--accent);
+  background: none;
+  color: var(--ink);
 }
 
 /* Card filter: one row that slides sideways; the page itself never does. */

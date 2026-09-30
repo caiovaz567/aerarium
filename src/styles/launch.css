@@ -5,18 +5,25 @@
   flex-direction: column;
   gap: 14px;
 }
+/* HeroUI's segmented control: a sunken track, the chosen one lifted. */
 .segmented {
   display: flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--surface-2);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+.block .segmented,
+.modal .segmented,
+.hero .segmented {
+  background: var(--bg);
 }
 .segmented button {
   flex: 1;
-  padding: 9px 6px;
+  min-height: 36px;
+  padding: 8px 6px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: none;
   color: var(--muted);
   font-size: 14px;
@@ -24,8 +31,7 @@
   white-space: nowrap;
 }
 .segmented button[aria-pressed='true'] {
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: var(--surface-2);
   color: var(--ink);
 }
 /* The amount is the main thing: big digits. */
