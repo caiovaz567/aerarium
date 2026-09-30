@@ -565,6 +565,40 @@ a.row-main {
 .review-value {
   white-space: nowrap;
 }
+.review-same {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--warn-soft);
+}
+.review-same p,
+.review-joined {
+  margin: 0;
+  font-size: 13.5px;
+}
+.review-same > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.review-same .btn {
+  min-height: 36px;
+  padding-block: 0;
+}
+.review-joined {
+  color: var(--muted);
+}
+.review-joined .link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
 .segmented.who.small {
   align-self: flex-end;
   width: 170px;

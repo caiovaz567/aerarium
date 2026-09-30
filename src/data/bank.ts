@@ -300,6 +300,47 @@ export const bankOps = {
     }
   },
 
+  /**
+   * "É a mesma": each purchase from the bank that the owner said was one
+   * launched by hand. The bank's row goes (first: the bank id is unique) and
+   * the one launched by hand takes its place (`joinedPurchase`).
+   */
+  joinSame(
+    pairs: readonly { readonly bankId: string; readonly joined: ExpenseRow }[],
+  ): FinanceOp {
+    return {
+      run: async () => {
+        for (const { bankId, joined } of pairs) {
+          await ok(table('invoice_expenses').delete().eq('id', bankId))
+          await ok(
+            table('invoice_expenses')
+              .update({
+                invoice_id: joined.invoiceId,
+                description: joined.description,
+                note: joined.note ?? null,
+                amount: toDecimal(joined.amount),
+                spent_on: joined.spentOn,
+                occurred_at: joined.occurredAt ?? null,
+                category_id: joined.categoryId ?? null,
+                external_id: joined.externalId,
+                reviewed_at: joined.reviewedAt,
+              })
+              .eq('id', joined.id),
+          )
+        }
+      },
+      apply: (f) => ({
+        ...f,
+        expenses: f.expenses
+          .filter((item) => !pairs.some((pair) => pair.bankId === item.id))
+          .map(
+            (item) =>
+              pairs.find((pair) => pair.joined.id === item.id)?.joined ?? item,
+          ),
+      }),
+    }
+  },
+
   /** Closing and due days from the bank, only where the card has none. */
   fillCardDays(finance: Finance, data: BankData): FinanceOp | null {
     const changes = cardDaysFromBank(
