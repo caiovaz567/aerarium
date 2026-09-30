@@ -832,10 +832,6 @@
     grid-column: 1;
   }
   /* A card's row: name, what is in it, and the total, in columns. */
-  /* Logos are square and narrower than card pictures: same slot for both. */
-  .row-main > .bank-logo.xs {
-    margin-inline: 3px;
-  }
   /* Fixed shares, so every row's columns start at the same place. */
   .card-body {
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 8em;
@@ -885,15 +881,13 @@
   background: var(--accent);
 }
 
-/* Under a bill: where it was paid from. */
-.desc .paid-from-sub {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+/* Logos are square and narrower than card pictures: same slot for both
+   (cards, and bills paid from a bank). */
+.row-main > .bank-logo.xs {
+  margin-inline: 3px;
 }
-.paid-from-sub .bank-logo.tiny,
-.paid-from-sub svg {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
+@media (max-width: 480px) {
+  .row-main > .bank-logo.xs {
+    margin-inline: 0;
+  }
 }

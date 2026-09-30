@@ -323,7 +323,7 @@
   color: color-mix(in srgb, var(--cat) 60%, white);
 }
 @media (max-width: 480px) {
-  .cat-badge.card {
+  .cat-badge:not(.round) {
     width: 30px;
   }
 }

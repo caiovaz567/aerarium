@@ -1,4 +1,4 @@
-import { isBankKey, paidFromName } from '../../domain/banks'
+import { CASH, isBankKey, paidFromName } from '../../domain/banks'
 import { BankLogo } from '../../ui/BankLogo'
 import { WalletIcon } from '../../ui/icons'
 import type { BillRow, IncomeRow } from '../../data/finance'
@@ -12,20 +12,25 @@ import type { CardOutflow, CarryHint, LooseOutflow } from './monthView'
 
 const EMPTY = 'Toca no + pra lançar.'
 
-/** Under a bill: the bank (logo and name) or cash it came from, if said. */
-function PaidFrom({ value }: { readonly value?: string | null }) {
-  const name = paidFromName(value)
-  if (!name) return null
-  return (
-    <span className="sub paid-from-sub">
-      {isBankKey(value) ? (
-        <BankLogo bank={value} className="tiny" />
-      ) : (
+/**
+ * A bill's tile: the bank it was paid from (its logo, like the cards), cash,
+ * or its category when that was not said.
+ */
+function BillTile({
+  paidFrom,
+  category,
+}: {
+  readonly paidFrom?: string | null
+  readonly category: Category | null
+}) {
+  if (isBankKey(paidFrom)) return <BankLogo bank={paidFrom} className="xs" />
+  if (paidFrom === CASH)
+    return (
+      <span className="cat-badge none" aria-hidden="true">
         <WalletIcon />
-      )}
-      {name}
-    </span>
-  )
+      </span>
+    )
+  return <CategoryBadge category={category} />
 }
 
 export function IncomesBlock({
@@ -246,10 +251,22 @@ export function OutflowsByType({
                   className="row-main"
                   onClick={() => onBill(bill)}
                 >
-                  <CategoryBadge category={category(bill.categoryId)} />
+                  <BillTile
+                    paidFrom={bill.paidFrom}
+                    category={category(bill.categoryId)}
+                  />
                   <span className="desc">
                     {bill.description}
-                    <PaidFrom value={bill.paidFrom} />
+                    {paidFromName(bill.paidFrom) && (
+                      <span className="sub">
+                        {[
+                          paidFromName(bill.paidFrom),
+                          category(bill.categoryId)?.name,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    )}
                   </span>
                   <span className={`val${bill.amount ? '' : ' zero'}`}>
                     {formatMoney(bill.amount)}
