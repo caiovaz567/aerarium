@@ -828,13 +828,19 @@
     grid-column: 1;
   }
   /* A card's row: name, what is in it, and the total, in columns. */
+  /* Logos are square and narrower than card pictures: same slot for both. */
+  .row-main > .bank-logo.xs {
+    margin-inline: 3px;
+  }
+  /* Fixed shares, so every row's columns start at the same place. */
   .card-body {
-    grid-template-columns: minmax(150px, 0.8fr) minmax(0, 1.6fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 8em;
     align-items: center;
     column-gap: 20px;
   }
   .card-body .val {
     grid-column: 3;
+    text-align: right;
   }
   .card-sub {
     grid-row: 1;

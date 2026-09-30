@@ -1,3 +1,4 @@
+import { Masonry } from '../../ui/Masonry'
 import { HeaderSlot } from '../../app/headerSlot'
 import { cardFinal } from '../../domain/banks'
 import { useState, type ReactNode } from 'react'
@@ -257,7 +258,7 @@ export function CardsPage() {
       )}
 
       {/* On a wide screen, the cards side by side. */}
-      <div className="cards-grid">
+      <Masonry>
         {view.blocks.map((block) => (
           <CardSection
             key={block.card.id}
@@ -338,7 +339,7 @@ export function CardsPage() {
             </AddButton>
           </section>
         )}
-      </div>
+      </Masonry>
 
       <button
         type="button"

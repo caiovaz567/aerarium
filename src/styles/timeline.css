@@ -9,6 +9,10 @@
   border-radius: 0;
   background: none;
 }
+/* The tabs already draw a line: the first group below them has none. */
+.segmented.views + * > :first-child {
+  border-top: 0;
+}
 .segmented.views button {
   flex: none;
   min-height: 0;
