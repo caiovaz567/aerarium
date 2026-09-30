@@ -1,9 +1,11 @@
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     // The service worker only keeps the app shell; Supabase calls
     // (financial data) always go to the network and are never cached.

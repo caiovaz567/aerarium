@@ -1,0 +1,22 @@
+/*
+ * HeroUI v3 on Tailwind CSS v4, like H:\Fenix Project. Imported first, all in
+ * layers, so the app's own (unlayered) styles still win where they speak.
+ * Tailwind's preflight reset is left out on purpose: the screens not yet
+ * moved to HeroUI keep looking exactly as before. HeroUI reads its colors
+ * from the variables in tokens.css (the bottom of that file maps them).
+ */
+@layer theme, base, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import 'tw-animate-css';
+
+@import '@heroui/styles/base' layer(base);
+@import '@heroui/styles/components/index.css' layer(components);
+@import '@heroui/styles/themes/default' layer(theme);
+@import '@heroui/styles/utilities';
+@import '@heroui/styles/variants';
+
+@theme {
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+}

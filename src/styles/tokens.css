@@ -41,6 +41,43 @@
   --space-6: 24px;
   --space-8: 32px;
   --content-width: 720px;
+
+  /*
+   * HeroUI's own names, pointed at the app's colors. Declared once here: they
+   * follow light and dark through the app variables above and below.
+   */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --surface-foreground: var(--ink);
+  --surface-secondary: var(--surface-2);
+  --surface-secondary-foreground: var(--ink);
+  --surface-tertiary: var(--surface-2);
+  --surface-tertiary-foreground: var(--ink);
+  --overlay: var(--surface);
+  --overlay-foreground: var(--ink);
+  --default: var(--surface-2);
+  --default-foreground: var(--ink);
+  --field-background: var(--surface-2);
+  --field-foreground: var(--ink);
+  --field-placeholder: var(--muted);
+  --segment: var(--surface);
+  --segment-foreground: var(--ink);
+  --border: var(--line);
+  --separator: var(--line);
+  --focus: var(--accent);
+  --link: var(--accent);
+  --accent-foreground: var(--accent-ink);
+  --success: var(--pos);
+  --success-foreground: var(--surface);
+  --danger: var(--neg);
+  --danger-foreground: var(--surface);
+  --warning: var(--warn);
+  --warning-foreground: var(--surface);
+  --backdrop: rgb(0 0 0 / 45%);
+  --surface-shadow: 0 0 0 0 transparent inset;
+  --overlay-shadow: 0 0 0 1px var(--line-strong) inset;
+  --field-shadow: inset 0 0 0 1px var(--line);
+  --radius: 0.75rem;
 }
 
 @media (prefers-color-scheme: dark) {
