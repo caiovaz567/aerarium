@@ -30,6 +30,7 @@
   --warn: #936316;
   --warn-soft: rgb(245 165 36 / 14%);
   --shadow: none;
+  --scrim: rgb(244 244 245 / 45%);
   --display: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
   --body: 'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
   /* Only the wordmark keeps the brand typeface. */
@@ -94,6 +95,7 @@
     --accent-ink: #0a0a0a;
     --accent-soft: rgb(0 111 238 / 16%);
     --hero-bar: #338ef7;
+    --scrim: rgb(10 10 10 / 45%);
     --pos: #34d399;
     --pos-soft: rgb(52 211 153 / 13%);
     --neg: #f87272;
@@ -116,6 +118,7 @@
   --accent-ink: #0a0a0a;
   --accent-soft: rgb(0 111 238 / 16%);
   --hero-bar: #338ef7;
+  --scrim: rgb(10 10 10 / 45%);
   --pos: #34d399;
   --pos-soft: rgb(52 211 153 / 13%);
   --neg: #f87272;

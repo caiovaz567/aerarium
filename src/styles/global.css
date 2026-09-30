@@ -616,9 +616,10 @@ body.has-stuck .app-header.scrolled {
 .modal-scrim {
   position: absolute;
   inset: 0;
-  background: rgb(8 10 18 / 55%);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  /* The app stays visible behind, blurred (the owner's choice). */
+  background: var(--scrim);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   animation: fadein 0.18s ease-out;
 }
 .modal {
