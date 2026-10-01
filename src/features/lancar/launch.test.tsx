@@ -422,6 +422,8 @@ describe('modal Lançar', () => {
   })
 
   it('Pix mostra "Já paguei" marcado; o mês vem do que está aberto em Meses', () => {
+    // Already opened this month: August stays, it was picked on purpose.
+    localStorage.setItem('aerarium.mesVisto', '2026-09')
     renderApp('/meses/2026-08')
     const dialog = open()
     fireEvent.click(

@@ -17,6 +17,7 @@ import type { ShowToast } from '../../ui/toastContext'
 import { buildNewMonth } from './monthView'
 
 const STARTED_KEY = 'aerarium.mesIniciado'
+const SEEN_KEY = 'aerarium.mesVisto'
 
 /** The last month started by itself on this device: never twice. */
 function lastStarted(): string | null {
@@ -31,6 +32,17 @@ function rememberStarted(value: Month) {
     localStorage.setItem(STARTED_KEY, value)
   } catch {
     /* private mode: the session still remembers it */
+  }
+}
+
+/** The month the app was last open in on this device, and now this one. */
+function swapSeen(value: Month): string | null {
+  try {
+    const before = localStorage.getItem(SEEN_KEY)
+    localStorage.setItem(SEEN_KEY, value)
+    return before
+  } catch {
+    return null
   }
 }
 
@@ -66,11 +78,16 @@ export function useMonthStart(finance: Finance | undefined, toast: ShowToast) {
     const refs = finance.months.map((item) => item.ref)
     // Seen already: deleting it later is the person's choice, kept.
     if (refs.includes(today)) started.current.add(today)
-    // The app opens (or the month turns) on the month that just ended, as
-    // where it was left: show today's. Once, so going back there stays.
+    // The month turned since the app was last open here, and it opens on
+    // the one that ended (where it was left): show today's. Once, so going
+    // back there on purpose stays.
     if (refs.includes(today) && opened.current !== today) {
       opened.current = today
-      if (pathname === monthPath(addMonths(today, -1)))
+      const seen = swapSeen(today)
+      if (
+        (seen === null || seen < today) &&
+        pathname === monthPath(addMonths(today, -1))
+      )
         navigate(monthPath(today), { replace: true })
     }
     const next = monthToStart(refs, today)
@@ -82,6 +99,7 @@ export function useMonthStart(finance: Finance | undefined, toast: ShowToast) {
       return
     started.current.add(next.target)
     opened.current = next.target
+    swapSeen(next.target)
     rememberStarted(next.target)
     const left = monthBalance(next.previous, finance).available
     const snapshot = buildNewMonth(finance, next.target, next.previous, {

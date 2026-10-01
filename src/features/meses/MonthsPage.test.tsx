@@ -1,4 +1,11 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeKey } from '../../data/finance'
@@ -440,6 +447,16 @@ describe('Criar e excluir mês', () => {
     expect(writes()).toEqual([])
     // Going back to September on purpose stays there.
     fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
+    await settle()
+    expect(
+      screen.getByRole('region', { name: 'Resumo do mês' }),
+    ).toHaveTextContent('Disponível em Setembro')
+    // Opened again in October, on September: stays (it did not turn now).
+    cleanup()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      months: [...finance.months, { id: 'm10', ref: month('2026-10') }],
+    })
     await settle()
     expect(
       screen.getByRole('region', { name: 'Resumo do mês' }),
