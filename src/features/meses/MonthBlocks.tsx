@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { CASH, isBankKey, paidFromName } from '../../domain/banks'
 import { BankLogo } from '../../ui/BankLogo'
 import { WalletIcon } from '../../ui/icons'
@@ -33,6 +34,20 @@ function BillTile({
   return <CategoryBadge category={category} />
 }
 
+const KEPT_KEY = 'aerarium.sobraNaoUsar'
+
+/** "Não usar": the hints set aside on this device, carry income → amount. */
+function readKept(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(KEPT_KEY) ?? '{}') as Record<
+      string,
+      number
+    >
+  } catch {
+    return {}
+  }
+}
+
 export function IncomesBlock({
   incomes,
   total,
@@ -48,6 +63,18 @@ export function IncomesBlock({
   readonly onDelete: (income: IncomeRow) => void
   readonly onUseCarry: (hint: CarryHint) => void
 }) {
+  // "Não usar" hides the hint until the month before closes with another value.
+  const [kept, setKept] = useState(readKept)
+  const hidden = carryHint && kept[carryHint.income.id] === carryHint.available
+  const keep = (hint: CarryHint) => {
+    const next = { ...kept, [hint.income.id]: hint.available }
+    setKept(next)
+    try {
+      localStorage.setItem(KEPT_KEY, JSON.stringify(next))
+    } catch {
+      /* private mode: hidden until the page reloads */
+    }
+  }
   return (
     <section className="block" aria-labelledby="entradas">
       <div className="block-head">
@@ -74,15 +101,24 @@ export function IncomesBlock({
           </li>
         ))}
       </ul>
-      {carryHint && (
+      {carryHint && !hidden && (
         <div className="hint">
           <span>
             {monthName(carryHint.previous)} fechou com{' '}
             <b>{formatMoney(carryHint.available)}</b>.
           </span>
-          <button type="button" onClick={() => onUseCarry(carryHint)}>
-            Usar esse valor
-          </button>
+          <span className="hint-actions">
+            <button
+              type="button"
+              className="quiet"
+              onClick={() => keep(carryHint)}
+            >
+              Não usar
+            </button>
+            <button type="button" onClick={() => onUseCarry(carryHint)}>
+              Usar esse valor
+            </button>
+          </span>
         </div>
       )}
       {!incomes.length && (

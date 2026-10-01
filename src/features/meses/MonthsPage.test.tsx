@@ -111,6 +111,17 @@ describe('Meses: números batem com as contas feitas à mão', () => {
       ]),
     )
   })
+
+  it('"Não usar" esconde a dica e mantém o valor; ela fica escondida', async () => {
+    renderApp('/meses/2026-09')
+    fireEvent.click(screen.getByRole('button', { name: 'Não usar' }))
+    expect(screen.queryByText(/fechou com/)).not.toBeInTheDocument()
+    await settle()
+    expect(writes()).toEqual([])
+    cleanup()
+    renderApp('/meses/2026-09')
+    expect(screen.queryByText(/fechou com/)).not.toBeInTheDocument()
+  })
 })
 
 describe('Meses: mudanças', () => {
