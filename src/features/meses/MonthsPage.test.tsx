@@ -426,6 +426,26 @@ describe('Criar e excluir mês', () => {
     expect(writes().at(-1)).toMatchObject({ table: 'months', op: 'delete' })
   })
 
+  it('outubro já criado: abrir no mês que acabou vai pro de agora, uma vez', async () => {
+    vi.setSystemTime(new Date('2026-10-01T00:40:00-03:00'))
+    const finance = financeFixture()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      months: [...finance.months, { id: 'm10', ref: month('2026-10') }],
+    })
+    expect(
+      await screen.findByRole('region', { name: 'Resumo do mês' }),
+    ).toHaveTextContent('Disponível em Outubro')
+    await settle()
+    expect(writes()).toEqual([])
+    // Going back to September on purpose stays there.
+    fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
+    await settle()
+    expect(
+      screen.getByRole('region', { name: 'Resumo do mês' }),
+    ).toHaveTextContent('Disponível em Setembro')
+  })
+
   it('o mês que começou sozinho não volta se a pessoa apagar', async () => {
     vi.setSystemTime(new Date('2026-10-01T09:00:00-03:00'))
     localStorage.setItem('aerarium.mesIniciado', '2026-10')
