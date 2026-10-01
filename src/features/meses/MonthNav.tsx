@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { currentMonth } from '../../app/paths'
 import type { Finance } from '../../data/finance'
 import { monthSnapshot, ops } from '../../data/financeOps'
 import { useFinanceOp } from '../../data/useFinance'
@@ -7,7 +8,7 @@ import { addMonths, monthLabel, type Month } from '../../domain/months'
 import { useToast } from '../../ui/toastContext'
 import { MonthBar } from './MonthBar'
 import { MonthListModal, NewMonthModal } from './MonthModals'
-import { buildNewMonth } from './monthView'
+import { archiveSplit, buildNewMonth } from './monthView'
 
 /**
  * Month bar shared by Meses and Cartões,
@@ -38,6 +39,9 @@ export function MonthNav({
     for (let ref = next; ref <= forecastUntil; ref = addMonths(ref, 1))
       ahead.push(ref)
   const forecast = selected > last
+  // The current month comes first; the ones before it are archived.
+  const { active, archived } = archiveSplit(refs, currentMonth())
+  const inArchive = archived.includes(selected)
 
   const create = (options: { copy: boolean; carryover: boolean }) => {
     run(ops.createMonth(buildNewMonth(finance, next, last, options)))
@@ -65,8 +69,9 @@ export function MonthNav({
     <>
       <MonthBar
         selected={selected}
-        months={[...refs, ...ahead]}
+        months={inArchive ? [...refs, ...ahead] : [...active, ...ahead]}
         pathFor={pathFor}
+        archived={inArchive}
         onOpenList={() => setDialog('list')}
         onCreateNext={() => setDialog('new')}
         canCreate={!forecast}
@@ -75,6 +80,7 @@ export function MonthNav({
         <MonthListModal
           finance={finance}
           selected={selected}
+          archived={archived}
           next={next}
           canDelete={!forecast}
           onClose={close}

@@ -16,6 +16,7 @@ export function MonthBar({
   onOpenList,
   onCreateNext,
   canCreate = true,
+  archived = false,
 }: {
   readonly selected: Month
   readonly months: readonly Month[]
@@ -24,6 +25,8 @@ export function MonthBar({
   readonly onCreateNext: () => void
   /** False at the end of the forecasts: the next month to create is not this one's. */
   readonly canCreate?: boolean
+  /** A month that is over, opened from "Arquivados". */
+  readonly archived?: boolean
 }) {
   const index = months.indexOf(selected)
   const previous = months[index - 1]
@@ -60,6 +63,7 @@ export function MonthBar({
           <ChevronDownIcon />
         </small>
       </button>
+      {archived && <span className="month-tag">arquivado</span>}
       {next ? (
         <Link
           className="icon-button"

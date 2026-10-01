@@ -9,6 +9,7 @@ import { Modal } from '../../ui/Modal'
 export function MonthListModal({
   finance,
   selected,
+  archived = [],
   next,
   canDelete = true,
   onPick,
@@ -18,6 +19,8 @@ export function MonthListModal({
 }: {
   readonly finance: Finance
   readonly selected: Month
+  /** Months that are over: listed apart, under "Arquivados". */
+  readonly archived?: readonly Month[]
   readonly next: Month
   /** False on a forecast month (there is nothing to delete). */
   readonly canDelete?: boolean
@@ -27,6 +30,19 @@ export function MonthListModal({
   readonly onClose: () => void
 }) {
   const months = [...finance.months].reverse()
+  const current = months.filter(({ ref }) => !archived.includes(ref))
+  const past = months.filter(({ ref }) => archived.includes(ref))
+  const row = (ref: Month) => (
+    <button
+      type="button"
+      key={ref}
+      aria-current={ref === selected ? 'true' : undefined}
+      onClick={() => onPick(ref)}
+    >
+      {monthLabel(ref)}
+      <span>{formatMoney(monthBalance(ref, finance).available)}</span>
+    </button>
+  )
   return (
     <Modal
       title="Seus meses"
@@ -45,19 +61,13 @@ export function MonthListModal({
         </>
       }
     >
-      <div className="month-list">
-        {months.map(({ ref }) => (
-          <button
-            type="button"
-            key={ref}
-            aria-current={ref === selected ? 'true' : undefined}
-            onClick={() => onPick(ref)}
-          >
-            {monthLabel(ref)}
-            <span>{formatMoney(monthBalance(ref, finance).available)}</span>
-          </button>
-        ))}
-      </div>
+      <div className="month-list">{current.map(({ ref }) => row(ref))}</div>
+      {past.length > 0 && (
+        <section className="month-archive" aria-label="Meses arquivados">
+          <h4>Arquivados</h4>
+          <div className="month-list">{past.map(({ ref }) => row(ref))}</div>
+        </section>
+      )}
       <button type="button" className="btn ghost wide" onClick={onCreate}>
         Criar {monthLabel(next)}
       </button>

@@ -422,9 +422,12 @@ describe('modal Lançar', () => {
   })
 
   it('Pix mostra "Já paguei" marcado; o mês vem do que está aberto em Meses', () => {
-    // The app opens on September (today's); August is picked on purpose.
+    // The app opens on September (today's); August, archived, on purpose.
     renderApp('/meses/2026-09')
-    fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Setembro 2026. Escolher mês' }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Agosto 2026/ }))
     const dialog = open()
     fireEvent.click(
       within(dialog).getByRole('radio', { name: 'Pix, boleto ou dinheiro' }),

@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { Session } from '@supabase/supabase-js'
 import { renderApp } from '../test/renderApp'
@@ -87,13 +87,23 @@ describe('esqueleto', () => {
     ).toBeInTheDocument()
   })
 
-  it('barra de meses: os que existem, depois a previsão até a última parcela', () => {
+  it('barra de meses: o atual primeiro, os passados arquivados, depois a previsão', () => {
     renderApp('/meses/2026-09')
-    fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
-    expect(screen.getByText('Agosto')).toBeInTheDocument()
+    // September is today's: the first one, nothing before it.
     expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeDisabled()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Setembro 2026. Escolher mês' }),
+    )
+    const list = screen.getByRole('dialog', { name: 'Seus meses' })
+    const archive = within(list).getByRole('region', {
+      name: 'Meses arquivados',
+    })
+    fireEvent.click(within(archive).getByRole('button', { name: /Agosto/ }))
+    expect(screen.getByText('Agosto')).toBeInTheDocument()
+    expect(screen.getByText('arquivado')).toBeVisible()
     fireEvent.click(screen.getByRole('link', { name: 'Próximo mês' }))
     expect(screen.getByText('Setembro')).toBeInTheDocument()
+    expect(screen.queryByText('arquivado')).toBeNull()
     fireEvent.click(screen.getByRole('link', { name: 'Próximo mês' }))
     expect(screen.getByText('Outubro')).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Previsão' })).toBeVisible()

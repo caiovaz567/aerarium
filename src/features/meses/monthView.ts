@@ -203,6 +203,19 @@ export function defaultMonth(finance: Finance, today: Month): Month | null {
   return before[before.length - 1] ?? refs[0] ?? null
 }
 
+/**
+ * The months that are over go to "Arquivados" (owner's choice, 01/10/2026):
+ * once today's month (or a later one) exists, navigation starts at it and the
+ * months before it are archived. With nothing from today on, none is.
+ */
+export function archiveSplit(refs: readonly Month[], today: Month) {
+  const started = refs.some((ref) => ref >= today)
+  return {
+    active: started ? refs.filter((ref) => ref >= today) : [...refs],
+    archived: started ? refs.filter((ref) => ref < today) : [],
+  }
+}
+
 /** Rows for a new month, with fresh ids, ready to insert. */
 export function buildNewMonth(
   finance: Finance,

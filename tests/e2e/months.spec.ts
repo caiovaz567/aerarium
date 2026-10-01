@@ -55,16 +55,17 @@ test('nome de cartão longo e composição quebram sem "…"', async ({ page }) 
   }
 })
 
-test('trocar de mês não mexe na barra nem no resumo', async ({ page }) => {
+test('trocar de mês não mexe na barra', async ({ page }) => {
   await page.goto('/meses/2026-09')
   // The arrows stay put, whatever the month's name.
   const bar = page.locator('[aria-label="Mês anterior"]')
   const hero = page.getByRole('region', { name: 'Resumo do mês' })
-  const before = [await box(bar), await box(hero)]
-  await page.getByRole('link', { name: 'Mês anterior' }).click()
-  await expect(hero).toContainText('Disponível em Agosto')
-  const after = [await box(bar), await box(hero)]
-  expect(after).toEqual(before)
+  const before = await box(bar)
+  // September is the first month (today's): go on to October instead. The
+  // forecast note shows above the summary there, so only the bar is compared.
+  await page.getByRole('link', { name: 'Próximo mês' }).click()
+  await expect(hero).toContainText('Disponível em Outubro')
+  expect(await box(bar)).toEqual(before)
 })
 
 test('resumo da fatura e lista de meses sem rolagem lateral', async ({

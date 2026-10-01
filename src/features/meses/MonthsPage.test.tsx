@@ -445,8 +445,17 @@ describe('Criar e excluir mês', () => {
     ).toHaveTextContent('Disponível em Outubro')
     await settle()
     expect(writes()).toEqual([])
-    // Going back to September on purpose stays there.
-    fireEvent.click(screen.getByRole('link', { name: 'Mês anterior' }))
+    // October is the first one now; September is archived. Opening it on
+    // purpose stays there.
+    expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeDisabled()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Outubro 2026. Escolher mês' }),
+    )
+    fireEvent.click(
+      within(
+        screen.getByRole('region', { name: 'Meses arquivados' }),
+      ).getByRole('button', { name: /Setembro 2026/ }),
+    )
     await settle()
     expect(
       screen.getByRole('region', { name: 'Resumo do mês' }),
