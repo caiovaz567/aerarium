@@ -1,7 +1,7 @@
 import { expect, test as setup } from '@playwright/test'
 import { rmSync } from 'node:fs'
 import { e2eClient, resetFixture } from './fixture'
-import { SESSION } from './session'
+import { fixedToday, SESSION } from './session'
 
 setup('preparar e entrar com a conta de teste', async ({ page }) => {
   rmSync(SESSION, { force: true })
@@ -10,6 +10,7 @@ setup('preparar e entrar com a conta de teste', async ({ page }) => {
   setup.skip(!email || !password, 'Sem conta de teste. Rode npm run e2e:user.')
   // Same fictitious data every run, only in the e2e account.
   await resetFixture(await e2eClient())
+  await fixedToday(page)
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(email!)
   await page.getByLabel('Senha', { exact: true }).fill(password!)

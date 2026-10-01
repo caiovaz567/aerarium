@@ -212,6 +212,37 @@ describe('Cartões do Caio, na conta de quem usa', () => {
     )
   })
 
+  it('virou o mês: abre no que falta pagar; tudo pago, no mês novo', async () => {
+    vi.setSystemTime(new Date('2026-11-02T12:00:00-03:00'))
+    const { ownerName, pixKey, pixBank, ...data } = raw
+    const share = (paidBack: { month: string; amount: string }[]) => [
+      {
+        owner_name: ownerName,
+        pix_key: pixKey,
+        pix_bank: pixBank,
+        data: { ...data, paidBack },
+      },
+    ]
+    // September still owes: it opens there.
+    fake.current!.tableResults.shares = share([])
+    const first = renderApp('/compartilhado')
+    const hero = () =>
+      screen.getByRole('region', { name: 'O que você deve ao Caio' })
+    await screen.findByRole('region', { name: 'O que você deve ao Caio' })
+    expect(text(hero().textContent)).toContain(
+      'Falta pagar ao Caio em Setembro',
+    )
+    first.unmount()
+    // All paid: November, the month today, even with nothing in it yet.
+    fake.current!.tableResults.shares = share([
+      { month: '2026-09', amount: '149.95' },
+      { month: '2026-10', amount: '89.95' },
+    ])
+    renderApp('/compartilhado')
+    await screen.findByRole('region', { name: 'O que você deve ao Caio' })
+    expect(text(hero().textContent)).toContain('Novembro com Caio')
+  })
+
   it('sem nada compartilhado: Meses de sempre, e a tela diz que não tem nada', async () => {
     renderApp('/meses/2026-09')
     await settle()

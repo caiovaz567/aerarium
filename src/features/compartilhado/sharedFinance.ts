@@ -19,7 +19,7 @@ const invoiceId = (cardId: string, ref: Month) => `fatura:${cardId}:${ref}`
  * 'other'), so Meses' views (Por tipo, Por data, Por categoria) show it as
  * they are. Only their purchases, installments and bank rests are in it.
  */
-export function sharedFinance(view: SharedView): Finance {
+export function sharedFinance(view: SharedView, today?: Month): Finance {
   const plans: PlanRow[] = view.plans.map((plan) => ({
     ...plan,
     note: null,
@@ -35,7 +35,10 @@ export function sharedFinance(view: SharedView): Finance {
       ...view.paidBack.map((item) => item.month),
       ...schedule.map(({ item }) => item.month),
     ]),
-  ].sort()
+  ]
+  // Today's month is always there once anything is, even with nothing yet.
+  if (today && refs.length && !refs.includes(today)) refs.push(today)
+  refs.sort()
   const pairs = new Map<string, { cardId: string; month: Month }>()
   for (const { cardId, month } of [
     ...view.expenses,
@@ -143,12 +146,21 @@ export function sharedMonth(view: SharedView, finance: Finance, ref: Month) {
   }
 }
 
-/** The month to open: this one when it has something, else the closest before, else the first. */
+/**
+ * The month to open: the oldest one up to today with something still to pay
+ * back; with everything paid, today's (the month turned, so it shows the new
+ * one); else the closest before, else the first.
+ */
 export function sharedDefaultMonth(
+  view: SharedView,
   finance: Finance,
   today: Month,
 ): Month | null {
   const refs = finance.months.map((item) => item.ref)
+  const owing = refs.find(
+    (ref) => ref <= today && sharedMonth(view, finance, ref).due > 0,
+  )
+  if (owing) return owing
   if (refs.includes(today)) return today
   const before = refs.filter((ref) => ref < today)
   return before.at(-1) ?? refs[0] ?? null

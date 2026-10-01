@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { fixedToday } from './session'
 import { randomUUID } from 'node:crypto'
 import { unlink, writeFile } from 'node:fs/promises'
 
@@ -64,6 +65,7 @@ test('senha errada mostra o motivo', async ({ page }) => {
 
 test('entra, cai no mês atual e sai', async ({ page }) => {
   test.skip(!process.env.E2E_EMAIL, 'Sem conta de teste.')
+  await fixedToday(page)
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(process.env.E2E_EMAIL!)
   await page

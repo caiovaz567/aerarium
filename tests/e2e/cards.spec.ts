@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { E2E, LONG_CARD } from './fixture'
-import { signedIn } from './session'
+import { signedIn, TODAY } from './session'
 
 // Read only: every project, in parallel. Data: tests/e2e/fixture.ts.
 signedIn()
@@ -15,7 +15,7 @@ function todayMonth() {
     timeZone: 'America/Sao_Paulo',
     year: 'numeric',
     month: '2-digit',
-  }).formatToParts(new Date())
+  }).formatToParts(TODAY)
   const get = (type: string) => parts.find((part) => part.type === type)!.value
   return `${get('year')}-${get('month')}`
 }

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { e2eClient, resetFixture } from './fixture'
-import { signedIn } from './session'
+import { signedIn, TODAY } from './session'
 
 // Changes the e2e account's data and checks it survives a reload.
 // Runs alone (project "fluxo"), and puts the fixture back at the end.
@@ -179,7 +179,7 @@ test('cartão: fechamento, vencimento e banco ficam gravados', async ({
     new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/Sao_Paulo',
       day: '2-digit',
-    }).format(new Date()),
+    }).format(TODAY),
   )
   if (day > 5)
     await expect(launch.getByLabel('Entra em')).not.toHaveValue('2026-09')

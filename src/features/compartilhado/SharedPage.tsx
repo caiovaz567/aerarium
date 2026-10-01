@@ -79,13 +79,13 @@ function SharedMonths({
 }) {
   const [params] = useSearchParams()
   const [tab, setTab] = useState<View>('tipo')
-  const finance = sharedFinance(view)
+  const finance = sharedFinance(view, currentMonth())
   const refs = finance.months.map((item) => item.ref)
   const picked = parseMonth(params.get('mes') ?? undefined)
   const selected: Month | null =
     picked && refs.includes(picked)
       ? picked
-      : sharedDefaultMonth(finance, currentMonth())
+      : sharedDefaultMonth(view, finance, currentMonth())
   if (!selected)
     return (
       <EmptyState title="Nada por aqui ainda">

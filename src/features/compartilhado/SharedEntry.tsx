@@ -14,8 +14,8 @@ export function SharedEntry() {
   const query = useSharedWithMe(false)
   const view = query.data?.[0]
   if (!view) return null
-  const finance = sharedFinance(view)
-  const ref = sharedDefaultMonth(finance, currentMonth())
+  const finance = sharedFinance(view, currentMonth())
+  const ref = sharedDefaultMonth(view, finance, currentMonth())
   const due = ref ? sharedMonth(view, finance, ref).due : null
   return (
     <Link className="shared-entry" to="/compartilhado">
@@ -26,7 +26,9 @@ export function SharedEntry() {
         <b>Cartões do {view.ownerName}</b>
         <small>
           {ref && due !== null
-            ? `${monthName(ref)}: falta pagar ${formatMoney(due)}`
+            ? due > 0
+              ? `${monthName(ref)}: falta pagar ${formatMoney(due)}`
+              : `${monthName(ref)}: nada a pagar`
             : 'Nada por enquanto'}
         </small>
       </span>

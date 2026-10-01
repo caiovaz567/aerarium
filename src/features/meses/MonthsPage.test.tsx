@@ -398,6 +398,45 @@ describe('Criar e excluir mês', () => {
     )
   })
 
+  it('virou o mês: outubro começa sozinho, abre nele e dá pra desfazer', async () => {
+    vi.setSystemTime(new Date('2026-10-01T00:38:00-03:00'))
+    renderApp('/meses/2026-09')
+    // Opened on the month that ended: the new one shows.
+    expect(
+      await screen.findByText(/Outubro 2026 começou: copiei setembro/),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('region', { name: 'Resumo do mês' }),
+    ).toHaveTextContent('Disponível em Outubro')
+    await settle()
+    expect(writes().map((call) => `${call.table}:${call.op}`)).toEqual([
+      'months:insert',
+      'incomes:insert',
+      'bills:insert',
+      'invoices:insert',
+    ])
+    // The carried rest is September's available.
+    expect(writes()[1]).toMatchObject({
+      payload: expect.arrayContaining([
+        expect.objectContaining({ description: 'Sobrou do mês passado' }),
+      ]),
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
+    await settle()
+    expect(writes().at(-1)).toMatchObject({ table: 'months', op: 'delete' })
+  })
+
+  it('o mês que começou sozinho não volta se a pessoa apagar', async () => {
+    vi.setSystemTime(new Date('2026-10-01T09:00:00-03:00'))
+    localStorage.setItem('aerarium.mesIniciado', '2026-10')
+    renderApp('/meses/2026-09')
+    await settle()
+    expect(writes()).toEqual([])
+    expect(
+      screen.getByRole('region', { name: 'Resumo do mês' }),
+    ).toHaveTextContent('Disponível em Setembro')
+  })
+
   it('conta sem meses oferece criar o mês atual', () => {
     renderApp('/meses', undefined, {
       cards: [],

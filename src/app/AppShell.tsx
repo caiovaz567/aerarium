@@ -8,6 +8,7 @@ import { ReviewModal } from '../features/banco/ReviewModal'
 import type { Finance } from '../data/finance'
 import { useFinance, useFinanceOp } from '../data/useFinance'
 import { EditorProvider } from '../features/editar/EditorProvider'
+import { useMonthStart } from '../features/meses/useMonthStart'
 import { ExcelButton } from '../features/exportar/ExcelButton'
 import { LaunchModal } from '../features/lancar/LaunchModal'
 import { useToast } from '../ui/toastContext'
@@ -127,6 +128,7 @@ export function AppShell() {
   const toast = useToast()
   useBankAutoSync(finance.data, toast)
   useShareSync(finance.data)
+  useMonthStart(finance.data, toast)
   const review = useReview(finance.data)
   const inMonths = useMatch('/meses/:ym')
   const openLaunch = () => {

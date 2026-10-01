@@ -86,3 +86,18 @@ export function newMonthDraft(options: NewMonthOptions, data: FinancialData) {
   })
   return { month: target, incomes, bills, invoices }
 }
+
+/**
+ * The month to start by itself (owner's choice, 01/10/2026, for everyone):
+ * today's, when the last month created is the one right before it. With no
+ * month yet, or a gap of more months, nothing (the person creates it).
+ */
+export function monthToStart(
+  refs: readonly Month[],
+  today: Month,
+): { readonly target: Month; readonly previous: Month } | null {
+  month(today)
+  const last = [...refs].sort().at(-1)
+  if (!last || refs.includes(today) || addMonths(last, 1) !== today) return null
+  return { target: today, previous: last }
+}

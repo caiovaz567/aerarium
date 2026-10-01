@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { emptyData, seedData } from './__fixtures__/seed'
 import { cents } from './money'
 import { month } from './months'
-import { advanceCounter, newMonthDraft, type NewMonthOptions } from './newMonth'
+import {
+  advanceCounter,
+  newMonthDraft,
+  type NewMonthOptions,
+  monthToStart,
+} from './newMonth'
 
 const options: NewMonthOptions = {
   target: month('2026-12'),
@@ -123,5 +128,20 @@ describe('criação de mês', () => {
     expect(() =>
       newMonthDraft({ ...options, cardIds: ['card', 'card'] }, seedData()),
     ).toThrow()
+  })
+})
+
+describe('mês novo sozinho', () => {
+  const refs = [month('2026-08'), month('2026-09')]
+  it('no dia 1º, o mês de hoje, logo depois do último', () => {
+    expect(monthToStart(refs, month('2026-10'))).toEqual({
+      target: '2026-10',
+      previous: '2026-09',
+    })
+  })
+  it('já criado, sem mês nenhum, ou pulando meses: nada', () => {
+    expect(monthToStart(refs, month('2026-09'))).toBeNull()
+    expect(monthToStart([], month('2026-10'))).toBeNull()
+    expect(monthToStart(refs, month('2026-11'))).toBeNull()
   })
 })
