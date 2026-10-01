@@ -58,8 +58,46 @@ type Transaction = {
   } | null
 }
 
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+/**
+ * Before the daily email: asks Pluggy to look at the bank now and waits (up
+ * to 40 s: the daily job gives the whole function 60 s) until it is done, so
+ * the email has yesterday's purchases instead of whatever Pluggy's own daily
+ * look had. Never fails the email: when it
+ * cannot ask (too soon, not allowed), the email goes with what there is.
+ */
+async function askBank(apiKey: string, items: readonly string[]) {
+  try {
+    let asked = false
+    for (const itemId of items) {
+      const response = await fetch(`${PLUGGY}/items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      asked ||= response.ok
+    }
+    if (!asked) return
+    for (let turn = 0; turn < 8; turn++) {
+      await wait(5000)
+      const states = await Promise.all(
+        items.map((itemId) =>
+          pluggy<{ status: string }>(apiKey, `/items/${itemId}`),
+        ),
+      )
+      if (states.every((item) => item.status !== 'UPDATING')) return
+    }
+  } catch (error) {
+    console.error('daily-email ask', (error as Error).message)
+  }
+}
+
 /** The credit card transactions of the owner's items since `from`. */
-async function bankTransactions(from: string): Promise<EmailTransaction[]> {
+async function bankTransactions(
+  from: string,
+  fresh: boolean,
+): Promise<EmailTransaction[]> {
   const { apiKey } = await fetch(`${PLUGGY}/auth`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -75,6 +113,7 @@ async function bankTransactions(from: string): Promise<EmailTransaction[]> {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
+  if (fresh) await askBank(apiKey, items)
   const result: EmailTransaction[] = []
   for (const itemId of items) {
     const accounts = (
@@ -161,7 +200,7 @@ async function sendFor(owner: string, test: boolean): Promise<number> {
 
   const now = new Date().toISOString()
   const groups = emailGroups({
-    transactions: await bankTransactions(from),
+    transactions: await bankTransactions(from, !test),
     cards,
     sent,
     from,

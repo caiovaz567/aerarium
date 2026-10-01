@@ -120,7 +120,8 @@ Deno.serve(async (request) => {
   const body = await request.json().catch(() => ({}))
   if (body?.action === 'status') return reply(200, { enabled })
   if (!enabled) return reply(403, { error: 'not-enabled' })
-  if (body?.action !== 'fetch') return reply(400, { error: 'action' })
+  if (body?.action !== 'fetch' && body?.action !== 'refresh')
+    return reply(400, { error: 'action' })
 
   const from =
     typeof body.from === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.from)
@@ -139,6 +140,22 @@ Deno.serve(async (request) => {
       if (!response.ok) throw new Error(`Pluggy auth: ${response.status}`)
       return response.json() as Promise<{ apiKey: string }>
     })
+
+    // Ask Pluggy to look at the bank now (it does it by itself once a day).
+    // Each answer is only "asked or not": too soon (once an hour) or not
+    // allowed is not an error, the daily look still happens.
+    if (body.action === 'refresh') {
+      const asked: { id: string; ok: boolean; code: number }[] = []
+      for (const itemId of items) {
+        const response = await fetch(`${PLUGGY}/items/${itemId}`, {
+          method: 'PATCH',
+          headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+          body: '{}',
+        })
+        asked.push({ id: itemId, ok: response.ok, code: response.status })
+      }
+      return reply(200, { asked })
+    }
 
     const result = {
       items: [] as {

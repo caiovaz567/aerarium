@@ -442,3 +442,19 @@
     color: var(--ink);
   }
 }
+
+/* Bancos conectados: how each bank connection is doing. */
+.bank-item {
+  min-height: 0;
+  padding-left: 66px;
+}
+.bank-item b {
+  font-size: 14px;
+  font-weight: 600;
+}
+.bank-item.bad small {
+  color: var(--warn);
+}
+.bank-item.ok small {
+  color: var(--pos);
+}

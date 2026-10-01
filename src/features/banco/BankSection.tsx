@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { bankOps, setupDailyEmail } from '../../data/bank'
+import { useEffect, useRef, useState } from 'react'
+import { askBankUpdate, bankOps, setupDailyEmail } from '../../data/bank'
 import type { Finance } from '../../data/finance'
 import { useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
@@ -14,6 +14,7 @@ import {
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { ShareSettings } from '../compartilhado/ShareSettings'
+import { bankItemLines, savedItems } from './bankItems'
 import { PreviewCards } from './PreviewCards'
 import { importMessage, lastSync, useBankEnabled, useBankSync } from './useBank'
 
@@ -124,6 +125,10 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
   const [synced, setSynced] = useState(lastSync)
   const [mailing, setMailing] = useState(false)
   const [accounts, setAccounts] = useState(false)
+  const [items, setItems] = useState(savedItems)
+  // After asking the bank, look again by itself a minute later (a few times).
+  const again = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(again.current), [])
   if (!enabled) return null
 
   const toggleEmail = async (on: boolean) => {
@@ -148,17 +153,32 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
     }
   }
 
-  const update = async () => {
+  const update = async (tries = 3) => {
     setBusy(true)
     setError('')
+    window.clearTimeout(again.current)
     try {
+      // The bank is only looked at once a day: ask for a look right now.
+      const asked = tries === 3 && (await askBankUpdate())
       const outcome = await fetchPlan()
       setSynced(lastSync())
+      setItems(outcome.data.items ?? [])
+      const waiting =
+        asked || outcome.data.items?.some((item) => item.status === 'UPDATING')
       if (outcome.first && outcome.result.records.length)
         setPreview(outcome.result)
       else {
         save(outcome.result)
-        toast(importMessage(outcome.result))
+        toast(
+          waiting && tries > 0
+            ? `${importMessage(outcome.result)} Pedi pro banco mandar o que tem de novo; olho de novo em 1 minuto.`
+            : importMessage(outcome.result),
+        )
+        if (waiting && tries > 0)
+          again.current = window.setTimeout(
+            () => void update(tries - 1),
+            60_000,
+          )
       }
     } catch (reason) {
       setError((reason as Error).message)
@@ -221,7 +241,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             className="settings-row action"
             aria-label="Atualizar agora"
             disabled={busy}
-            onClick={update}
+            onClick={() => void update()}
           >
             <span className="settings-icon accent" aria-hidden="true">
               <RefreshIcon />
@@ -230,12 +250,20 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
               <b>{busy ? 'Buscando no banco…' : 'Atualizar agora'}</b>
               <small>
                 {finance.bankAccounts.length
-                  ? `Última busca: ${when(synced)}. O banco atualiza uma vez por dia.`
+                  ? `Última busca: ${when(synced)}. Pede pro banco mandar o que tem de novo.`
                   : 'Busca seus cartões no banco pela primeira vez.'}
               </small>
             </span>
           </button>
         </li>
+        {bankItemLines(finance, items, new Date()).map((line) => (
+          <li className={`settings-row bank-item ${line.tone}`} key={line.id}>
+            <span className="settings-text">
+              <b>{line.name}</b>
+              <small>{line.text}</small>
+            </span>
+          </li>
+        ))}
       </ul>
       <p className="form-error" role="alert">
         {error}

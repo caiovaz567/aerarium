@@ -85,6 +85,19 @@ export async function fetchBank(from: ISODate): Promise<BankData> {
 }
 
 /**
+ * Asks Pluggy to look at the bank now instead of waiting for its daily look
+ * (it takes a minute or two; limited to once an hour). True when it was
+ * asked; false when it could not be (too soon, not allowed, an older server).
+ */
+export async function askBankUpdate(): Promise<boolean> {
+  const { data, error } = await supabase().functions.invoke('bank', {
+    body: { action: 'refresh' },
+  })
+  if (error || !Array.isArray(data?.asked)) return false
+  return (data.asked as { ok?: boolean }[]).some((item) => item.ok === true)
+}
+
+/**
  * Fase 14.3: turns the daily email on (the server saves the switch and the
  * daily job) and sends a first one; how many purchases it had.
  */

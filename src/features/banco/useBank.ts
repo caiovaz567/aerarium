@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../app/authContext'
 import {
+  askBankUpdate,
   bankOps,
   bankStatus,
   fetchBank,
@@ -13,6 +14,7 @@ import {
 import { financeKey, type Finance } from '../../data/finance'
 import { today, useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
+import { saveItems } from './bankItems'
 
 /** Asked once per session; only the app's owner gets true. */
 let status: Promise<boolean> | null = null
@@ -67,6 +69,7 @@ export function useBankSync() {
 
   const fetchPlan = useCallback(async (): Promise<SyncOutcome> => {
     const data = await fetchBank(syncFrom(today()))
+    saveItems(data.items ?? [])
     let finance = client.getQueryData<Finance>(financeKey(userId))!
     const add = bankOps.addAccounts(finance, data)
     if (add) {
@@ -109,6 +112,8 @@ export function useBankSync() {
 
 /** How often an open app looks at the bank by itself (it updates daily). */
 export const AUTO_SYNC_MS = 6 * 60 * 60 * 1000
+/** After asking the bank for a look, how long until its answer is there. */
+const ASK_WAIT_MS = 2 * 60 * 1000
 
 /** "3 compras novas, 1 parcelamento e 2 que você já tinha lançado". */
 export function importMessage(result: ImportResult): string {
@@ -141,6 +146,7 @@ export function useBankAutoSync(
   const enabled = useBankEnabled()
   const { fetchPlan, save } = useBankSync()
   const started = useRef(false)
+  const again = useRef<number | undefined>(undefined)
   useEffect(() => {
     if (!enabled || !finance || started.current) return
     // The first import is done by hand, with a preview.
@@ -148,18 +154,28 @@ export function useBankAutoSync(
     const last = lastSync()
     if (last && Date.now() - last.getTime() < AUTO_SYNC_MS) return
     started.current = true
-    fetchPlan()
-      .then(({ result }) => {
-        save(result)
-        if (
-          result.expenses.length ||
-          result.plans.length ||
-          result.notices.length
-        )
-          toast([importMessage(result), ...result.notices].join(' '))
-      })
-      .catch(() => {
-        /* offline or bank down: tried again next time */
+    const look = () =>
+      fetchPlan()
+        .then(({ result }) => {
+          save(result)
+          if (
+            result.expenses.length ||
+            result.plans.length ||
+            result.notices.length
+          )
+            toast([importMessage(result), ...result.notices].join(' '))
+        })
+        .catch(() => {
+          /* offline or bank down: tried again next time */
+        })
+    // Pluggy looks at the bank once a day: ask for a look now, take what
+    // there is, and look again once the bank has had time to answer.
+    void askBankUpdate()
+      .catch(() => false)
+      .then((asked) => {
+        void look()
+        if (asked) again.current = window.setTimeout(look, ASK_WAIT_MS)
       })
   }, [enabled, finance, fetchPlan, save, toast])
+  useEffect(() => () => window.clearTimeout(again.current), [])
 }
