@@ -219,7 +219,7 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             <MailIcon />
           </span>
           <label className="settings-text" htmlFor="email-diario">
-            <b>Resumo por e-mail às 9h</b>
+            <b>Resumo por e-mail às 18h</b>
             <small>
               {mailing
                 ? 'Ligando e mandando o primeiro…'

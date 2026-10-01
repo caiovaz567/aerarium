@@ -1,4 +1,4 @@
-// Fase 14.3: the daily email at 9h, only for the Open Finance owner
+// Fase 14.3: the daily email at 18h, only for the Open Finance owner
 // (PLUGGY_OWNER_USER_ID). It reads the bank (Meu Pluggy) and emails what is
 // new, card by card, through Resend. It never writes purchases: the app still
 // imports them when opened ("Chegou do banco").
@@ -7,7 +7,7 @@
 //                      turned on: saves where this function is and a secret
 //                      for the daily job (private.daily_email), turns the
 //                      email on and sends a first one right away.
-//   {action: 'send'}   the daily job (pg_cron, 12:00 UTC = 9h in São Paulo),
+//   {action: 'send'}   the daily job (pg_cron, 21:00 UTC = 18h in São Paulo),
 //                      with the header x-daily-email: that secret.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import postgres from 'npm:postgres@3.4.5'

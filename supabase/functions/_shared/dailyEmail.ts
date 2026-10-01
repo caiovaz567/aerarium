@@ -1,4 +1,4 @@
-// Fase 14.3, the daily email at 9h (Open Finance owner only). Pure: what goes
+// Fase 14.3, the daily email at 18h (Open Finance owner only). Pure: what goes
 // in the email and its HTML. The Edge Function daily-email feeds it with the
 // bank's transactions and the owner's cards, and sends it. No imports, so both
 // Deno (the function) and Vitest (the tests) read it as is.
@@ -224,7 +224,7 @@ export function renderEmail(input: {
     : `Aerarium: ${count} no cartão, ${money(total)}`
   const mark = Boolean(input.otherPerson) && items.length > 0
   const intro = input.test
-    ? `<tr><td style="padding:0 4px 12px;color:#161a26;font-size:14px;line-height:1.5;${FONT}">Pronto! Todo dia às 9h chega aqui o que o banco mostrou de novo.${
+    ? `<tr><td style="padding:0 4px 12px;color:#161a26;font-size:14px;line-height:1.5;${FONT}">Pronto! Todo dia às 18h chega aqui o que o banco mostrou de novo.${
         items.length
           ? ' Abaixo, as compras dos últimos dias.'
           : ' Nos últimos dias não chegou nenhuma compra.'
@@ -263,7 +263,7 @@ export function renderEmail(input: {
     <a href="${escape(input.appUrl)}" style="display:inline-block;padding:12px 24px;border-radius:12px;background:#3140c2;color:#fff;font-size:15px;font-weight:700;text-decoration:none;${FONT}">${mark ? 'Marcar no Aerarium' : 'Abrir o Aerarium'}</a>
   </td></tr>
   <tr><td align="center" style="padding:8px 20px;color:#8a90a3;font-size:12px;line-height:1.5;${FONT}">
-    Chega às 9h, só nos dias com compra nova. Pra parar, desligue em Ajustes, Bancos conectados.
+    Chega às 18h, só nos dias com compra nova. Pra parar, desligue em Ajustes, Bancos conectados.
   </td></tr>
 </table>
 </td></tr>

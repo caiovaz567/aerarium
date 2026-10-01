@@ -83,12 +83,12 @@ describe('cartões do banco, agrupados', () => {
   })
 })
 
-describe('resumo por e-mail às 9h', () => {
+describe('resumo por e-mail às 18h', () => {
   it('ligar passa pelo servidor, que manda o primeiro; desligar grava direto', async () => {
     fake.setup.mockResolvedValue(3)
     renderApp('/config?aba=bancos')
     const toggle = screen.getByRole('checkbox', {
-      name: /Resumo por e-mail às 9h/,
+      name: /Resumo por e-mail às 18h/,
     })
     expect(toggle).not.toBeChecked()
     fireEvent.click(toggle)
@@ -116,7 +116,7 @@ describe('resumo por e-mail às 9h', () => {
     fake.setup.mockRejectedValue(new Error('Não consegui ligar o e-mail.'))
     renderApp('/config?aba=bancos')
     const toggle = screen.getByRole('checkbox', {
-      name: /Resumo por e-mail às 9h/,
+      name: /Resumo por e-mail às 18h/,
     })
     fireEvent.click(toggle)
     await settle()

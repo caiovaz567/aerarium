@@ -115,7 +115,7 @@ export interface Finance {
    * month before it is due. Everyone else: due in its own month.
    */
   readonly dueNextMonth?: boolean
-  /** Fase 14.3, Open Finance owner: the daily email at 9h is on. */
+  /** Fase 14.3, Open Finance owner: the daily email at 18h is on. */
   readonly dailyEmail?: boolean
   /** Owner only (user_settings.other_bank_until): see InvoiceContext. */
   readonly otherBankUntil?: Month | null
