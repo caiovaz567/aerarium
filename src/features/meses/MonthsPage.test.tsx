@@ -433,7 +433,7 @@ describe('Criar e excluir mês', () => {
     expect(writes().at(-1)).toMatchObject({ table: 'months', op: 'delete' })
   })
 
-  it('outubro já criado: abrir no mês que acabou vai pro de agora, uma vez', async () => {
+  it('outubro já criado: o app abre num mês passado e vai pro de agora', async () => {
     vi.setSystemTime(new Date('2026-10-01T00:40:00-03:00'))
     const finance = financeFixture()
     renderApp('/meses/2026-09', undefined, {
@@ -451,16 +451,15 @@ describe('Criar e excluir mês', () => {
     expect(
       screen.getByRole('region', { name: 'Resumo do mês' }),
     ).toHaveTextContent('Disponível em Setembro')
-    // Opened again in October, on September: stays (it did not turn now).
+    // Opened again on an older month (August): today's, October, again.
     cleanup()
-    renderApp('/meses/2026-09', undefined, {
+    renderApp('/meses/2026-08', undefined, {
       ...finance,
       months: [...finance.months, { id: 'm10', ref: month('2026-10') }],
     })
-    await settle()
     expect(
-      screen.getByRole('region', { name: 'Resumo do mês' }),
-    ).toHaveTextContent('Disponível em Setembro')
+      await screen.findByRole('region', { name: 'Resumo do mês' }),
+    ).toHaveTextContent('Disponível em Outubro')
   })
 
   it('o mês que começou sozinho não volta se a pessoa apagar', async () => {
