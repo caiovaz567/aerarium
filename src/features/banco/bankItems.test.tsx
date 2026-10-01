@@ -143,6 +143,19 @@ describe('"Atualizar agora" pede pro banco e mostra como cada um está', () => {
     expect(localStorage.getItem('aerarium.banco.itens')).toContain('item1')
   })
 
+  it('banco em dia só aparece depois de atualizar; com problema fica sempre', async () => {
+    localStorage.setItem(
+      'aerarium.banco.itens',
+      JSON.stringify([
+        item('item1', 'UPDATED', '2026-09-15T09:10:00.000Z'),
+        item('item2', 'LOGIN_ERROR', null),
+      ]),
+    )
+    renderApp('/config?aba=bancos', undefined, withBank())
+    expect(await screen.findByText(/A conexão com o banco caiu/)).toBeVisible()
+    expect(screen.queryByText(/Em dia: o banco mandou dados/)).toBeNull()
+  })
+
   it('servidor antigo ou banco que não deixa pedir: olha o que tem, sem aviso', async () => {
     fake.current!.functionResults.bank = {
       items: [item('item1', 'UPDATED', '2026-09-15T09:10:00.000Z')],

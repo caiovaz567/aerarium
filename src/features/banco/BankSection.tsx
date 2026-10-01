@@ -29,6 +29,9 @@ const when = (date: Date | null) =>
       }).format(date)
     : 'nunca'
 
+/** How long the banks that are fine stay on screen after "Atualizar agora". */
+const SHOWN_MS = 30_000
+
 /** Name of the other person, saved when the field loses focus. */
 function OtherName({
   name,
@@ -128,7 +131,17 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
   const [items, setItems] = useState(savedItems)
   // After asking the bank, look again by itself a minute later (a few times).
   const again = useRef<number | undefined>(undefined)
-  useEffect(() => () => window.clearTimeout(again.current), [])
+  // The banks that are fine only show for a while after "Atualizar agora";
+  // one with a problem stays until it is solved.
+  const [fresh, setFresh] = useState(false)
+  const hide = useRef<number | undefined>(undefined)
+  useEffect(
+    () => () => {
+      window.clearTimeout(again.current)
+      window.clearTimeout(hide.current)
+    },
+    [],
+  )
   if (!enabled) return null
 
   const toggleEmail = async (on: boolean) => {
@@ -163,6 +176,9 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
       const outcome = await fetchPlan()
       setSynced(lastSync())
       setItems(outcome.data.items ?? [])
+      setFresh(true)
+      window.clearTimeout(hide.current)
+      hide.current = window.setTimeout(() => setFresh(false), SHOWN_MS)
       const waiting =
         asked || outcome.data.items?.some((item) => item.status === 'UPDATING')
       if (outcome.first && outcome.result.records.length)
@@ -256,14 +272,16 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
             </span>
           </button>
         </li>
-        {bankItemLines(finance, items, new Date()).map((line) => (
-          <li className={`settings-row bank-item ${line.tone}`} key={line.id}>
-            <span className="settings-text">
-              <b>{line.name}</b>
-              <small>{line.text}</small>
-            </span>
-          </li>
-        ))}
+        {bankItemLines(finance, items, new Date())
+          .filter((line) => fresh || line.tone !== 'ok')
+          .map((line) => (
+            <li className={`settings-row bank-item ${line.tone}`} key={line.id}>
+              <span className="settings-text">
+                <b>{line.name}</b>
+                <small>{line.text}</small>
+              </span>
+            </li>
+          ))}
       </ul>
       <p className="form-error" role="alert">
         {error}
