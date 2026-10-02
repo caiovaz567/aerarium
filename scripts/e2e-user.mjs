@@ -21,6 +21,9 @@ const DISPOSABLE_EMAIL = 'aerarium.e2e.apagar@example.test'
 // Open Finance tests: the only account the bank function answers in development.
 const BANK_ID = '10000000-0000-4000-8000-000000000ba0'
 const BANK_EMAIL = 'aerarium.e2e.banco@example.test'
+// Not for tests: fictitious data to show the app (npm run demo fills it).
+const DEMO_ID = '10000000-0000-4000-8000-0000000de300'
+const DEMO_EMAIL = 'aerarium.demo@example.test'
 
 const development = JSON.parse(
   readFileSync('supabase/development.json', 'utf8'),
@@ -68,7 +71,7 @@ select email, email_confirmed_at is not null as confirmed from auth.users where 
 `
 
 const sql = `begin;
-${account(USER_ID, EMAIL)}${account(DISPOSABLE_ID, DISPOSABLE_EMAIL)}${account(BANK_ID, BANK_EMAIL)}commit;`
+${account(USER_ID, EMAIL)}${account(DISPOSABLE_ID, DISPOSABLE_EMAIL)}${account(BANK_ID, BANK_EMAIL)}${account(DEMO_ID, DEMO_EMAIL)}commit;`
 
 mkdirSync('.artifacts/db', { recursive: true })
 const file = resolve('.artifacts/db', `${randomUUID()}.sql`)
@@ -93,7 +96,7 @@ try {
   if (result.status !== 0 || output.error)
     throw new Error(output.error?.message || result.stderr || 'Falha no SQL.')
   console.log(
-    `Contas de teste prontas: ${EMAIL}, ${DISPOSABLE_EMAIL} e ${BANK_EMAIL}. Senha em ${envFile}.`,
+    `Contas de teste prontas: ${EMAIL}, ${DISPOSABLE_EMAIL}, ${BANK_EMAIL} e ${DEMO_EMAIL}. Senha em ${envFile}.`,
   )
 } finally {
   unlinkSync(file)
