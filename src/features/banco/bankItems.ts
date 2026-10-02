@@ -54,13 +54,16 @@ export function bankItemLines(
   now: Date,
 ): BankItemLine[] {
   return items.map((item) => {
-    const names = finance.bankAccounts
-      .filter((account) => account.itemId === item.id)
-      .map(
-        (account) =>
-          finance.cards.find((card) => card.id === account.cardId)?.name ??
-          account.name,
-      )
+    const accounts = finance.bankAccounts.filter(
+      (account) => account.itemId === item.id,
+    )
+    // Only the cards that come into the app; a bank card set to "Não
+    // importar" (one the person no longer has) is left out of the name.
+    const used = accounts.flatMap(
+      (account) =>
+        finance.cards.find((card) => card.id === account.cardId)?.name ?? [],
+    )
+    const names = used.length ? used : accounts.map((account) => account.name)
     const name = [...new Set(names)].join(', ') || 'Banco'
     const last = item.lastUpdatedAt
     const seen = last ? `o banco mandou dados em ${when(last)}` : null

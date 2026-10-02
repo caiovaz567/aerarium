@@ -116,6 +116,29 @@ describe('situação de cada banco', () => {
   })
 })
 
+describe('nome da conexão', () => {
+  it('cartão do banco em "Não importar" fica de fora quando outro entra no app', () => {
+    const finance = withBank()
+    const lines = bankItemLines(
+      {
+        ...finance,
+        bankAccounts: [
+          ...finance.bankAccounts,
+          {
+            ...finance.bankAccounts[1]!,
+            id: 'a3',
+            name: 'ANTIGO',
+            itemId: 'item1',
+          },
+        ],
+      },
+      [item('item1', 'UPDATED', '2026-09-15T09:10:00.000Z')],
+      now,
+    )
+    expect(lines[0]!.name).toBe('Nubank Teste')
+  })
+})
+
 describe('"Atualizar agora" pede pro banco e mostra como cada um está', () => {
   it('pede a busca, olha o que tem e mostra a situação', async () => {
     fake.current!.functionResults.bank = {
