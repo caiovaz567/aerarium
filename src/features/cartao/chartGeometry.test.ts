@@ -88,6 +88,6 @@ describe('faixa do gráfico', () => {
     expect(layout.points[0]!.y).toBe(layout.base)
     const top = Math.min(...layout.points.map((point) => point.y))
     expect(top).toBeGreaterThan(20)
-    expect(layout.labels[0]!.replace(/\s/g, ' ')).toBe('R$ 0')
+    expect(layout.labels[0]!.replace(/\s/g, ' ')).toBe('R$ 0,00')
   })
 })

@@ -7,12 +7,7 @@ import {
   UNDETAILED,
   type OutflowItem,
 } from '../../domain/categories'
-import {
-  cents,
-  formatMoney,
-  formatMoneyShort,
-  sumMoney,
-} from '../../domain/money'
+import { cents, formatMoney, sumMoney } from '../../domain/money'
 import { monthShort, type Month } from '../../domain/months'
 import { categoryChanges } from '../../domain/timeline'
 import { CategoryBadge } from '../../ui/CategoryBadge'
@@ -94,7 +89,7 @@ export function SpendingList({
                       className={`change-pill ${change > 0 ? 'up' : 'down'}`}
                     >
                       {change > 0 ? '▲' : '▼'}{' '}
-                      {formatMoneyShort(cents(Math.abs(change)))} vs{' '}
+                      {formatMoney(cents(Math.abs(change)))} vs{' '}
                       {monthShort(compared.previous)}
                     </span>
                   )}

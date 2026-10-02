@@ -59,11 +59,11 @@ describe('Saídas por categoria', () => {
   it('setembro por categoria, somando as saídas do mês (R$ 873,17)', () => {
     renderApp('/meses/2026-09')
     expect(rows()).toEqual([
-      'MoradiaR$ 180,3521% das saídas▲ R$ 180 vs ago',
+      'MoradiaR$ 180,3521% das saídas▲ R$ 180,35 vs ago',
       'ComprasR$ 120,0014% das saídas',
       'AssinaturasR$ 39,905% das saídas',
       'TransporteR$ 12,001% das saídas',
-      'Sem categoriaR$ 249,9029% das saídas▼ R$ 1.400 vs ago',
+      'Sem categoriaR$ 249,9029% das saídas▼ R$ 1.400,10 vs ago',
       'Outros gastos das faturasR$ 271,0231% das saídas',
     ])
     expect(

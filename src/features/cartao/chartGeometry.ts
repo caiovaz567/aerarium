@@ -1,5 +1,5 @@
 import type { ChartPoint } from '../../domain/chartSeries'
-import { formatMoneyShort } from '../../domain/money'
+import { formatMoney } from '../../domain/money'
 import type { Month } from '../../domain/months'
 
 export interface Point {
@@ -94,7 +94,7 @@ export function chartLayout(
   current: Month,
 ): ChartLayout {
   const safeWidth = Math.max(260, width)
-  const labels = points.map((point) => formatMoneyShort(point.total))
+  const labels = points.map((point) => formatMoney(point.total))
   const slot = slotWidth(safeWidth, labels)
   const plot = plotHeight(safeWidth)
   const base = TOP + plot

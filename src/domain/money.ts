@@ -73,11 +73,6 @@ const fullFormat = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
   currency: 'BRL',
 })
-const shortFormat = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-  maximumFractionDigits: 0,
-})
 
 export function formatMoney(value: Cents): string {
   const decimal = toDecimal(value)
@@ -88,10 +83,6 @@ export function formatMoney(value: Cents): string {
     .formatToParts(integer)
     .map((part) => (part.type === 'fraction' ? fraction : part.value))
     .join('')
-}
-
-export function formatMoneyShort(value: Cents): string {
-  return shortFormat.format(BigInt(divideMoney(value, 100)))
 }
 
 /**

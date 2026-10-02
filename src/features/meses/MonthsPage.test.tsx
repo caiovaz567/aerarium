@@ -76,10 +76,10 @@ describe('Meses: números batem com as contas feitas à mão', () => {
         text(node.textContent),
       ),
     ).toEqual([
-      'Notebook R$ 120',
-      'Streaming R$ 40',
-      'Uber R$ 12',
-      'outros R$ 271',
+      'Notebook R$ 120,00',
+      'Streaming R$ 39,90',
+      'Uber R$ 12,00',
+      'outros R$ 271,02',
     ])
     // The long-name card's note just repeats its name, so it is hidden.
     expect(

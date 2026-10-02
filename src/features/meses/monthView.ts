@@ -5,7 +5,7 @@ import {
   installmentStatus,
 } from '../../domain/installments'
 import { invoiceTotals } from '../../domain/invoices'
-import { formatMoneyShort, sumMoney, type Cents } from '../../domain/money'
+import { formatMoney, sumMoney, type Cents } from '../../domain/money'
 import { addMonths, type Month } from '../../domain/months'
 import { newMonthDraft } from '../../domain/newMonth'
 import type { MonthSnapshot } from '../../data/financeOps'
@@ -63,7 +63,7 @@ export function compositionParts(
     many: (count: number) => string,
   ) => {
     if (!items.length) return []
-    const total = formatMoneyShort(sumMoney(items.map((item) => item.amount)))
+    const total = formatMoney(sumMoney(items.map((item) => item.amount)))
     return [
       `${items.length === 1 ? items[0]!.name : many(items.length)} ${total}`,
     ]
@@ -79,10 +79,10 @@ export function compositionParts(
       (count) => `${count} gastos`,
     ),
     ...(!invoice.estimated && invoice.otherAmount > 0
-      ? [`outros ${formatMoneyShort(invoice.otherAmount)}`]
+      ? [`outros ${formatMoney(invoice.otherAmount)}`]
       : []),
     ...(otherShare > 0 && finance.otherPerson
-      ? [`${finance.otherPerson} ${formatMoneyShort(otherShare)}`]
+      ? [`${finance.otherPerson} ${formatMoney(otherShare)}`]
       : []),
   ]
 }

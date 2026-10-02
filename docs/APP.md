@@ -23,7 +23,7 @@ Vite + React 19 + TypeScript estrito, React Router, TanStack Query (um cache `['
 
 ## Regras de negócio (em `src/domain`)
 
-- **Dinheiro** em centavos inteiros (`Cents`). No banco é `numeric(12,2)`, lido como texto.
+- **Dinheiro** em centavos inteiros (`Cents`). No banco é `numeric(12,2)`, lido como texto. Na tela, valor sempre com centavos (`formatMoney`), nunca arredondado, nem no gráfico ou nos resumos (desde 02/10/2026).
 - **Fatura** = parcelas do cartão no mês + assinaturas ativas do cartão (as que já começaram) + gastos lançados + "outros gastos" (o resto não detalhado). "Sei o total" calcula o "outros" e recusa total menor que o fixo. Fatura paga congela o total (`closed_total`) e paga as parcelas do cartão daquele mês; desmarcar desfaz.
 - **Assinatura com data de início** (29/09/2026): "Começou em" (hoje, na nova; vazio nas antigas). `subscriptions.first_month` é a primeira fatura em que entra, pelo fechamento do cartão como uma compra (depois do fechamento, fatura seguinte; na convenção do dono, `invoiceMonthForCard`). O app calcula (`subscriptionFirstMonth`) e recalcula quando o fechamento ou o vencimento do cartão mudam, à mão ou pelo banco (`movedSubscriptions`). Sem data, conta em todos os meses, como antes (`chargedIn`, `v_invoice_totals`, `private.invoice_payment`).
 - **Parcelas**: cronograma fixo a partir do mês da primeira; a última parcela absorve o arredondamento (`final_adjustment`). Quitado quando todas estão pagas.

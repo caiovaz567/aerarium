@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Finance } from '../../data/finance'
 import type { OutflowItem } from '../../domain/categories'
-import { formatMoney, formatMoneyShort, sumMoney } from '../../domain/money'
+import { formatMoney, sumMoney } from '../../domain/money'
 import { dayMonth, type Month } from '../../domain/months'
 import {
   buildTimeline,
@@ -30,7 +30,7 @@ function cardParts(items: readonly OutflowItem[]): string {
     const list = items.filter((item) => item.source === source)
     if (!list.length) return []
     const text = list.length === 1 ? one : many(list.length)
-    return [kinds > 1 ? `${text} ${formatMoneyShort(total(list))}` : text]
+    return [kinds > 1 ? `${text} ${formatMoney(total(list))}` : text]
   }
   return [
     ...group('installment', '1 parcela', (count) => `${count} parcelas`),

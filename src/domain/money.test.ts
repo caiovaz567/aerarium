@@ -4,7 +4,6 @@ import {
   divideMoney,
   formatMoney,
   formatMoneyInput,
-  formatMoneyShort,
   fromDecimal,
   nonNegative,
   parseMoney,
@@ -67,15 +66,13 @@ describe('dinheiro em centavos', () => {
     expect(() => sumMoney([cents(Number.MAX_SAFE_INTEGER), cents(1)])).toThrow()
     expect(sumMoney([])).toBe(0)
   })
-  it('formata reais completos, curtos, negativos e campos', () => {
+  it('formata reais completos, negativos e campos', () => {
     expect(formatMoney(cents(114729))).toBe('R$ 1.147,29')
     expect(formatMoney(cents(-1))).toBe('-R$ 0,01')
     expect(formatMoney(cents(0))).toBe('R$ 0,00')
     expect(formatMoney(cents(Number.MAX_SAFE_INTEGER))).toBe(
       'R$ 90.071.992.547.409,91',
     )
-    expect(formatMoneyShort(cents(114750))).toBe('R$ 1.148')
-    expect(formatMoneyShort(cents(-150))).toBe('-R$ 2')
     expect(formatMoneyInput(cents(-114729))).toBe('-1147,29')
   })
   it.each([
