@@ -308,7 +308,7 @@ describe('Cartões, uma tela só', () => {
       otherBankUntil: month('2026-10'),
     })
     expect(hero()).toContain(
-      'Sua parte da fatura de setembro · a pagarR$ 442,92Total no bancoDigitarParte do PaiR$ 0,00',
+      'Sua parte da fatura de setembro · a pagarR$ 442,92Total no bancoDigitarSua parteR$ 442,92Parte do PaiR$ 0,00',
     )
     fireEvent.click(screen.getByRole('button', { name: /^Total no banco/ }))
     const dialog = screen.getByRole('dialog', {
@@ -328,7 +328,9 @@ describe('Cartões, uma tela só', () => {
       }),
     )
     // 500,00 minus the 442,92 that is yours.
-    expect(hero()).toContain('Total no bancoR$ 500,00Parte do PaiR$ 57,08')
+    expect(hero()).toContain(
+      'Total no bancoR$ 500,00Sua parteR$ 442,92Parte do PaiR$ 57,08',
+    )
   })
 
   it('Eu | Pai: a sua visão só tem o seu; a do pai, só o dele', () => {
@@ -364,7 +366,10 @@ describe('Cartões, uma tela só', () => {
     expect(hero()).toContain(
       'Sua parte da fatura de setembro · a pagarR$ 430,92',
     )
-    expect(hero()).toContain('Parte do PaiR$ 12,00')
+    // The whole invoice, with both parts under it.
+    expect(hero()).toContain(
+      'Fatura todaR$ 442,92Sua parteR$ 430,92Parte do PaiR$ 12,00',
+    )
   })
 
   it('outros gastos: "Sei o total" recusa menos que o fixo e aceita o resto', async () => {
@@ -420,12 +425,15 @@ describe('Cartões, uma tela só', () => {
       otherBankUntil: month('2026-09'),
     })
     expect(hero()).not.toContain('Total no banco')
-    expect(hero()).toContain('Parte do PaiR$ 0,00')
+    expect(hero()).toContain(
+      'Fatura todaR$ 442,92Sua parteR$ 442,92Parte do PaiR$ 0,00',
+    )
   })
 
   it('usuário normal não vê nada disso', () => {
     renderApp('/cartoes?mes=2026-09')
     expect(hero()).not.toContain('Total no banco')
     expect(hero()).not.toContain('Sua parte')
+    expect(hero()).not.toContain('Fatura toda')
   })
 })

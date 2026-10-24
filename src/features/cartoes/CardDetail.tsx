@@ -324,8 +324,13 @@ export function CardDetail({
           </div>
           {other && view.invoice && (
             <div className="card-hero-split">
-              {bankFillsOther(view.invoice.month, finance) && (
-                <button type="button" onClick={() => setTypingBank(true)}>
+              {/* The whole invoice, with both parts under it. */}
+              {bankFillsOther(view.invoice.month, finance) ? (
+                <button
+                  type="button"
+                  className="whole"
+                  onClick={() => setTypingBank(true)}
+                >
                   <small>Total no banco</small>
                   <b>
                     {view.bankTotal === null
@@ -333,18 +338,20 @@ export function CardDetail({
                       : formatMoney(view.bankTotal)}
                   </b>
                 </button>
-              )}
-              {part === 'other' ? (
-                <div>
-                  <small>Sua parte</small>
-                  <b>{formatMoney(view.mine)}</b>
-                </div>
               ) : (
-                <div className="other">
-                  <small>Parte do {other}</small>
-                  <b>{formatMoney(view.otherShare)}</b>
+                <div className="whole">
+                  <small>Fatura toda</small>
+                  <b>{formatMoney(cents(view.mine + view.otherShare))}</b>
                 </div>
               )}
+              <div>
+                <small>Sua parte</small>
+                <b>{formatMoney(view.mine)}</b>
+              </div>
+              <div className="other">
+                <small>Parte do {other}</small>
+                <b>{formatMoney(view.otherShare)}</b>
+              </div>
             </div>
           )}
           {view.invoice && (
