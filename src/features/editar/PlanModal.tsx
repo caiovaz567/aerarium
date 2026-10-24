@@ -21,6 +21,7 @@ import { DateInput } from '../../ui/DateInput'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
+import { launchCards } from '../lancar/launch'
 
 /** New or edit installment plan, with its payment history. */
 export function PlanModal({
@@ -167,7 +168,8 @@ export function PlanModal({
             onChange={(event) => setCardId(event.target.value)}
           >
             <option value="">Nenhum, pago à parte</option>
-            {finance.cards.map((card) => (
+            {/* A new plan goes only on cards the bank does not feed. */}
+            {(plan ? finance.cards : launchCards(finance)).map((card) => (
               <option key={card.id} value={card.id}>
                 {card.name}
               </option>

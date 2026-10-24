@@ -59,6 +59,8 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 
 ### 14.2 Lançar mais esperto
 
+- [x] Feito em 24/10/2026, mais simples que o planejado (escolha do dono): os cartões ligados ao banco saíram do Lançar, em vez de só mostrar uma dica.
+
 - No "Onde", cartões fora do Open Finance e "Pix, boleto ou dinheiro" primeiro. Ao escolher um cartão conectado: dica "As compras do Nubank chegam sozinhas no dia seguinte. Lança só se quiser ver agora."
 - Mantém a ligação automática (mesmo cartão e valor, até 3 dias) para não duplicar.
 

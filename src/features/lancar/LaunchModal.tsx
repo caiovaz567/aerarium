@@ -19,6 +19,7 @@ import { instantToSaoPaulo, saoPauloToInstant } from '../../domain/timeline'
 import {
   buildLaunch,
   installmentPreview,
+  launchCards,
   launchMonths,
   NO_CARD,
   suggestMonth,
@@ -56,9 +57,10 @@ function rememberedWhere(finance: Finance) {
   } catch {
     /* private mode */
   }
-  if (saved === NO_CARD || finance.cards.some((card) => card.id === saved))
+  const cards = launchCards(finance)
+  if (saved === NO_CARD || cards.some((card) => card.id === saved))
     return saved!
-  return finance.cards[0]?.id ?? NO_CARD
+  return cards[0]?.id ?? NO_CARD
 }
 
 /** Lançar: Gasto, Parcelado or Entrada in a few taps. */
@@ -94,7 +96,8 @@ export function LaunchModal({
   const [error, setError] = useState('')
   const ids = { count: useId(), text: useId(), month: useId() }
 
-  const card = finance.cards.find((item) => item.id === where) ?? null
+  const cards = launchCards(finance)
+  const card = cards.find((item) => item.id === where) ?? null
   const usesCard = kind !== 'entrada'
   const suggested = suggestMonth(finance, {
     openMonth,
@@ -248,7 +251,7 @@ export function LaunchModal({
           <fieldset className="field where">
             <legend>Onde</legend>
             <div className="where-grid">
-              {finance.cards.map((item) => (
+              {cards.map((item) => (
                 <label className="where-option" key={item.id}>
                   <input
                     type="radio"
@@ -279,6 +282,12 @@ export function LaunchModal({
                 </span>
               </label>
             </div>
+            {cards.length < finance.cards.length && (
+              <small>
+                Os cartões ligados ao banco não aparecem aqui: as compras deles
+                chegam sozinhas no dia seguinte.
+              </small>
+            )}
           </fieldset>
         )}
 

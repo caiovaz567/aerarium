@@ -23,6 +23,16 @@ export type LaunchKind = 'gasto' | 'parcelado' | 'entrada'
 /** A card id, or NO_CARD for Pix, boleto ou dinheiro. */
 export const NO_CARD = 'none'
 
+/**
+ * Cards a purchase can be typed on: the ones fed by the bank (Open Finance)
+ * stay out, so nothing is typed and then brought by the bank again (the
+ * owner's choice, 24/10/2026).
+ */
+export function launchCards(finance: Finance): readonly Card[] {
+  const fed = new Set(finance.bankAccounts.map((item) => item.cardId))
+  return finance.cards.filter((card) => !fed.has(card.id))
+}
+
 /** Months Lançar can put something in: the existing ones and the next one. */
 export function launchMonths(finance: Finance): Month[] {
   const refs = finance.months.map((item) => item.ref)

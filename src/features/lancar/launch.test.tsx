@@ -443,6 +443,43 @@ describe('modal Lançar', () => {
     expect(within(dialog).queryByText('Onde')).not.toBeInTheDocument()
   })
 
+  it('cartão ligado ao banco não aparece no Onde: as compras chegam sozinhas', () => {
+    const finance = financeFixture()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      bankAccounts: [
+        {
+          id: 'b1',
+          pluggyAccountId: 'p1',
+          itemId: 'i1',
+          name: 'NUBANK',
+          number: null,
+          cardId: 'c1',
+        },
+      ],
+    })
+    const dialog = open()
+    const where = within(dialog).getByRole('group', { name: 'Onde' })
+    expect(
+      within(where).queryByRole('radio', { name: 'Nubank Teste' }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(where).getByRole('radio', { name: /^Cartão com um nome/ }),
+    ).toBeChecked()
+    expect(where).toHaveTextContent(
+      'Os cartões ligados ao banco não aparecem aqui',
+    )
+  })
+
+  it('sem banco ligado, todos os cartões aparecem e nenhum aviso', () => {
+    renderApp('/meses/2026-09')
+    const where = within(open()).getByRole('group', { name: 'Onde' })
+    expect(
+      within(where).getByRole('radio', { name: 'Nubank Teste' }),
+    ).toBeInTheDocument()
+    expect(where).not.toHaveTextContent('ligados ao banco')
+  })
+
   it('Pix com "Saiu de": grava o banco, mostra na linha e lembra da próxima vez', async () => {
     renderApp('/meses/2026-09')
     let dialog = open()
