@@ -348,7 +348,6 @@ describe('modal Lançar', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
     await waitFor(() => expect(writes()[1]).toMatchObject({ op: 'delete' }))
-    expect(localStorage.getItem('aerarium.lancar.onde')).toBe('c1')
   })
 
   it('com o pai ligado: compra no cartão e parcelado podem ser dele; Pix não', async () => {
@@ -469,6 +468,31 @@ describe('modal Lançar', () => {
     expect(where).toHaveTextContent(
       'Os cartões ligados ao banco não aparecem aqui',
     )
+  })
+
+  it('o cartão mais usado à mão vem primeiro e já marcado', () => {
+    const finance = financeFixture()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      // Five typed on the long-named card, more than Nubank Teste has.
+      expenses: [
+        ...finance.expenses,
+        ...[1, 2, 3, 4, 5].map((n) => ({
+          ...finance.expenses[0]!,
+          id: `x${n}`,
+          invoiceId: 'v9b',
+        })),
+      ],
+    })
+    const where = within(open()).getByRole('group', { name: 'Onde' })
+    expect(
+      within(where)
+        .getAllByRole('radio')
+        .map((item) => item.getAttribute('value')),
+    ).toEqual(['c2', 'c1', NO_CARD])
+    expect(
+      within(where).getByRole('radio', { name: /^Cartão com um nome/ }),
+    ).toBeChecked()
   })
 
   it('sem banco ligado, todos os cartões aparecem e nenhum aviso', () => {

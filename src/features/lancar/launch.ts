@@ -26,11 +26,21 @@ export const NO_CARD = 'none'
 /**
  * Cards a purchase can be typed on: the ones fed by the bank (Open Finance)
  * stay out, so nothing is typed and then brought by the bank again (the
- * owner's choice, 24/10/2026).
+ * owner's choice, 24/10/2026). The card with the most purchases typed by
+ * hand comes first: Lançar opens on it.
  */
 export function launchCards(finance: Finance): readonly Card[] {
   const fed = new Set(finance.bankAccounts.map((item) => item.cardId))
-  return finance.cards.filter((card) => !fed.has(card.id))
+  const cardOf = new Map(finance.invoices.map((item) => [item.id, item.cardId]))
+  const typed = new Map<string, number>()
+  for (const expense of finance.expenses) {
+    const cardId = cardOf.get(expense.invoiceId)
+    if (cardId && !expense.externalId)
+      typed.set(cardId, (typed.get(cardId) ?? 0) + 1)
+  }
+  return finance.cards
+    .filter((card) => !fed.has(card.id))
+    .sort((a, b) => (typed.get(b.id) ?? 0) - (typed.get(a.id) ?? 0))
 }
 
 /** Months Lançar can put something in: the existing ones and the next one. */

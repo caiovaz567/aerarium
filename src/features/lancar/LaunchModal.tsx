@@ -26,7 +26,6 @@ import {
   type LaunchKind,
 } from './launch'
 
-const WHERE_KEY = 'aerarium.lancar.onde'
 const KINDS: readonly [LaunchKind, string][] = [
   ['gasto', 'Gasto'],
   ['parcelado', 'Parcelado'],
@@ -50,19 +49,6 @@ function rememberedFrom() {
   }
 }
 
-function rememberedWhere(finance: Finance) {
-  let saved: string | null = null
-  try {
-    saved = localStorage.getItem(WHERE_KEY)
-  } catch {
-    /* private mode */
-  }
-  const cards = launchCards(finance)
-  if (saved === NO_CARD || cards.some((card) => card.id === saved))
-    return saved!
-  return cards[0]?.id ?? NO_CARD
-}
-
 /** Lançar: Gasto, Parcelado or Entrada in a few taps. */
 export function LaunchModal({
   finance,
@@ -81,7 +67,10 @@ export function LaunchModal({
   const [value, setValue] = useState('')
   const [count, setCount] = useState('')
   const [description, setDescription] = useState('')
-  const [where, setWhere] = useState(() => rememberedWhere(finance))
+  // Opens on the card used the most (launchCards puts it first).
+  const [where, setWhere] = useState(
+    () => launchCards(finance)[0]?.id ?? NO_CARD,
+  )
   const [paid, setPaid] = useState(true)
   const [forOther, setForOther] = useState(false)
   const [paidFrom, setPaidFrom] = useState(rememberedFrom)
@@ -163,11 +152,9 @@ export function LaunchModal({
     } catch (reason) {
       return setError((reason as Error).message)
     }
-    if (usesCard)
+    if (kind === 'gasto' && where === NO_CARD)
       try {
-        localStorage.setItem(WHERE_KEY, where)
-        if (kind === 'gasto' && where === NO_CARD)
-          localStorage.setItem(FROM_KEY, paidFrom ?? '')
+        localStorage.setItem(FROM_KEY, paidFrom ?? '')
       } catch {
         /* private mode: not remembered */
       }
