@@ -210,7 +210,13 @@ async function main() {
   )
   await insert(db, 'invoice_expenses', rows('invoice_expenses'))
   await insert(db, 'installment_plans', rows('installment_plans'))
-  await insert(db, 'installment_payments', rows('installment_payments'))
+  // Payments made by paying an invoice come back when it is marked paid
+  // below (the database only takes them from a paid invoice).
+  await insert(
+    db,
+    'installment_payments',
+    rows('installment_payments').filter((row) => row.source !== 'invoice'),
+  )
   await insert(db, 'subscriptions', rows('subscriptions'))
   for (const invoice of copy.invoices.filter((row) => row.paid)) {
     const { error } = await db
