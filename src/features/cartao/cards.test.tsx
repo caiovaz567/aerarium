@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { chartSeries } from '../../domain/chartSeries'
 import { cents } from '../../domain/money'
@@ -199,6 +199,57 @@ describe('Cartões, uma tela só', () => {
     const invoice = screen.getByRole('dialog')
     fireEvent.click(within(invoice).getByRole('button', { name: 'Salvar' }))
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('compra na fatura errada: troca o mês no "Fatura" (a fatura paga não aparece)', async () => {
+    const finance = financeFixture()
+    renderApp('/cartoes?mes=2026-09', undefined, {
+      ...finance,
+      months: [...finance.months, { id: 'm10', ref: month('2026-10') }],
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^Uber/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Editar gasto' })
+    const field = within(dialog).getByLabelText('Fatura')
+    // August is paid: only September (where it is) and October.
+    expect(
+      within(field)
+        .getAllByRole('option')
+        .map((item) => item.textContent),
+    ).toEqual(['Setembro 2026', 'Outubro 2026'])
+    expect(field).toHaveValue('2026-09')
+    fireEvent.change(field, { target: { value: '2026-10' } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+    // Two writes in a row: the expense, then its move.
+    const created = await waitFor(() => {
+      const call = fake.current!.calls.find(
+        (item) => item.table === 'invoices' && item.op === 'insert',
+      )
+      expect(call).toBeDefined()
+      return call!
+    })
+    expect(created.payload).toMatchObject({ card_id: 'c1', month_id: 'm10' })
+    await waitFor(() =>
+      expect(fake.current!.calls).toContainEqual(
+        expect.objectContaining({
+          table: 'invoice_expenses',
+          op: 'update',
+          payload: { invoice_id: (created.payload as { id: string }).id },
+        }),
+      ),
+    )
+    expect(feed()).not.toContain('Uber')
+    expect(screen.getByText('Salvo, na fatura de outubro')).toBeVisible()
+  })
+
+  it('compra numa fatura paga não troca de mês', () => {
+    const finance = financeFixture()
+    renderApp('/cartoes?mes=2026-08', undefined, {
+      ...finance,
+      expenses: [{ ...finance.expenses[0]!, invoiceId: 'v8a' }],
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^Uber/ }))
+    const dialog = screen.getByRole('dialog', { name: 'Editar gasto' })
+    expect(within(dialog).queryByLabelText('Fatura')).toBeNull()
   })
 
   it('só as compras; as parcelas em aberto; os arquivados', () => {

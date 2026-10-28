@@ -371,6 +371,29 @@ export const ops = {
     }
   },
 
+  /** An expense to another invoice of its card, created first when new. */
+  moveExpense(
+    expense: ExpenseRow,
+    invoice: InvoiceRow,
+    created: boolean,
+  ): FinanceOp {
+    return {
+      run: async () => {
+        if (created) await ok(table('invoices').insert(invoiceRecord(invoice)))
+        await ok(
+          table('invoice_expenses')
+            .update({ invoice_id: invoice.id })
+            .eq('id', expense.id),
+        )
+      },
+      apply: (f) => ({
+        ...f,
+        invoices: created ? [...f.invoices, invoice] : f.invoices,
+        expenses: patch(f.expenses, expense.id, { invoiceId: invoice.id }),
+      }),
+    }
+  },
+
   removeExpense(expense: ExpenseRow): FinanceOp {
     return {
       run: () => ok(table('invoice_expenses').delete().eq('id', expense.id)),

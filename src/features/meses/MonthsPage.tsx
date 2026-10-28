@@ -22,6 +22,7 @@ import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
 import { useEditor } from '../editar/editorContext'
 import { BillModal, ExpenseModal, IncomeModal } from './EditModals'
+import { expenseMonth, expenseMonths, saveExpense } from './expenseMove'
 import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
 import { OwedBlock } from './OwedBlock'
@@ -416,15 +417,21 @@ export function MonthsPage() {
           expense={expense}
           categories={finance.categories}
           otherPerson={finance.otherPerson}
+          month={expenseMonth(finance, expense)}
+          months={expenseMonths(finance, expense)}
           onClose={close}
           onDelete={() => {
             close()
             removeExpense(expense)
           }}
           onSave={(changes) => {
-            run(ops.updateExpense(expense, changes))
+            run(saveExpense(finance, expense, changes))
             close()
-            toast('Salvo')
+            toast(
+              changes.month
+                ? `Salvo, na fatura de ${monthName(changes.month).toLowerCase()}`
+                : 'Salvo',
+            )
           }}
         />
       )}

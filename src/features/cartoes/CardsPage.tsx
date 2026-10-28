@@ -16,7 +16,7 @@ import { today, useFinance, useFinanceOp } from '../../data/useFinance'
 import { partOf, type CardPart } from '../../domain/chartSeries'
 import { invoiceTotals } from '../../domain/invoices'
 import { cents, formatMoney, sumMoney } from '../../domain/money'
-import { dateBR, type Month } from '../../domain/months'
+import { dateBR, monthName, type Month } from '../../domain/months'
 import { CardArt } from '../../ui/CardArt'
 import { AddButton, TrashButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
@@ -28,6 +28,7 @@ import { usePlanActions } from '../cartao/planActions'
 import { PlanRow } from '../cartao/PlanRow'
 import { useEditor } from '../editar/editorContext'
 import { ExpenseModal } from '../meses/EditModals'
+import { expenseMonth, expenseMonths, saveExpense } from '../meses/expenseMove'
 import { MonthNav } from '../meses/MonthNav'
 import { ProfileSwitch } from '../meses/ProfileSwitch'
 import { defaultMonth } from '../meses/monthView'
@@ -382,15 +383,21 @@ export function CardsPage() {
           expense={expense}
           categories={finance.categories}
           otherPerson={finance.otherPerson}
+          month={expenseMonth(finance, expense)}
+          months={expenseMonths(finance, expense)}
           onClose={close}
           onDelete={() => {
             close()
             removeExpense(expense)
           }}
           onSave={(changes) => {
-            run(ops.updateExpense(expense, changes))
+            run(saveExpense(finance, expense, changes))
             close()
-            toast('Salvo')
+            toast(
+              changes.month
+                ? `Salvo, na fatura de ${monthName(changes.month).toLowerCase()}`
+                : 'Salvo',
+            )
           }}
         />
       )}

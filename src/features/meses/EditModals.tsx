@@ -1,5 +1,5 @@
 import { PaidFromField } from '../../ui/PaidFromField'
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useId, useState, type FormEvent, type ReactNode } from 'react'
 import type { BillRow, ExpenseRow, IncomeRow } from '../../data/finance'
 import type { Category } from '../../domain/categories'
 import { formatMoneyInput, type Cents } from '../../domain/money'
@@ -13,7 +13,7 @@ import {
 import { CategoryPicker } from '../../ui/CategoryPicker'
 import { WhenField } from '../../ui/WhenField'
 import { instantToSaoPaulo, saoPauloToInstant } from '../../domain/timeline'
-import { dayMonth } from '../../domain/months'
+import { dayMonth, monthLabel, type Month } from '../../domain/months'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
 
@@ -193,12 +193,17 @@ export function ExpenseModal({
   expense,
   categories,
   otherPerson = null,
+  month,
+  months = [],
   onClose,
   onSave,
   onDelete,
 }: {
   readonly expense: ExpenseRow
   readonly categories: readonly Category[]
+  /** The invoice month it is in, and the ones it can go to (expenseMonths). */
+  readonly month?: Month
+  readonly months?: readonly Month[]
   /** Fase 13.3: who else uses the cards, if anyone. */
   readonly otherPerson?: string | null
   readonly onClose: () => void
@@ -209,10 +214,14 @@ export function ExpenseModal({
     occurredAt: string | null
     note?: string | null
     forOther?: boolean
+    /** Only when the person picked another invoice month. */
+    month?: Month
   }) => void
   readonly onDelete: () => void
 }) {
   const [forOther, setForOther] = useState(expense.forOther ?? false)
+  const [invoiceMonth, setInvoiceMonth] = useState(month)
+  const monthId = useId()
   // A purchase from the bank keeps the bank's name; the person adds a note.
   const fromBank = Boolean(expense.externalId)
   const [description, setDescription] = useState(expense.description)
@@ -249,6 +258,7 @@ export function ExpenseModal({
           occurredAt,
           ...(fromBank && { note: note.trim().slice(0, 200) || null }),
           ...(otherPerson && { forOther }),
+          ...(invoiceMonth !== month && { month: invoiceMonth }),
         })
       }}
     >
@@ -289,6 +299,23 @@ export function ExpenseModal({
           when ? undefined : `Sem hora; o dia é ${dayMonth(expense.spentOn)}.`
         }
       />
+      {months.length > 1 && (
+        <div className="field">
+          <label htmlFor={monthId}>Fatura</label>
+          <select
+            id={monthId}
+            value={invoiceMonth}
+            onChange={(event) => setInvoiceMonth(event.target.value as Month)}
+          >
+            {months.map((ref) => (
+              <option key={ref} value={ref}>
+                {monthLabel(ref)}
+              </option>
+            ))}
+          </select>
+          <small>Troca se a compra caiu na fatura do mês errado.</small>
+        </div>
+      )}
       <CategoryPicker
         categories={categories}
         value={categoryId}
