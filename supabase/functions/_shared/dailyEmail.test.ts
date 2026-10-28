@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  billMonthOf,
   dayText,
+  emailBills,
   emailGroups,
   money,
   renderEmail,
@@ -167,5 +169,121 @@ describe('e-mail diário: o desenho', () => {
     })
     expect(none.html).toContain('não chegou nenhuma compra')
     expect(none.html).toContain('nada novo')
+  })
+})
+
+describe('e-mail diário: fatura fechada', () => {
+  const bill = (
+    id: string,
+    accountId: string,
+    dueDate: string,
+    total = 5470.36,
+  ) => ({
+    id,
+    accountId,
+    dueDate,
+    total,
+  })
+  const base = {
+    cards,
+    sent: new Set<string>(),
+    today: '2026-10-28',
+    nextMonth: true,
+    otherPerson: true,
+    invoices: new Map([['bb 2026-10', { total: 877.02, mine: 877.02 }]]),
+  }
+
+  it('só as que ainda vão vencer e não foram contadas; o Pai fica com o resto', () => {
+    const bills = emailBills({
+      ...base,
+      bills: [
+        bill('old', 'bb', '2026-10-05'),
+        bill('told', 'bb', '2026-11-05'),
+        bill('zero', 'nu', '2026-11-05', 0),
+        bill('b10', 'bb', '2026-11-05'),
+        bill('n10', 'nu', '2026-11-10', 120),
+        bill('other', 'xx', '2026-11-05'),
+      ],
+      sent: new Set(['bill:told']),
+    })
+    expect(bills).toEqual([
+      {
+        id: 'n10',
+        card: cards[0],
+        month: 'outubro',
+        total: 120,
+        mine: null,
+        other: null,
+      },
+      {
+        id: 'b10',
+        card: cards[1],
+        month: 'outubro',
+        total: 5470.36,
+        mine: 877.02,
+        other: 4593.34,
+      },
+    ])
+    // Without the convention, the month is the due one; without the other
+    // person, only the total.
+    expect(
+      emailBills({
+        ...base,
+        nextMonth: false,
+        otherPerson: false,
+        bills: [bill('b10', 'bb', '2026-01-05')],
+        today: '2026-01-01',
+      })[0],
+    ).toMatchObject({ month: 'janeiro', mine: null, other: null })
+    expect(billMonthOf('2026-01-05', true)).toBe('2025-12')
+  })
+
+  it('no topo do e-mail, com as partes; sem compra, sem o resumo das compras', () => {
+    const [one] = emailBills({
+      ...base,
+      bills: [bill('b10', 'bb', '2026-11-05')],
+    })
+    const alone = renderEmail({
+      groups: [],
+      bills: [one!],
+      now: '2026-10-28T21:00:00.000Z',
+      appUrl: 'https://app.test',
+      otherPerson: 'Pai',
+    })
+    expect(alone.subject).toBe(
+      `Aerarium: fatura do Smiles BB fechou, ${money(5470.36)}`,
+    )
+    expect(alone.html).toContain('Fatura de outubro fechou')
+    expect(alone.html).toContain('Sua parte')
+    expect(alone.html).toContain('Parte do Pai')
+    expect(alone.html).toContain(money(4593.34))
+    expect(alone.html).not.toContain('chegou do banco')
+    expect(alone.html).toContain('compra nova ou fatura fechada')
+    const both = renderEmail({
+      groups: [
+        {
+          card: cards[0]!,
+          total: 10,
+          items: [
+            {
+              id: 'a',
+              name: 'LOJA',
+              amount: 10,
+              when: 'ter 28',
+              category: null,
+              installment: null,
+            },
+          ],
+        },
+      ],
+      bills: [one!, { ...one!, id: 'b2', mine: null, other: null }],
+      now: '2026-10-28T21:00:00.000Z',
+      appUrl: 'https://app.test',
+    })
+    expect(both.subject).toBe(
+      'Aerarium: 2 faturas fecharam, e 1 compra no cartão',
+    )
+    expect(both.html).toContain('chegou do banco')
+    expect(both.html).not.toContain('Sua parte')
   })
 })

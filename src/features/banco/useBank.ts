@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useAuth } from '../../app/authContext'
 import {
   askBankUpdate,
@@ -14,7 +15,9 @@ import {
 import { financeKey, type Finance } from '../../data/finance'
 import { today, useFinanceOp } from '../../data/useFinance'
 import type { ImportResult } from '../../domain/bank'
+import type { ShowToast } from '../../ui/toastContext'
 import { saveItems } from './bankItems'
+import { billNotices } from './billNotice'
 
 /** Asked once per session; only the app's owner gets true. */
 let status: Promise<boolean> | null = null
@@ -55,6 +58,8 @@ export interface SyncOutcome {
   readonly result: ImportResult
   /** First import ever: the person sees a preview before anything is saved. */
   readonly first: boolean
+  /** What the import was planned against. */
+  readonly finance: Finance
 }
 
 /**
@@ -91,6 +96,7 @@ export function useBankSync() {
       data,
       result: planSync(finance, data, today()),
       first: finance.bankRecords.length === 0,
+      finance,
     }
   }, [client, run, userId])
 
@@ -142,10 +148,11 @@ export function importMessage(result: ImportResult): string {
  */
 export function useBankAutoSync(
   finance: Finance | undefined,
-  toast: (message: string) => void,
+  toast: ShowToast,
 ) {
   const enabled = useBankEnabled()
   const { fetchPlan, save } = useBankSync()
+  const navigate = useNavigate()
   const started = useRef(false)
   const again = useRef<number | undefined>(undefined)
   useEffect(() => {
@@ -157,9 +164,17 @@ export function useBankAutoSync(
     started.current = true
     const look = () =>
       fetchPlan()
-        .then(({ result }) => {
+        .then(({ result, finance: before }) => {
           save(result)
-          if (
+          // A closed bill is told on its own, with a way to see it.
+          const bills = billNotices(bankOps.apply(result).apply(before), result)
+          if (bills.length) {
+            const { cardId, month } = bills[0]!
+            toast(bills.map((item) => item.message).join(' '), {
+              label: 'Ver',
+              onClick: () => navigate(`/cartoes?mes=${month}&cartao=${cardId}`),
+            })
+          } else if (
             result.expenses.length ||
             result.plans.length ||
             result.notices.length
@@ -177,6 +192,6 @@ export function useBankAutoSync(
         void look()
         if (asked) again.current = window.setTimeout(look, ASK_WAIT_MS)
       })
-  }, [enabled, finance, fetchPlan, save, toast])
+  }, [enabled, finance, fetchPlan, save, toast, navigate])
   useEffect(() => () => window.clearTimeout(again.current), [])
 }

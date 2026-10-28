@@ -16,6 +16,7 @@ import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
 import { ShareSettings } from '../compartilhado/ShareSettings'
 import { bankItemLines, savedItems } from './bankItems'
+import { billNotices } from './billNotice'
 import { PreviewCards } from './PreviewCards'
 import { importMessage, lastSync, useBankEnabled, useBankSync } from './useBank'
 
@@ -186,10 +187,14 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
         setPreview(outcome.result)
       else {
         save(outcome.result)
+        const bills = billNotices(
+          bankOps.apply(outcome.result).apply(outcome.finance),
+          outcome.result,
+        ).map((item) => ` ${item.message}`)
         toast(
           waiting && tries > 0
-            ? `${importMessage(outcome.result)} Pedi pro banco mandar o que tem de novo; olho de novo em 1 minuto.`
-            : importMessage(outcome.result),
+            ? `${importMessage(outcome.result)}${bills.join('')} Pedi pro banco mandar o que tem de novo; olho de novo em 1 minuto.`
+            : `${importMessage(outcome.result)}${bills.join('')}`,
         )
         if (waiting && tries > 0)
           again.current = window.setTimeout(

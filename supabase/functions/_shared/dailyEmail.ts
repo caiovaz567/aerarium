@@ -45,7 +45,47 @@ export interface EmailGroup {
   readonly items: readonly EmailItem[]
 }
 
+/** A closed bill from the bank (reais). */
+export interface EmailBankBill {
+  readonly id: string
+  readonly accountId: string
+  /** "YYYY-MM-DD" */
+  readonly dueDate: string
+  readonly total: number
+}
+
+/** The app's invoice of a bill: its total and the owner's part (reais). */
+export interface EmailInvoice {
+  readonly total: number
+  readonly mine: number
+}
+
+export interface EmailBill {
+  readonly id: string
+  readonly card: EmailCard
+  /** "outubro" */
+  readonly month: string
+  readonly total: number
+  /** With someone else using the cards and the invoice in the app. */
+  readonly mine: number | null
+  readonly other: number | null
+}
+
 const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
+const MONTH_NAMES = [
+  'janeiro',
+  'fevereiro',
+  'março',
+  'abril',
+  'maio',
+  'junho',
+  'julho',
+  'agosto',
+  'setembro',
+  'outubro',
+  'novembro',
+  'dezembro',
+]
 const MONTHS = [
   'jan',
   'fev',
@@ -145,6 +185,63 @@ export function emailGroups(input: {
   })
 }
 
+/**
+ * The app's month of a bill due on `dueDate` ("YYYY-MM"): its own month, or
+ * the one before with the owner's convention (billMonth in src/domain/bank.ts).
+ */
+export function billMonthOf(dueDate: string, nextMonth: boolean): string {
+  const year = Number(dueDate.slice(0, 4))
+  const index = Number(dueDate.slice(5, 7)) - 1 - (nextMonth ? 1 : 0)
+  return new Date(Date.UTC(year, index, 1)).toISOString().slice(0, 7)
+}
+
+/**
+ * The bills the bank closed and no email told yet (asked by the owner on
+ * 28/10/2026). Only the ones not due yet: older ones were paid long ago. The
+ * other person's part is the rest of the bank's total, as in the app.
+ */
+export function emailBills(input: {
+  readonly bills: readonly EmailBankBill[]
+  readonly cards: readonly EmailCard[]
+  /** Already in an email, as "bill:ID". */
+  readonly sent: ReadonlySet<string>
+  /** "YYYY-MM-DD" in São Paulo. */
+  readonly today: string
+  readonly nextMonth: boolean
+  readonly otherPerson: boolean
+  /** The app's invoices by "accountId YYYY-MM". */
+  readonly invoices: ReadonlyMap<string, EmailInvoice>
+}): EmailBill[] {
+  return input.cards.flatMap((card) =>
+    input.bills
+      .filter(
+        (bill) =>
+          bill.accountId === card.accountId &&
+          bill.total > 0 &&
+          bill.dueDate >= input.today &&
+          !input.sent.has(`bill:${bill.id}`),
+      )
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+      .map((bill): EmailBill => {
+        const month = billMonthOf(bill.dueDate, input.nextMonth)
+        const app = input.otherPerson
+          ? input.invoices.get(`${card.accountId} ${month}`)
+          : undefined
+        const round = (value: number) => Math.round(value * 100) / 100
+        return {
+          id: bill.id,
+          card,
+          month: MONTH_NAMES[Number(month.slice(5, 7)) - 1]!,
+          total: bill.total,
+          mine: app ? round(app.mine) : null,
+          other: app
+            ? round(Math.max(0, Math.max(app.total, bill.total) - app.mine))
+            : null,
+        }
+      }),
+  )
+}
+
 /** "29 set", the day the email goes out. */
 export function dayText(instant: string): string {
   const local = saoPaulo(instant)
@@ -184,10 +281,51 @@ function itemRow(item: EmailItem): string {
       </tr>`
 }
 
-function cardBlock(group: EmailGroup, appUrl: string): string {
-  const logo = group.card.bank
-    ? `<td valign="middle" style="padding-right:10px;"><img src="${escape(appUrl)}/banks/${escape(group.card.bank)}.png" width="28" height="28" alt="" style="display:block;width:28px;height:28px;border-radius:8px;"></td>`
+function logoCell(card: EmailCard, appUrl: string): string {
+  return card.bank
+    ? `<td valign="middle" style="padding-right:10px;"><img src="${escape(appUrl)}/banks/${escape(card.bank)}.png" width="28" height="28" alt="" style="display:block;width:28px;height:28px;border-radius:8px;"></td>`
     : ''
+}
+
+function partRow(label: string, amount: number): string {
+  return `
+      <tr>
+        <td valign="middle" style="padding:10px 12px 10px 0;border-top:1px solid #eef0f5;color:#62697e;font-size:14px;${FONT}">${escape(label)}</td>
+        <td align="right" valign="middle" style="padding:10px 0;border-top:1px solid #eef0f5;white-space:nowrap;color:#161a26;font-size:15px;font-weight:700;${FONT}">${money(amount)}</td>
+      </tr>`
+}
+
+function billBlock(
+  bill: EmailBill,
+  appUrl: string,
+  otherPerson: string | null,
+): string {
+  const parts =
+    bill.mine !== null && bill.other !== null && otherPerson
+      ? partRow('Sua parte', bill.mine) +
+        partRow(`Parte do ${otherPerson}`, bill.other)
+      : ''
+  return `
+  <tr><td style="height:12px;"></td></tr>
+  <tr><td style="background:#fff;border-radius:18px;padding:4px 18px 6px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td valign="middle" style="padding:12px 0 10px;">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            ${logoCell(bill.card, appUrl)}<td valign="middle">
+              <div style="color:#161a26;font-size:16px;font-weight:800;${DISPLAY}">${escape(bill.card.name)}</div>
+              <div style="color:#62697e;font-size:12.5px;${FONT}">Fatura de ${escape(bill.month)} fechou</div>
+            </td>
+          </tr></table>
+        </td>
+        <td align="right" valign="middle" style="padding:12px 0 10px;color:#161a26;font-size:15px;font-weight:700;white-space:nowrap;${FONT}">${money(bill.total)}</td>
+      </tr>${parts}
+    </table>
+  </td></tr>`
+}
+
+function cardBlock(group: EmailGroup, appUrl: string): string {
+  const logo = logoCell(group.card, appUrl)
   return `
   <tr><td style="height:12px;"></td></tr>
   <tr><td style="background:#fff;border-radius:18px;padding:4px 18px 6px;">
@@ -207,6 +345,8 @@ function cardBlock(group: EmailGroup, appUrl: string): string {
 /** Subject and HTML of the email. */
 export function renderEmail(input: {
   readonly groups: readonly EmailGroup[]
+  /** Bills the bank closed, above the purchases. */
+  readonly bills?: readonly EmailBill[]
   /** When it goes out (ISO instant). */
   readonly now: string
   readonly appUrl: string
@@ -219,9 +359,18 @@ export function renderEmail(input: {
   const total = input.groups.reduce((sum, group) => sum + group.total, 0)
   const count = `${items.length} ${items.length === 1 ? 'compra' : 'compras'}`
   const cards = `${input.groups.length} ${input.groups.length === 1 ? 'cartão' : 'cartões'}`
+  const bills = input.bills ?? []
+  const closed =
+    bills.length === 1
+      ? `fatura do ${bills[0]!.card.name} fechou, ${money(bills[0]!.total)}`
+      : `${bills.length} faturas fecharam`
   const subject = input.test
     ? 'Aerarium: resumo por e-mail ligado'
-    : `Aerarium: ${count} no cartão, ${money(total)}`
+    : bills.length
+      ? `Aerarium: ${closed}${items.length ? `, e ${count} no cartão` : ''}`
+      : `Aerarium: ${count} no cartão, ${money(total)}`
+  // With only closed bills, the purchases' summary would say zero.
+  const hero = items.length > 0 || bills.length === 0
   const mark = Boolean(input.otherPerson) && items.length > 0
   const intro = input.test
     ? `<tr><td style="padding:0 4px 12px;color:#161a26;font-size:14px;line-height:1.5;${FONT}">Pronto! Todo dia às 18h chega aqui o que o banco mostrou de novo.${
@@ -243,6 +392,10 @@ export function renderEmail(input: {
 <tr><td align="center" style="padding:20px 12px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
   ${intro}
+  ${bills.map((bill) => billBlock(bill, input.appUrl, input.otherPerson ?? null)).join('')}
+  ${
+    hero
+      ? `${bills.length ? '<tr><td style="height:12px;"></td></tr>' : ''}
   <tr><td style="background:#2b39b3;border-radius:18px;padding:18px 20px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
       <td valign="middle" style="color:#d5d9f4;font-size:13px;font-weight:600;${FONT}">Aerarium · chegou do banco</td>
@@ -252,7 +405,9 @@ export function renderEmail(input: {
       <td valign="bottom" style="color:#fff;font-size:30px;font-weight:800;line-height:1;${DISPLAY}">${money(total)}</td>
       <td align="right" valign="bottom" style="color:#fff;font-size:14px;${FONT}">${items.length ? `${count} em ${cards}` : 'nada novo'}</td>
     </tr></table>
-  </td></tr>
+  </td></tr>`
+      : ''
+  }
   ${input.groups.map((group) => cardBlock(group, input.appUrl)).join('')}
   ${
     mark
@@ -263,7 +418,7 @@ export function renderEmail(input: {
     <a href="${escape(input.appUrl)}" style="display:inline-block;padding:12px 24px;border-radius:12px;background:#3140c2;color:#fff;font-size:15px;font-weight:700;text-decoration:none;${FONT}">${mark ? 'Marcar no Aerarium' : 'Abrir o Aerarium'}</a>
   </td></tr>
   <tr><td align="center" style="padding:8px 20px;color:#8a90a3;font-size:12px;line-height:1.5;${FONT}">
-    Chega às 18h, só nos dias com compra nova. Pra parar, desligue em Ajustes, Bancos conectados.
+    Chega às 18h, só nos dias com compra nova ou fatura fechada. Pra parar, desligue em Ajustes, Bancos conectados.
   </td></tr>
 </table>
 </td></tr>

@@ -1,7 +1,7 @@
 // Fase 14.3: the daily email at 18h, only for the Open Finance owner
 // (PLUGGY_OWNER_USER_ID). It reads the bank (Meu Pluggy) and emails what is
-// new, card by card, through Resend. It never writes purchases: the app still
-// imports them when opened ("Chegou do banco").
+// new, card by card, and the bills that closed, through Resend. It never
+// writes purchases or totals: the app still imports them when opened.
 //
 //   {action: 'setup'}  the owner's session, when the switch in Ajustes is
 //                      turned on: saves where this function is and a secret
@@ -12,10 +12,13 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import postgres from 'npm:postgres@3.4.5'
 import {
+  emailBills,
   emailGroups,
   renderEmail,
+  type EmailBankBill,
   type EmailCard,
   type EmailCategory,
+  type EmailInvoice,
   type EmailTransaction,
 } from '../_shared/dailyEmail.ts'
 
@@ -46,6 +49,7 @@ async function pluggy<T>(apiKey: string, path: string): Promise<T> {
 }
 
 type Account = { id: string; type: string }
+type Bill = { id: string; dueDate: string; totalAmount: number }
 type Transaction = {
   id: string
   description: string
@@ -93,11 +97,11 @@ async function askBank(apiKey: string, items: readonly string[]) {
   }
 }
 
-/** The credit card transactions of the owner's items since `from`. */
-async function bankTransactions(
+/** The owner's credit card transactions since `from`, and the closed bills. */
+async function bankData(
   from: string,
   fresh: boolean,
-): Promise<EmailTransaction[]> {
+): Promise<{ transactions: EmailTransaction[]; bills: EmailBankBill[] }> {
   const { apiKey } = await fetch(`${PLUGGY}/auth`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -115,6 +119,7 @@ async function bankTransactions(
     .filter(Boolean)
   if (fresh) await askBank(apiKey, items)
   const result: EmailTransaction[] = []
+  const bills: EmailBankBill[] = []
   for (const itemId of items) {
     const accounts = (
       await pluggy<{ results: Account[] }>(apiKey, `/accounts?itemId=${itemId}`)
@@ -144,9 +149,20 @@ async function bankTransactions(
           ? page.next.slice(page.next.indexOf('?'))
           : `?${page.next}`
       }
+      const closed = await pluggy<{ results: Bill[] }>(
+        apiKey,
+        `/bills?accountId=${account.id}`,
+      )
+      for (const bill of closed.results)
+        bills.push({
+          id: bill.id,
+          accountId: account.id,
+          dueDate: bill.dueDate.slice(0, 10),
+          total: bill.totalAmount,
+        })
     }
   }
-  return result
+  return { transactions: result, bills }
 }
 
 const daysAgo = (days: number) =>
@@ -198,21 +214,51 @@ async function sendFor(owner: string, test: boolean): Promise<number> {
     ).map((row) => row.external_id),
   )
 
+  const [settings] = await sql<
+    { other_person: string | null; due_next_month: boolean | null }[]
+  >`
+    select other_person, due_next_month from public.user_settings
+    where user_id = ${owner}`
+  // The app's invoices of the bank cards: the owner's part of each bill.
+  const invoices = new Map<string, EmailInvoice>(
+    (
+      await sql<{ key: string; total: string; mine: string }[]>`
+        select a.pluggy_account_id || ' ' || to_char(t.month, 'YYYY-MM') as key,
+          t.total, t.mine
+        from public.bank_accounts a
+        join public.v_invoice_totals t
+          on t.card_id = a.card_id and t.user_id = a.user_id
+        where a.user_id = ${owner}`
+    ).map((row) => [
+      row.key,
+      { total: Number(row.total), mine: Number(row.mine) },
+    ]),
+  )
+
   const now = new Date().toISOString()
+  const bank = await bankData(from, !test)
   const groups = emailGroups({
-    transactions: await bankTransactions(from, !test),
+    transactions: bank.transactions,
     cards,
     sent,
     from,
     now,
     categories,
   })
-  if (!groups.length && !test) return 0
+  const bills = emailBills({
+    bills: bank.bills,
+    cards,
+    sent,
+    today: daysAgo(0),
+    nextMonth: settings?.due_next_month === true,
+    otherPerson: Boolean(settings?.other_person),
+    invoices,
+  })
+  if (!groups.length && !bills.length && !test) return 0
 
-  const [settings] = await sql<{ other_person: string | null }[]>`
-    select other_person from public.user_settings where user_id = ${owner}`
   const { subject, html } = renderEmail({
     groups,
+    bills,
     now,
     otherPerson: settings?.other_person ?? null,
     appUrl: env('APP_URL') || 'https://aerarium-delta.vercel.app',
@@ -233,7 +279,10 @@ async function sendFor(owner: string, test: boolean): Promise<number> {
   })
   if (!response.ok) throw new Error(`Resend: ${response.status}`)
 
-  const ids = groups.flatMap((group) => group.items.map((item) => item.id))
+  const ids = [
+    ...groups.flatMap((group) => group.items.map((item) => item.id)),
+    ...bills.map((bill) => `bill:${bill.id}`),
+  ]
   if (ids.length)
     await sql`
       insert into private.emailed_transactions ${sql(
