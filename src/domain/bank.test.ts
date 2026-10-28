@@ -202,6 +202,162 @@ describe('textos e datas do banco', () => {
   })
 })
 
+describe('o dia de fechamento do cartão manda (27/10/2026)', () => {
+  const nov = month('2026-11')
+  // The bank still says the bill due 01/11 is open, with the next close.
+  const after: BankAccount = {
+    pluggyAccountId: 'acc',
+    cardId: 'card',
+    dueDate: isoDate('2026-11-01'),
+    closeDate: isoDate('2026-11-17'),
+  }
+  const smiles = { closingDay: 22, dueDay: 1 }
+  const at = (date: string) => tx('t', 'LOJA', 100, `${date}T15:00:00.000Z`)
+
+  it('compra depois do dia de fechamento vai pra fatura seguinte', () => {
+    expect(bankInvoiceMonth(at('2026-10-23'), after, [], smiles, true)).toBe(
+      nov,
+    )
+    expect(bankInvoiceMonth(at('2026-10-22'), after, [], smiles, true)).toBe(
+      oct,
+    )
+    // The bank's closed bill still decides when it names one.
+    const bills: BankBill[] = [
+      {
+        id: 'b10',
+        accountId: 'acc',
+        dueDate: isoDate('2026-11-01'),
+        total: cents(1),
+      },
+    ]
+    expect(
+      bankInvoiceMonth(
+        { ...at('2026-10-23'), billId: 'b10' },
+        after,
+        bills,
+        smiles,
+        true,
+      ),
+    ).toBe(oct)
+  })
+
+  const bankExpense = (
+    id: string,
+    invoiceId: string,
+    spentOn: string,
+    externalId: string | null = `ext-${id}`,
+  ) => ({
+    id,
+    invoiceId,
+    description: 'LOJA',
+    amount: cents(1000),
+    spentOn: isoDate(spentOn),
+    externalId,
+  })
+  const open = (id: string, cardId: string, ref: string, paid = false) => ({
+    id,
+    cardId,
+    month: month(ref),
+    paid,
+    otherAmount: cents(0),
+  })
+
+  it('compras do banco que já caíram na fatura fechada passam pra seguinte', () => {
+    const result = planBankImport(
+      state({
+        cards: [
+          { id: 'card', ...smiles },
+          { id: 'sem-dia', closingDay: null },
+        ],
+        months: [
+          { id: 'm9', ref: sep },
+          { id: 'm10', ref: oct },
+          { id: 'm11', ref: nov },
+        ],
+        invoices: [
+          open('inv9', 'card', '2026-09', true),
+          open('inv10', 'card', '2026-10'),
+          open('outro10', 'sem-dia', '2026-10'),
+        ],
+        expenses: [
+          bankExpense('depois', 'inv10', '2026-10-23'),
+          bankExpense('depois2', 'inv10', '2026-10-25'),
+          bankExpense('antes', 'inv10', '2026-10-20'),
+          bankExpense('a-mao', 'inv10', '2026-10-24', null),
+          bankExpense('paga', 'inv9', '2026-09-25'),
+          bankExpense('sumiu', 'nenhuma', '2026-10-25'),
+          bankExpense('sem-dia', 'outro10', '2026-10-25'),
+        ],
+      }),
+      { accounts: [], transactions: [], bills: [] },
+      ids,
+    )
+    const created = result.invoices.find((item) => item.month === nov)!
+    expect(created).toMatchObject({ cardId: 'card', monthId: 'm11' })
+    expect(result.moves).toEqual([
+      { expenseId: 'depois', invoiceId: created.id },
+      { expenseId: 'depois2', invoiceId: created.id },
+    ])
+    expect(result.notices).toContain(
+      '2 compras do banco foram pra fatura seguinte, pelo dia de fechamento do cartão.',
+    )
+  })
+
+  it('não mexe se a fatura seguinte está paga ou o mês não existe', () => {
+    const base = {
+      cards: [{ id: 'card', ...smiles }],
+      expenses: [bankExpense('depois', 'inv10', '2026-10-23')],
+    }
+    const paidNext = planBankImport(
+      state({
+        ...base,
+        months: [
+          { id: 'm10', ref: oct },
+          { id: 'm11', ref: nov },
+        ],
+        invoices: [
+          open('inv10', 'card', '2026-10'),
+          open('inv11', 'card', '2026-11', true),
+        ],
+      }),
+      { accounts: [], transactions: [], bills: [] },
+      ids,
+    )
+    expect(paidNext.moves).toEqual([])
+    const noMonth = planBankImport(
+      state({ ...base, invoices: [open('inv10', 'card', '2026-10')] }),
+      { accounts: [], transactions: [], bills: [] },
+      ids,
+    )
+    expect(noMonth.moves).toEqual([])
+    expect(noMonth.notices).toEqual([])
+  })
+
+  it('uma só: vai pra fatura seguinte que já existe', () => {
+    const result = planBankImport(
+      state({
+        cards: [{ id: 'card', ...smiles }],
+        months: [
+          { id: 'm10', ref: oct },
+          { id: 'm11', ref: nov },
+        ],
+        invoices: [
+          open('inv10', 'card', '2026-10'),
+          open('inv11', 'card', '2026-11'),
+        ],
+        expenses: [bankExpense('depois', 'inv10', '2026-10-23')],
+      }),
+      { accounts: [], transactions: [], bills: [] },
+      ids,
+    )
+    expect(result.invoices).toEqual([])
+    expect(result.moves).toEqual([{ expenseId: 'depois', invoiceId: 'inv11' }])
+    expect(result.notices).toEqual([
+      '1 compra do banco foi pra fatura seguinte, pelo dia de fechamento do cartão.',
+    ])
+  })
+})
+
 describe('compra antiga sem a fatura do banco', () => {
   const open: BankAccount = {
     pluggyAccountId: 'acc',

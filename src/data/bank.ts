@@ -527,6 +527,12 @@ export const bankOps = {
               })
               .eq('id', link.expenseId),
           )
+        for (const move of result.moves)
+          await ok(
+            table('invoice_expenses')
+              .update({ invoice_id: move.invoiceId })
+              .eq('id', move.expenseId),
+          )
         for (const [invoiceId, otherAmount] of totals)
           await ok(
             table('invoices')
@@ -574,14 +580,16 @@ export const bankOps = {
         expenses: [
           ...f.expenses.map((item) => {
             const link = result.links.find((row) => row.expenseId === item.id)
+            const move = result.moves.find((row) => row.expenseId === item.id)
+            const next = move ? { ...item, invoiceId: move.invoiceId } : item
             return link
               ? {
-                  ...item,
+                  ...next,
                   externalId: link.externalId,
                   description: link.description,
                   note: link.note,
                 }
-              : item
+              : next
           }),
           ...expenses,
         ],

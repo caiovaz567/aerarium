@@ -100,7 +100,8 @@ export function useBankSync() {
       if (
         result.records.length ||
         result.bankTotals.length ||
-        result.invoiceTotals.length
+        result.invoiceTotals.length ||
+        result.moves.length
       )
         run(bankOps.apply(result))
     },

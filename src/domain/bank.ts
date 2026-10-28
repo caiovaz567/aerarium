@@ -164,6 +164,14 @@ export interface ImportResult {
     readonly planId: string
     readonly externalKey: string
   }[]
+  /**
+   * Bank purchases already in an invoice whose closing came before them:
+   * they go to the next one (by the card's closing day).
+   */
+  readonly moves: readonly {
+    readonly expenseId: string
+    readonly invoiceId: string
+  }[]
   /** "Outros" of an open invoice, from the bank's closed bill. */
   readonly invoiceTotals: readonly {
     readonly invoiceId: string
@@ -234,7 +242,12 @@ export function bankMoment(date: string): { day: ISODate; at: string | null } {
 export const billMonth = (due: ISODate, nextMonth = false): Month =>
   nextMonth ? addMonths(monthOf(due), -1) : monthOf(due)
 
-/** Which app invoice month a bank charge belongs to. */
+/**
+ * Which app invoice month a bank charge belongs to: the bank's closed bill
+ * when it names one; else the card's closing day, when the card has one (the
+ * owner's choice, 27/10/2026: after a bill closes, the bank's dates sent the
+ * next purchases into it); else the bank's open bill dates.
+ */
 export function bankInvoiceMonth(
   transaction: BankTransaction,
   account: BankAccount,
@@ -247,7 +260,8 @@ export function bankInvoiceMonth(
     : undefined
   if (bill) return billMonth(bill.dueDate, nextMonth)
   const { day } = bankMoment(transaction.date)
-  if (!account.dueDate) return invoiceMonthForCard(day, card, nextMonth)
+  if (!account.dueDate || card.closingDay)
+    return invoiceMonthForCard(day, card, nextMonth)
   const open = billMonth(account.dueDate, nextMonth)
   // The open bill's closing: the bank's, else a week before it is due.
   const close =
@@ -338,6 +352,7 @@ export function planBankImport(
     links: [] as ImportResult['links'][number][],
     plans: [] as ImportResult['plans'][number][],
     planLinks: [] as ImportResult['planLinks'][number][],
+    moves: [] as ImportResult['moves'][number][],
     invoiceTotals: [] as ImportResult['invoiceTotals'][number][],
     bankTotals: [] as ImportResult['bankTotals'][number][],
     records: [] as ImportResult['records'][number][],
@@ -554,6 +569,34 @@ export function planBankImport(
     history.push({ description: name, categoryId })
     record(transaction.id, 'expense', expense.id)
   }
+
+  // Bank purchases placed by the bank's dates in an invoice that had already
+  // closed, by the card's closing day: one invoice later. Only forward, only
+  // between open invoices; what was typed by hand never moves.
+  let moved = 0
+  for (const expense of state.expenses) {
+    const invoice = invoices.find((item) => item.id === expense.invoiceId)
+    const card = state.cards.find((item) => item.id === invoice?.cardId)
+    if (!expense.externalId || !invoice || invoice.paid || !card?.closingDay)
+      continue
+    const target = invoiceMonthForCard(
+      expense.spentOn,
+      card,
+      state.dueNextMonth,
+    )
+    if (target !== addMonths(invoice.month, 1) || !monthIds.has(target))
+      continue
+    const next = invoiceFor(card.id, target)
+    if (next.paid) continue
+    result.moves.push({ expenseId: expense.id, invoiceId: next.id })
+    moved++
+  }
+  if (moved)
+    result.notices.push(
+      moved === 1
+        ? '1 compra do banco foi pra fatura seguinte, pelo dia de fechamento do cartão.'
+        : `${moved} compras do banco foram pra fatura seguinte, pelo dia de fechamento do cartão.`,
+    )
 
   // A closed bill is the whole invoice at the bank (the owner's use and the
   // other person's). It is kept on the invoice; the owner's own launches

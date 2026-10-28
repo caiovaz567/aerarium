@@ -52,6 +52,7 @@ const result: ImportResult = {
     },
   ],
   planLinks: [],
+  moves: [],
   invoiceTotals: [],
   bankTotals: [],
   records: [],
