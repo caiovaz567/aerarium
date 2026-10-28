@@ -3,17 +3,13 @@
 // Copies YOUR data from production into YOUR account in development, so the
 // app can be tried locally with real numbers. Production is only read (with
 // your own login, through RLS, like the app). Development: your data there is
-// replaced by the copy. Passwords are typed here and never shown or saved.
+// replaced by the copy. Login: scripts/login.mjs (asked once, then kept).
 // A copy of what was read is saved in scripts/data/ (outside Git).
 //
 // Left out on purpose: sharing with another account (it points to production
 // users) and the daily email (off in development).
-import { createClient } from '@supabase/supabase-js'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { createInterface } from 'node:readline/promises'
-
-const PROD_URL = 'https://kpzupvajcjhjoarxjcvq.supabase.co'
-const PROD_APP = 'https://aerarium-delta.vercel.app'
+import { ask, env, PROD_URL, prodKey, signedIn } from './login.mjs'
 const DEV_REF = JSON.parse(
   readFileSync('supabase/development.json', 'utf8'),
 ).projectRef
@@ -34,68 +30,6 @@ const TABLES = [
   'bank_records',
   'user_settings',
 ]
-
-function env(name) {
-  const text = readFileSync('.env.local', 'utf8')
-  const line = text.split(/\r?\n/).find((item) => item.startsWith(`${name}=`))
-  return line?.slice(name.length + 1).trim() ?? ''
-}
-
-async function ask(question) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout })
-  const answer = await rl.question(question)
-  rl.close()
-  return answer.trim()
-}
-
-/** Reads a line without showing it on screen. */
-function askHidden(question) {
-  return new Promise((resolve) => {
-    process.stdout.write(question)
-    const input = process.stdin
-    let value = ''
-    input.setRawMode?.(true)
-    input.resume()
-    input.setEncoding('utf8')
-    const onData = (chunk) => {
-      for (const char of chunk) {
-        if (char === '\r' || char === '\n') {
-          input.setRawMode?.(false)
-          input.pause()
-          input.off('data', onData)
-          process.stdout.write('\n')
-          resolve(value)
-          return
-        }
-        if (char === '\u0003') process.exit(1)
-        if (char === '\u007f' || char === '\b') value = value.slice(0, -1)
-        else value += char
-      }
-    }
-    input.on('data', onData)
-  })
-}
-
-/** The production publishable key is public: the live app carries it. */
-async function prodKey() {
-  const html = await fetch(PROD_APP).then((response) => response.text())
-  const script = html.match(/assets\/index-[^"]+\.js/)?.[0]
-  const code = await fetch(`${PROD_APP}/${script}`).then((r) => r.text())
-  const key = code.match(/sb_publishable_[A-Za-z0-9_-]+/)?.[0]
-  if (!key) throw new Error('Não achei a chave pública da produção.')
-  return key
-}
-
-async function signIn(url, key, email, password, label) {
-  const client = createClient(url, key, { auth: { persistSession: false } })
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password,
-  })
-  if (error || !data.user)
-    throw new Error(`Não consegui entrar ${label}: ${error?.message ?? ''}`)
-  return { client, userId: data.user.id }
-}
 
 async function readAll(client, table) {
   const rows = []
@@ -136,41 +70,28 @@ async function main() {
   console.log(
     'A produção só é lida. No desenvolvimento, seus dados são trocados.\n',
   )
-  // AERARIUM_EMAIL and AERARIUM_SENHA in .env.local spare the typing.
-  const email = env('AERARIUM_EMAIL') || (await ask('Seu e-mail: '))
-  const prodPassword =
-    env('AERARIUM_SENHA') || (await askHidden('Senha da produção: '))
-  const prod = await signIn(
-    PROD_URL,
-    await prodKey(),
-    email,
-    prodPassword,
-    'na produção',
-  )
+  const prod = await signedIn({
+    url: PROD_URL,
+    key: await prodKey(),
+    label: 'da produção',
+    name: 'prod',
+  })
 
   const copy = {}
   for (const table of TABLES) copy[table] = await readAll(prod.client, table)
-  // Local only: a global sign out ends the app's session in the browser too.
-  await prod.client.auth.signOut({ scope: 'local' })
   mkdirSync('scripts/data', { recursive: true })
   const file = `scripts/data/prod-${new Date().toISOString().slice(0, 10)}.json`
   writeFileSync(file, JSON.stringify(copy, null, 2))
   console.log(`\nLido da produção (cópia em ${file}):`)
   for (const table of TABLES) console.log(`  ${table}: ${copy[table].length}`)
 
-  // With the password in .env.local, development uses the same one.
-  const devPassword = env('AERARIUM_SENHA')
-    ? prodPassword
-    : (await askHidden(
-        '\nSenha do desenvolvimento (Enter se for a mesma): ',
-      )) || prodPassword
-  const dev = await signIn(
-    devUrl,
-    devKey,
-    email,
-    devPassword,
-    'no desenvolvimento',
-  )
+  const dev = await signedIn({
+    url: devUrl,
+    key: devKey,
+    label: 'do desenvolvimento',
+    name: 'dev',
+    samePassword: prod.password,
+  })
   const sure = await ask(
     '\nApagar seus dados do DESENVOLVIMENTO e colocar a cópia? (s/n) ',
   )
@@ -238,7 +159,6 @@ async function main() {
     'user_settings',
     rows('user_settings').map((row) => ({ ...row, daily_email: false })),
   )
-  await db.auth.signOut({ scope: 'local' })
   console.log('\nPronto: o desenvolvimento tem a cópia dos seus dados.')
   console.log('Rode npm run dev e entre com o mesmo e-mail.\n')
 }
