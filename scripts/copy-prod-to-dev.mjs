@@ -136,8 +136,10 @@ async function main() {
   console.log(
     'A produção só é lida. No desenvolvimento, seus dados são trocados.\n',
   )
-  const email = await ask('Seu e-mail: ')
-  const prodPassword = await askHidden('Senha da produção: ')
+  // AERARIUM_EMAIL and AERARIUM_SENHA in .env.local spare the typing.
+  const email = env('AERARIUM_EMAIL') || (await ask('Seu e-mail: '))
+  const prodPassword =
+    env('AERARIUM_SENHA') || (await askHidden('Senha da produção: '))
   const prod = await signIn(
     PROD_URL,
     await prodKey(),
@@ -148,16 +150,20 @@ async function main() {
 
   const copy = {}
   for (const table of TABLES) copy[table] = await readAll(prod.client, table)
-  await prod.client.auth.signOut()
+  // Local only: a global sign out ends the app's session in the browser too.
+  await prod.client.auth.signOut({ scope: 'local' })
   mkdirSync('scripts/data', { recursive: true })
   const file = `scripts/data/prod-${new Date().toISOString().slice(0, 10)}.json`
   writeFileSync(file, JSON.stringify(copy, null, 2))
   console.log(`\nLido da produção (cópia em ${file}):`)
   for (const table of TABLES) console.log(`  ${table}: ${copy[table].length}`)
 
-  const devPassword =
-    (await askHidden('\nSenha do desenvolvimento (Enter se for a mesma): ')) ||
-    prodPassword
+  // With the password in .env.local, development uses the same one.
+  const devPassword = env('AERARIUM_SENHA')
+    ? prodPassword
+    : (await askHidden(
+        '\nSenha do desenvolvimento (Enter se for a mesma): ',
+      )) || prodPassword
   const dev = await signIn(
     devUrl,
     devKey,
@@ -232,7 +238,7 @@ async function main() {
     'user_settings',
     rows('user_settings').map((row) => ({ ...row, daily_email: false })),
   )
-  await db.auth.signOut()
+  await db.auth.signOut({ scope: 'local' })
   console.log('\nPronto: o desenvolvimento tem a cópia dos seus dados.')
   console.log('Rode npm run dev e entre com o mesmo e-mail.\n')
 }
