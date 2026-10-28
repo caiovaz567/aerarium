@@ -128,3 +128,32 @@ describe('resumo por e-mail às 18h', () => {
     )
   })
 })
+
+describe('trazer as compras do banco (28/10/2026)', () => {
+  it('desligado: só o total do banco, e o resto é do Pai', async () => {
+    renderApp('/config?aba=bancos', undefined, {
+      ...financeFixture(),
+      otherPerson: 'Pai',
+    })
+    const toggle = screen.getByLabelText(/Trazer as compras do banco/)
+    expect(toggle).toBeChecked()
+    fireEvent.click(toggle)
+    await settle()
+    expect(writes()).toContainEqual(
+      expect.objectContaining({
+        table: 'user_settings',
+        payload: expect.objectContaining({ bank_purchases: false }),
+      }),
+    )
+    expect(toggle).not.toBeChecked()
+    expect(
+      screen.getByText(/vem só o total do banco\. O resto é de Pai\./),
+    ).toBeVisible()
+    fireEvent.click(screen.getByRole('link', { name: 'Pai' }))
+    expect(
+      screen.getByText(
+        'Você lança só o que é seu. O resto da fatura do banco é de Pai.',
+      ),
+    ).toBeVisible()
+  })
+})

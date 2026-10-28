@@ -6,6 +6,7 @@ import type { ImportResult } from '../../domain/bank'
 import { settingsOps } from '../../data/settingsOps'
 import {
   BankIcon,
+  CardIcon,
   ChevronRightIcon,
   MailIcon,
   PeopleIcon,
@@ -232,6 +233,28 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
         )}
         <li className="settings-row">
           <span className="settings-icon accent" aria-hidden="true">
+            <CardIcon />
+          </span>
+          <label className="settings-text" htmlFor="compras-do-banco">
+            <b>Trazer as compras do banco</b>
+            <small>
+              {finance.bankPurchases === false
+                ? `Desligado: você lança suas compras e, quando a fatura fecha, vem só o total do banco.${finance.otherPerson ? ` O resto é de ${finance.otherPerson}.` : ''}`
+                : 'Cada compra do cartão chega sozinha no dia seguinte.'}
+            </small>
+          </label>
+          <input
+            id="compras-do-banco"
+            type="checkbox"
+            className="toggle"
+            checked={finance.bankPurchases !== false}
+            onChange={(event) =>
+              run(settingsOps.setBankPurchases(event.target.checked))
+            }
+          />
+        </li>
+        <li className="settings-row">
+          <span className="settings-icon accent" aria-hidden="true">
             <MailIcon />
           </span>
           <label className="settings-text" htmlFor="email-diario">
@@ -357,7 +380,9 @@ export function OtherPersonSection({ finance }: { readonly finance: Finance }) {
             <b>Outra pessoa usa seus cartões</b>
             <small>
               {finance.otherPerson
-                ? `Cada compra que chega do banco você marca: sua ou de ${finance.otherPerson}. O que for de ${finance.otherPerson} fica separado.`
+                ? finance.bankPurchases === false
+                  ? `Você lança só o que é seu. O resto da fatura do banco é de ${finance.otherPerson}.`
+                  : `Cada compra que chega do banco você marca: sua ou de ${finance.otherPerson}. O que for de ${finance.otherPerson} fica separado.`
                 : 'Liga pra separar o que é seu do que é de outra pessoa.'}
             </small>
           </label>

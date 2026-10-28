@@ -117,6 +117,11 @@ export interface Finance {
   readonly dueNextMonth?: boolean
   /** Fase 14.3, Open Finance owner: the daily email at 18h is on. */
   readonly dailyEmail?: boolean
+  /**
+   * Open Finance owner (user_settings.bank_purchases): bank purchases come
+   * in; false, only the totals of the closed bills (28/10/2026).
+   */
+  readonly bankPurchases?: boolean
   /** Owner only (user_settings.other_bank_until): see InvoiceContext. */
   readonly otherBankUntil?: Month | null
   /** Profile "Pai": outflows seen as the other person's (not loaded). */
@@ -198,7 +203,7 @@ export async function loadFinance(): Promise<Finance> {
     select('bank_records', 'external_id,amount::text,ref_id'),
     select(
       'user_settings',
-      'other_person,due_next_month,other_bank_until,daily_email',
+      'other_person,due_next_month,other_bank_until,daily_email,bank_purchases',
     ),
   ])
   const monthRows = months
@@ -343,6 +348,7 @@ export async function loadFinance(): Promise<Finance> {
     otherPerson,
     dueNextMonth: settings[0]?.due_next_month === true,
     dailyEmail: settings[0]?.daily_email === true,
+    bankPurchases: settings[0]?.bank_purchases !== false,
     otherBankUntil: settings[0]?.other_bank_until
       ? monthOfDate(settings[0].other_bank_until)
       : null,

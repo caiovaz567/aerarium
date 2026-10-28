@@ -358,6 +358,106 @@ describe('o dia de fechamento do cartão manda (27/10/2026)', () => {
   })
 })
 
+describe('só o total do banco (28/10/2026)', () => {
+  const nov = month('2026-11')
+  const bills: BankBill[] = [
+    // Due 01/11: October's invoice (the owner's convention).
+    {
+      id: 'b10',
+      accountId: 'acc',
+      dueDate: isoDate('2026-11-01'),
+      total: cents(547036),
+    },
+    // Due 01/12: November's, a month the app does not have yet.
+    {
+      id: 'b11',
+      accountId: 'acc',
+      dueDate: isoDate('2026-12-01'),
+      total: cents(1),
+    },
+  ]
+  const only = (overrides: Partial<ImportState> = {}) =>
+    planBankImport(
+      state({
+        purchases: false,
+        cards: [{ id: 'card', closingDay: 22, dueDay: 1 }],
+        months: [
+          { id: 'm9', ref: sep },
+          { id: 'm10', ref: oct },
+        ],
+        invoices: [],
+        expenses: [],
+        ...overrides,
+      }),
+      {
+        accounts: [account],
+        transactions: [
+          tx('t1', 'MERCADO', 1000, '2026-10-10T15:00:00.000Z'),
+          tx('t2', 'LOJA', 2000, '2026-10-12T15:00:00.000Z', {
+            installmentNumber: 1,
+            totalInstallments: 3,
+          }),
+        ],
+        bills,
+      },
+      ids,
+    )
+
+  it('nenhuma compra entra; ficam marcadas pra nunca entrar depois', () => {
+    const result = only()
+    expect(result.expenses).toEqual([])
+    expect(result.plans).toEqual([])
+    expect(result.records.filter((item) => item.kind === 'ignored')).toEqual([
+      { externalId: 't1', kind: 'ignored', refId: null, amount: null },
+      { externalId: 't2', kind: 'ignored', refId: null, amount: null },
+    ])
+  })
+
+  it('o total da fatura fechada entra, criando a fatura do mês se faltar', () => {
+    const result = only()
+    const created = result.invoices.find((item) => item.month === oct)!
+    expect(created).toMatchObject({ cardId: 'card', monthId: 'm10' })
+    expect(result.bankTotals).toEqual([
+      { invoiceId: created.id, bankTotal: cents(547036) },
+    ])
+    // November does not exist: its bill waits.
+    expect(result.invoices.some((item) => item.month === nov)).toBe(false)
+  })
+
+  it('compra do banco já na fatura não muda de mês', () => {
+    const result = only({
+      invoices: [
+        {
+          id: 'inv10',
+          cardId: 'card',
+          month: oct,
+          paid: false,
+          otherAmount: cents(0),
+        },
+      ],
+      expenses: [
+        {
+          id: 'veio',
+          invoiceId: 'inv10',
+          description: 'LOJA',
+          amount: cents(1000),
+          spentOn: isoDate('2026-10-25'),
+          externalId: 'ext',
+        },
+      ],
+      months: [
+        { id: 'm10', ref: oct },
+        { id: 'm11', ref: nov },
+      ],
+    })
+    expect(result.moves).toEqual([])
+    expect(result.bankTotals).toContainEqual({
+      invoiceId: 'inv10',
+      bankTotal: cents(547036),
+    })
+  })
+})
+
 describe('compra antiga sem a fatura do banco', () => {
   const open: BankAccount = {
     pluggyAccountId: 'acc',
@@ -755,7 +855,10 @@ describe('total da fatura do banco', () => {
     )
     expect(result.bankTotals).toEqual([{ invoiceId: 'inv9', bankTotal: 50000 }])
     expect(result.invoiceTotals).toEqual([])
-    expect(result.records).toEqual([])
+    // What the bank said, so a total typed later is told apart.
+    expect(result.records).toEqual([
+      { externalId: 'bill:b9', kind: 'bill', refId: 'inv9', amount: 50000 },
+    ])
     // What the app has of that invoice, for the preview.
     expect(result.billChecks).toEqual([
       {
@@ -789,11 +892,24 @@ describe('total da fatura do banco', () => {
         { accounts, transactions: [], bills: [bill(50000)] },
         ids,
       ).bankTotals
+    const said = (amount: number) =>
+      new Map([['bill:b9', { amount: cents(amount) }]])
     expect(run({ invoices: invoice9({ bankTotal: cents(50000) }) })).toEqual([])
-    // Total changed at the bank: kept again.
+    // Total changed at the bank, over the one it set: kept again.
     expect(
-      run({ invoices: invoice9({ bankTotal: cents(40000) }) }),
+      run({
+        invoices: invoice9({ bankTotal: cents(40000) }),
+        records: said(40000),
+      }),
     ).toHaveLength(1)
+    // A total the person typed stays, known or not what the bank said.
+    expect(
+      run({
+        invoices: invoice9({ bankTotal: cents(49925) }),
+        records: said(50000),
+      }),
+    ).toEqual([])
+    expect(run({ invoices: invoice9({ bankTotal: cents(49925) }) })).toEqual([])
     expect(run({ invoices: invoice9({ paid: true }) })).toHaveLength(1)
     expect(run({ invoices: [] })).toEqual([])
     expect(run({}, [{ ...account, cardId: null }])).toEqual([])

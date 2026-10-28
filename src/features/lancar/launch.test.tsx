@@ -470,6 +470,29 @@ describe('modal Lançar', () => {
     )
   })
 
+  it('só o total do banco: os cartões ligados ao banco voltam pro Onde', () => {
+    const finance = financeFixture()
+    renderApp('/meses/2026-09', undefined, {
+      ...finance,
+      bankPurchases: false,
+      bankAccounts: [
+        {
+          id: 'b1',
+          pluggyAccountId: 'p1',
+          itemId: 'i1',
+          name: 'NUBANK',
+          number: null,
+          cardId: 'c1',
+        },
+      ],
+    })
+    const where = within(open()).getByRole('group', { name: 'Onde' })
+    expect(
+      within(where).getByRole('radio', { name: 'Nubank Teste' }),
+    ).toBeInTheDocument()
+    expect(where).not.toHaveTextContent('ligados ao banco')
+  })
+
   it('o cartão mais usado à mão vem primeiro e já marcado', () => {
     const finance = financeFixture()
     renderApp('/meses/2026-09', undefined, {

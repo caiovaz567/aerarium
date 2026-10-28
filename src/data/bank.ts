@@ -168,6 +168,7 @@ export function importState(finance: Finance): ImportState {
     records,
     otherPerson: Boolean(finance.otherPerson),
     dueNextMonth: finance.dueNextMonth ?? false,
+    purchases: finance.bankPurchases !== false,
   }
 }
 

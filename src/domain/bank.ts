@@ -105,6 +105,11 @@ export interface ImportState {
   readonly otherPerson?: boolean
   /** The owner's convention: an invoice is the month before it is due. */
   readonly dueNextMonth?: boolean
+  /**
+   * False (the owner's choice, 28/10/2026): no purchase comes in, only the
+   * totals of the closed bills; the other person's part is the rest.
+   */
+  readonly purchases?: boolean
 }
 
 export type RecordKind =
@@ -398,7 +403,7 @@ export function planBankImport(
     const monthId = monthIds.get(target)!
     const created = { id: newId(), cardId, monthId, month: target }
     result.invoices.push(created)
-    const invoice = {
+    const invoice: ImportInvoice = {
       id: created.id,
       cardId,
       month: target,
@@ -418,6 +423,11 @@ export function planBankImport(
     if (start && bankMoment(transaction.date).day < start) continue
     const account = accounts.get(transaction.accountId)
     if (!account?.cardId) continue
+    // Only totals: seen, so turning purchases back on never brings it in.
+    if (state.purchases === false) {
+      record(transaction.id, 'ignored')
+      continue
+    }
     if (transaction.amount <= 0) {
       record(transaction.id, 'ignored')
       continue
@@ -574,7 +584,7 @@ export function planBankImport(
   // closed, by the card's closing day: one invoice later. Only forward, only
   // between open invoices; what was typed by hand never moves.
   let moved = 0
-  for (const expense of state.expenses) {
+  for (const expense of state.purchases === false ? [] : state.expenses) {
     const invoice = invoices.find((item) => item.id === expense.invoiceId)
     const card = state.cards.find((item) => item.id === invoice?.cardId)
     if (!expense.externalId || !invoice || invoice.paid || !card?.closingDay)
@@ -605,10 +615,23 @@ export function planBankImport(
     const account = accounts.get(bill.accountId)
     if (!account?.cardId) continue
     const target = billMonth(bill.dueDate, state.dueNextMonth)
-    const invoice = invoices.find(
-      (item) => item.cardId === account.cardId && item.month === target,
-    )
-    if (!invoice || invoice.bankTotal === bill.total) continue
+    // Only totals: the invoice is made for it when its month exists.
+    const invoice =
+      invoices.find(
+        (item) => item.cardId === account.cardId && item.month === target,
+      ) ??
+      (state.purchases === false && monthIds.has(target)
+        ? invoiceFor(account.cardId, target)
+        : undefined)
+    if (!invoice) continue
+    // A total typed by the person stays (28/10/2026): the bank only fills an
+    // empty one, or changes the one it set itself (kept in "bill:ID").
+    const key = `bill:${bill.id}`
+    const seen = state.records.get(key)
+    if (!seen) record(key, 'bill', invoice.id, bill.total)
+    const fromBank =
+      invoice.bankTotal == null || invoice.bankTotal === seen?.amount
+    if (!fromBank || invoice.bankTotal === bill.total) continue
     result.bankTotals.push({ invoiceId: invoice.id, bankTotal: bill.total })
     const fixed = fixedCardAmounts(account.cardId, target, {
       plans,

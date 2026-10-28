@@ -24,13 +24,18 @@ export type LaunchKind = 'gasto' | 'parcelado' | 'entrada'
 export const NO_CARD = 'none'
 
 /**
- * Cards a purchase can be typed on: the ones fed by the bank (Open Finance)
- * stay out, so nothing is typed and then brought by the bank again (the
- * owner's choice, 24/10/2026). The card with the most purchases typed by
- * hand comes first: Lançar opens on it.
+ * Cards a purchase can be typed on: the ones whose purchases come from the
+ * bank (Open Finance) stay out, so nothing is typed and then brought by the
+ * bank again (the owner's choice, 24/10/2026); with only the bank's totals,
+ * all of them. The card with the most purchases typed by hand comes first:
+ * Lançar opens on it.
  */
 export function launchCards(finance: Finance): readonly Card[] {
-  const fed = new Set(finance.bankAccounts.map((item) => item.cardId))
+  const fed = new Set(
+    finance.bankPurchases === false
+      ? []
+      : finance.bankAccounts.map((item) => item.cardId),
+  )
   const cardOf = new Map(finance.invoices.map((item) => [item.id, item.cardId]))
   const typed = new Map<string, number>()
   for (const expense of finance.expenses) {

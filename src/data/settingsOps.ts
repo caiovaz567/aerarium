@@ -18,6 +18,20 @@ export const settingsOps = {
     }
   },
 
+  /** Bank purchases come in (true) or only the closed bills' totals. */
+  setBankPurchases(on: boolean): FinanceOp {
+    return {
+      run: () =>
+        ok(
+          table('user_settings').upsert({
+            bank_purchases: on,
+            updated_at: new Date().toISOString(),
+          }),
+        ),
+      apply: (f) => ({ ...f, bankPurchases: on }),
+    }
+  },
+
   /**
    * Fase 14.3: the daily email. Turning it on goes through the server first
    * (setupDailyEmail), which also saves it; this keeps the app in step.

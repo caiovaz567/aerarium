@@ -470,7 +470,10 @@ export function CardDetail({
               </ul>
             )}
             {/* A card fed by the bank gets its installments from it. */}
-            {!finance.bankAccounts.some((item) => item.cardId === card.id) && (
+            {(finance.bankPurchases === false ||
+              !finance.bankAccounts.some(
+                (item) => item.cardId === card.id,
+              )) && (
               <AddButton onClick={() => editor.plan(null, { cardId: card.id })}>
                 Parcela neste cartão
               </AddButton>
