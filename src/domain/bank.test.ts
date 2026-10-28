@@ -902,14 +902,17 @@ describe('total da fatura do banco', () => {
         records: said(40000),
       }),
     ).toHaveLength(1)
-    // A total the person typed stays, known or not what the bank said.
+    // A total typed after the bank sent the closed bill stays.
     expect(
       run({
         invoices: invoice9({ bankTotal: cents(49925) }),
         records: said(50000),
       }),
     ).toEqual([])
-    expect(run({ invoices: invoice9({ bankTotal: cents(49925) }) })).toEqual([])
+    // One typed before (mid month, the open bill): the closed bill wins.
+    expect(run({ invoices: invoice9({ bankTotal: cents(30000) }) })).toEqual([
+      { invoiceId: 'inv9', bankTotal: 50000 },
+    ])
     expect(run({ invoices: invoice9({ paid: true }) })).toHaveLength(1)
     expect(run({ invoices: [] })).toEqual([])
     expect(run({}, [{ ...account, cardId: null }])).toEqual([])

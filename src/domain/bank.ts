@@ -624,13 +624,14 @@ export function planBankImport(
         ? invoiceFor(account.cardId, target)
         : undefined)
     if (!invoice) continue
-    // A total typed by the person stays (28/10/2026): the bank only fills an
-    // empty one, or changes the one it set itself (kept in "bill:ID").
+    // A total typed after the bill closed stays (28/10/2026): the bank then
+    // only changes the one it set itself (kept in "bill:ID"). One typed
+    // before, mid month, was a peek at the open bill: the closed one wins.
     const key = `bill:${bill.id}`
     const seen = state.records.get(key)
     if (!seen) record(key, 'bill', invoice.id, bill.total)
     const fromBank =
-      invoice.bankTotal == null || invoice.bankTotal === seen?.amount
+      !seen || invoice.bankTotal == null || invoice.bankTotal === seen.amount
     if (!fromBank || invoice.bankTotal === bill.total) continue
     result.bankTotals.push({ invoiceId: invoice.id, bankTotal: bill.total })
     const fixed = fixedCardAmounts(account.cardId, target, {
