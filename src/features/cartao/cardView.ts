@@ -1,11 +1,5 @@
 import { cardFinal } from '../../domain/banks'
-import {
-  chargedIn,
-  bestPurchaseDay,
-  dueDate,
-  dueText,
-  limitUse,
-} from '../../domain/cardDates'
+import { chargedIn, dueDate, dueText, limitUse } from '../../domain/cardDates'
 import type { ChartPoint } from '../../domain/chartSeries'
 import {
   installmentSchedule,
@@ -79,7 +73,8 @@ export function cardInvoiceView(
     nextDue: card.dueDay
       ? dueDate(addMonths(current, 1), card.dueDay, next)
       : null,
-    bestDay: card.closingDay ? bestPurchaseDay(card.closingDay) : null,
+    // The closing day itself is the first day of the next bill.
+    bestDay: card.closingDay,
     limit,
     parts: totals
       ? [

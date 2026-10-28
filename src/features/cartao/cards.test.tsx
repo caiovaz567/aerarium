@@ -335,7 +335,7 @@ describe('Cartões, uma tela só', () => {
       ],
     })
     expect(hero()).toBe(
-      'Nubank Testefinal 5580EditarFatura de setembro · a pagarR$ 442,92vence 25 out · faltam 40 diasMarcar fatura como pagaLimite livre R$ 3.750,00 de R$ 5.000,00Próxima fatura25 novMelhor dia pra comprardia 4',
+      'Nubank Testefinal 5580EditarFatura de setembro · a pagarR$ 442,92vence 25 out · faltam 40 diasMarcar fatura como pagaLimite livre R$ 3.750,00 de R$ 5.000,00Próxima fatura25 novMelhor dia pra comprardia 3',
     )
   })
 

@@ -89,13 +89,13 @@ describe('mês sugerido', () => {
     )
   })
 
-  it('fechamento dia 5: gasto no dia 6 vai pra fatura do mês seguinte', () => {
+  it('fechamento dia 5: gasto no próprio dia 5 já vai pra fatura seguinte', () => {
     const finance = withClosing(5)
     const card = finance.cards[0]!
     const on = (day: string) =>
       suggestMonth(finance, { openMonth: null, card, today: isoDate(day) })
-    expect(on('2026-09-05')).toBe('2026-09')
-    expect(on('2026-09-06')).toBe('2026-10')
+    expect(on('2026-09-04')).toBe('2026-09')
+    expect(on('2026-09-05')).toBe('2026-10')
     // Opening September in Meses is an explicit choice.
     expect(
       suggestMonth(finance, {
@@ -112,9 +112,9 @@ describe('mês sugerido', () => {
     const on = (day: string) =>
       suggestMonth(finance, { openMonth: null, card, today: isoDate(day) })
     // Closes 05/09, due about 12/09: August's invoice.
-    expect(on('2026-09-05')).toBe('2026-08')
-    // Closes 05/10, due about 12/10: September's.
-    expect(on('2026-09-06')).toBe('2026-09')
+    expect(on('2026-09-04')).toBe('2026-08')
+    // Closes 05/10, due about 12/10: September's (from the closing day on).
+    expect(on('2026-09-05')).toBe('2026-09')
     // Opening October in Meses is an explicit choice.
     expect(
       suggestMonth(finance, {

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  bestPurchaseDay,
   chargedIn,
   daysBetween,
   dueDate,
@@ -30,11 +29,6 @@ describe('datas do cartão', () => {
     expect(dueText(today, today)).toBe('vence hoje')
     expect(dueText(isoDate('2026-09-28'), today)).toBe('venceu ontem')
     expect(dueText(isoDate('2026-09-26'), today)).toBe('venceu há 3 dias')
-  })
-
-  it('melhor dia pra comprar é o dia seguinte ao fechamento', () => {
-    expect(bestPurchaseDay(3)).toBe(4)
-    expect(bestPurchaseDay(31)).toBe(1)
   })
 
   it('limite usado', () => {

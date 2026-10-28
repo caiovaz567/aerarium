@@ -33,7 +33,7 @@ Com o Open Finance, o uso principal deixa de ser **lançar** e passa a ser **rev
 
 - Topo azul: logo, nome, final; **vencimento** ("11 out · faltam 9 dias"), **total**, etiqueta "A pagar" ou "Paga".
 - **Limite disponível** com anel de uso: `creditLimit` e `availableCreditLimit` da Pluggy (a função `bank` passa a devolver). Só em cartão do Open Finance; sem dado, o bloco some.
-- **Próxima fatura** e **melhor dia pra comprar** (dia seguinte ao fechamento). Regra em `src/domain/closing.ts`, com teste.
+- **Próxima fatura** e **melhor dia pra comprar** (o próprio dia do fechamento, desde 28/10/2026). Regra em `src/domain/closing.ts`, com teste.
 - **Resumo da fatura**: compras, parcelamentos, assinaturas, outros, total. O gráfico por mês continua embaixo.
 
 ### 13.3 Logos das assinaturas

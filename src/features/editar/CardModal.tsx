@@ -158,7 +158,7 @@ export function CardModal({
             }
           />
           <small>
-            Gastos lançados depois desse dia já vão pra fatura do mês seguinte.
+            Compras no dia do fechamento ou depois já vão pra fatura seguinte.
           </small>
         </div>
         <div className="field">

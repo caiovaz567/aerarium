@@ -214,11 +214,11 @@ describe('o dia de fechamento do cartão manda (27/10/2026)', () => {
   const smiles = { closingDay: 22, dueDay: 1 }
   const at = (date: string) => tx('t', 'LOJA', 100, `${date}T15:00:00.000Z`)
 
-  it('compra depois do dia de fechamento vai pra fatura seguinte', () => {
-    expect(bankInvoiceMonth(at('2026-10-23'), after, [], smiles, true)).toBe(
+  it('compra no dia do fechamento ou depois vai pra fatura seguinte', () => {
+    expect(bankInvoiceMonth(at('2026-10-22'), after, [], smiles, true)).toBe(
       nov,
     )
-    expect(bankInvoiceMonth(at('2026-10-22'), after, [], smiles, true)).toBe(
+    expect(bankInvoiceMonth(at('2026-10-21'), after, [], smiles, true)).toBe(
       oct,
     )
     // The bank's closed bill still decides when it names one.

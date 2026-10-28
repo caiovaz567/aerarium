@@ -43,11 +43,6 @@ export function dueText(due: ISODate, today: ISODate): string {
   return `venceu há ${-days} dias`
 }
 
-/** Buying the day after closing gives the most time until paying. */
-export function bestPurchaseDay(closingDay: number): number {
-  return closingDay >= 31 ? 1 : closingDay + 1
-}
-
 /** How much of the limit is in use, as money and as a share from 0 to 1. */
 export function limitUse(limit: Cents, available: Cents) {
   const used = cents(Math.max(0, limit - available))
@@ -55,8 +50,8 @@ export function limitUse(limit: Cents, available: Cents) {
 }
 
 /**
- * The invoice month of a purchase on a card: after the closing day it goes to
- * the next one (everyone). With the owner's convention: that bill is due the
+ * The invoice month of a purchase on a card: from the closing day on it goes
+ * to the next one (everyone). With the owner's convention: that bill is due the
  * month it closes when the due day comes after the closing day, else the
  * month after, and the invoice is the month before it is due. Without a due
  * day, it is taken as a week after closing.
