@@ -40,9 +40,9 @@ function cardParts(items: readonly OutflowItem[]): string {
 }
 
 /**
- * Fase 13.3, profile of the other person, "Por tipo": their part card by card
- * (tapping a card shows its items, newest first, then the installments),
- * then their installments off the cards.
+ * Profile of the other person, "Por tipo": their part card by card (tapping a
+ * card shows its items, newest first, then the installments), then their
+ * installments off the cards.
  */
 export function OtherByType({
   finance,

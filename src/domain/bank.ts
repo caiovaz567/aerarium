@@ -20,11 +20,11 @@ import {
 } from './months'
 import type { InstallmentPayment, InstallmentPlan, Subscription } from './types'
 
-// Open Finance import (decisions of the user): bank purchases go straight in
-// with a suggested category and never duplicate what was launched by hand;
-// installment purchases become (or join) installment plans; charges of a
-// registered subscription are recognized; a closed bill sets the invoice
-// total, so "outros" is only the difference. Pure: the data layer writes it.
+// Open Finance import: bank purchases go straight in with a suggested category
+// and never duplicate what was launched by hand; installment purchases become
+// (or join) installment plans; charges of a registered subscription are
+// recognized; a closed bill sets the invoice total, so "outros" is only the
+// difference. Pure: the data layer writes it.
 
 export interface BankAccount {
   readonly pluggyAccountId: string
@@ -101,13 +101,13 @@ export interface ImportState {
   readonly history: readonly CategorizedText[]
   /** Bank ids already handled (transactions, and "bill:ID" with the total). */
   readonly records: ReadonlyMap<string, { readonly amount: Cents | null }>
-  /** Fase 13.3: someone else uses the cards (only for the owner). */
+  /** Someone else uses the cards (only for the owner). */
   readonly otherPerson?: boolean
   /** The owner's convention: an invoice is the month before it is due. */
   readonly dueNextMonth?: boolean
   /**
-   * False (the owner's choice, 28/10/2026): no purchase comes in, only the
-   * totals of the closed bills; the other person's part is the rest.
+   * False: no purchase comes in, only the totals of the closed bills; the other
+   * person's part is the rest.
    */
   readonly purchases?: boolean
 }
@@ -137,7 +137,7 @@ export interface ImportResult {
     readonly occurredAt: string | null
     readonly categoryId: string | null
     readonly externalId: string
-    /** Fase 13.3: the other person's, as guessed (the owner reviews it). */
+    /** The other person's, as guessed (the owner reviews it). */
     readonly forOther: boolean
     /** The first import is history: nothing to check purchase by purchase. */
     readonly reviewed: boolean
@@ -248,10 +248,10 @@ export const billMonth = (due: ISODate, nextMonth = false): Month =>
   nextMonth ? addMonths(monthOf(due), -1) : monthOf(due)
 
 /**
- * Which app invoice month a bank charge belongs to: the bank's closed bill
- * when it names one; else the card's closing day, when the card has one (the
- * owner's choice, 27/10/2026: after a bill closes, the bank's dates sent the
- * next purchases into it); else the bank's open bill dates.
+ * Which app invoice month a bank charge belongs to: the bank's closed bill when
+ * it names one; else the card's closing day, when the card has one (after a
+ * bill closes, the bank's dates sent the next purchases into it); else the
+ * bank's open bill dates.
  */
 export function bankInvoiceMonth(
   transaction: BankTransaction,
@@ -306,9 +306,9 @@ const storeKey = (text: string) =>
     .trim()
 
 /**
- * Fase 13.3: whose a purchase from the bank is. The store decides (the last
- * choice for it), and a new store follows what most bank purchases on that
- * card were. The owner checks it in "Chegou do banco".
+ * Whose a purchase from the bank is. The store decides (the last choice for
+ * it), and a new store follows what most bank purchases on that card were. The
+ * owner checks it in "Chegou do banco".
  */
 function ownerGuess(state: ImportState) {
   const cardOf = new Map(state.invoices.map((item) => [item.id, item.cardId]))
@@ -346,7 +346,7 @@ export function planBankImport(
     readonly accounts: readonly BankAccount[]
     readonly transactions: readonly BankTransaction[]
     readonly bills: readonly BankBill[]
-    /** Today; the first import starts from here (the owner's choice). */
+    /** Today; the first import starts from here. */
     readonly today?: ISODate
   },
   newId: () => string = () => crypto.randomUUID(),
@@ -380,10 +380,10 @@ export function planBankImport(
   const touched = new Set<string>()
   const plans: ImportPlan[] = [...state.plans]
   const history = [...state.history]
-  // Fase 13.3 (the owner's choice): start from zero. What was at the bank
-  // before the first import stays out; the months keep what was launched by
-  // hand, and only purchases from that day on come in. Imports made before
-  // this rule existed have no start and keep taking everything.
+  // Start from zero. What was at the bank before the first import stays out;
+  // the months keep what was launched by hand, and only purchases from that day
+  // on come in. Imports made before this rule existed have no start and keep
+  // taking everything.
   const startKey = [...state.records.keys()].find((key) =>
     key.startsWith('start:'),
   )
@@ -624,9 +624,9 @@ export function planBankImport(
         ? invoiceFor(account.cardId, target)
         : undefined)
     if (!invoice) continue
-    // A total typed after the bill closed stays (28/10/2026): the bank then
-    // only changes the one it set itself (kept in "bill:ID"). One typed
-    // before, mid month, was a peek at the open bill: the closed one wins.
+    // A total typed after the bill closed stays: the bank then only changes the
+    // one it set itself (kept in "bill:ID"). One typed before, mid month, was a
+    // peek at the open bill: the closed one wins.
     const key = `bill:${bill.id}`
     const seen = state.records.get(key)
     if (!seen) record(key, 'bill', invoice.id, bill.total)

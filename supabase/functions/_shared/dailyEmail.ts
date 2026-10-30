@@ -1,7 +1,7 @@
-// Fase 14.3, the daily email at 18h (Open Finance owner only). Pure: what goes
-// in the email and its HTML. The Edge Function daily-email feeds it with the
-// bank's transactions and the owner's cards, and sends it. No imports, so both
-// Deno (the function) and Vitest (the tests) read it as is.
+// The daily email at 18h (Open Finance owner only). Pure: what goes in the
+// email and its HTML. The Edge Function daily-email feeds it with the bank's
+// transactions and the owner's cards, and sends it. No imports, so both Deno
+// (the function) and Vitest (the tests) read it as is.
 
 export interface EmailTransaction {
   readonly id: string
@@ -196,9 +196,9 @@ export function billMonthOf(dueDate: string, nextMonth: boolean): string {
 }
 
 /**
- * The bills the bank closed and no email told yet (asked by the owner on
- * 28/10/2026). Only the ones not due yet: older ones were paid long ago. The
- * other person's part is the rest of the bank's total, as in the app.
+ * The bills the bank closed and no email told yet. Only the ones not due yet:
+ * older ones were paid long ago. The other person's part is the rest of the
+ * bank's total, as in the app.
  */
 export function emailBills(input: {
   readonly bills: readonly EmailBankBill[]
@@ -342,7 +342,6 @@ function cardBlock(group: EmailGroup, appUrl: string): string {
   </td></tr>`
 }
 
-/** Subject and HTML of the email. */
 export function renderEmail(input: {
   readonly groups: readonly EmailGroup[]
   /** Bills the bank closed, above the purchases. */

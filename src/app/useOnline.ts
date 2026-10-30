@@ -9,7 +9,6 @@ function subscribe(listener: () => void) {
   }
 }
 
-/** False when the device says it has no connection. */
 export function useOnline(): boolean {
   return useSyncExternalStore(
     subscribe,

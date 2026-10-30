@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 /**
- * Bar that sticks right below the header (7.4 item 6). While stuck it gets a
- * light shadow and the header drops its own, so there is only one.
+ * Bar that sticks right below the header. While stuck it gets a light shadow
+ * and the header drops its own, so there is only one.
  */
 export function StickyBar({
   children,

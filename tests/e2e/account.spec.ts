@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { signedIn } from './session'
 
-// Fase 10: Ajustes, privacidade, sem internet. Nothing here writes data.
+// Ajustes, privacidade, sem internet. Nothing here writes data.
 signedIn()
 
 const noSideScroll = async (page: Page) => {

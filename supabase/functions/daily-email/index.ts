@@ -1,4 +1,4 @@
-// Fase 14.3: the daily email at 18h, only for the Open Finance owner
+// The daily email at 18h, only for the Open Finance owner
 // (PLUGGY_OWNER_USER_ID). It reads the bank (Meu Pluggy) and emails what is
 // new, card by card, and the bills that closed, through Resend. It never
 // writes purchases or totals: the app still imports them when opened.

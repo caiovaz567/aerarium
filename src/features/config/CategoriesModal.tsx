@@ -158,7 +158,7 @@ function CategoryRow({
   )
 }
 
-/** Fase 11: the person's categories. Changes are saved as they happen. */
+/** The person's categories. Changes are saved as they happen. */
 export function CategoriesModal({
   finance,
   onClose,

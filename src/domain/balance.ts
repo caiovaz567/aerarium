@@ -9,7 +9,7 @@ export function monthBalance(target: Month, data: FinancialData) {
   const incomes = sumMoney(
     data.incomes
       .filter((item) => item.month === target)
-      // Fase 13.3: what the other person sends back only settles their part.
+      // What the other person sends back only settles their part.
       .filter((item) => item.kind !== 'from_other')
       .map((item) =>
         item.kind === 'carryover'
@@ -23,7 +23,7 @@ export function monthBalance(target: Month, data: FinancialData) {
   const invoices = data.invoices
     .filter((item) => item.month === target)
     .map((item) => ({
-      // Fase 13.3 (the owner's choice): only the owner's part is theirs.
+      // Only the owner's part is theirs.
       amount: invoiceTotals(item, data).mine,
       paid: item.paid,
     }))
@@ -33,8 +33,8 @@ export function monthBalance(target: Month, data: FinancialData) {
     .filter((item) => item.month === target)
   const outgoings = [...bills, ...invoices, ...installments]
   const outflows = sumMoney(outgoings.map((item) => item.amount))
-  // Fase 13.3: the other person's part of the month, and what of it they
-  // have not sent back yet (a reminder; it is not in the owner's numbers).
+  // The other person's part of the month, and what of it they have not sent
+  // back yet (a reminder; it is not in the owner's numbers).
   const otherOwed = sumMoney([
     ...data.invoices
       .filter((item) => item.month === target)

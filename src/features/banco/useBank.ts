@@ -142,9 +142,9 @@ export function importMessage(result: ImportResult): string {
 }
 
 /**
- * On opening the app (owner only): after the first import, look at the bank
- * by itself when the last look is older than AUTO_SYNC_MS, save straight away
- * (the user's choice) and say what came in.
+ * On opening the app (owner only): after the first import, look at the bank by
+ * itself when the last look is older than AUTO_SYNC_MS, save straight away and
+ * say what came in.
  */
 export function useBankAutoSync(
   finance: Finance | undefined,

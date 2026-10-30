@@ -12,7 +12,6 @@ export function PlanRow({
 }: {
   readonly line: PlanLine
   readonly onToggle: () => void
-  /** Opens the plan editor. */
   readonly onOpen: () => void
   readonly onDelete?: () => void
 }) {

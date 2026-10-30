@@ -1,4 +1,4 @@
-/* Cartões: the cards in a row and the picked one. Measures from v1. */
+/* Cartões: the cards in a row and the picked one. */
 
 a.row-main {
   color: var(--ink);
@@ -13,7 +13,7 @@ a.row-main {
   flex: none;
   width: 36px;
 }
-/* Info pieces wrap between each other, never inside one (7.4 item 3). */
+/* Info pieces wrap between each other, never inside one. */
 .desc .sub .part {
   white-space: nowrap;
 }
@@ -160,7 +160,7 @@ a.row-main {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-/* Fase 13.2: the card page opens like a bank app's invoice screen. */
+/* The card page opens like a bank app's invoice screen. */
 .card-hero {
   display: flex;
   flex-direction: column;
@@ -398,7 +398,7 @@ a.row-main {
   }
 }
 
-/* Fase 13.1: bank logo tiles (rounded corners are in the image). */
+/* Bank logo tiles (rounded corners are in the image). */
 .bank-logo {
   display: block;
   flex: none;
@@ -493,7 +493,7 @@ a.row-main {
   color: var(--warn);
 }
 
-/* Fase 13.3: "Chegou do banco". */
+/* "Chegou do banco". */
 .review-banner {
   display: flex;
   align-items: center;

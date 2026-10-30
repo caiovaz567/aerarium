@@ -17,9 +17,9 @@ import { describeOutflow } from './outflowText'
 import { SpendingDonut } from './SpendingDonut'
 
 /**
- * Saídas "Por categoria" (Fase 11, ring in Fase 12): a ring with the share of
- * each category, then the list; each row says how it changed against the month
- * before. A tap opens the category with what is in it; a tap on an item opens it.
+ * Saídas "Por categoria": a ring with the share of each category, then the
+ * list; each row says how it changed against the month before. A tap opens the
+ * category with what is in it; a tap on an item opens it.
  */
 export function SpendingList({
   finance,

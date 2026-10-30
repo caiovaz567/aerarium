@@ -3,11 +3,9 @@ import { ops, type FinanceOp } from '../../data/financeOps'
 import { cents } from '../../domain/money'
 import type { Month } from '../../domain/months'
 
-// "Fatura" in the expense's edit (the owner's choice, 28/10/2026, with
-// everything launched by hand): a purchase that fell in the wrong month goes
+// "Fatura" in the expense's edit: a purchase that fell in the wrong month goes
 // to its card's invoice of another month in one tap.
 
-/** The invoice month an expense is in. */
 export function expenseMonth(
   finance: Finance,
   expense: ExpenseRow,

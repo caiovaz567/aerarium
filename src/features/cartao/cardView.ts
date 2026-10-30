@@ -33,9 +33,9 @@ export const longDate = (date: ISODate) =>
   ).toLowerCase()}`
 
 /**
- * Fase 13.2, top of the card page like a bank app: this month's invoice with
- * its due date, the limit (Open Finance), next invoice, best day to buy and
- * what the invoice is made of.
+ * Top of the card page like a bank app: this month's invoice with its due date,
+ * the limit (Open Finance), next invoice, best day to buy and what the invoice
+ * is made of.
  */
 export function cardInvoiceView(
   card: Card,
@@ -182,7 +182,6 @@ export interface CardBlock {
   readonly subscriptionNames: readonly string[]
 }
 
-/** Aba Cartões for one month. */
 export function cardsView(finance: Finance, target: Month) {
   const blocks: CardBlock[] = finance.cards.map((card) => {
     const invoice =

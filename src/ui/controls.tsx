@@ -26,7 +26,6 @@ export function CheckButton({
   )
 }
 
-/** Always visible trash on rows (7.4 item 8). */
 export function TrashButton({
   label,
   onClick,
@@ -138,7 +137,7 @@ export function CheckField({
   )
 }
 
-/** Destructive button that asks for a second tap, like v1. */
+/** Destructive button that asks for a second tap. */
 export function ArmedButton({
   children,
   onConfirm,
@@ -165,7 +164,7 @@ export function ArmedButton({
   )
 }
 
-/** "+ Something" at the bottom of a block, with an SVG plus (7.4 item 4). */
+/** "+ Something" at the bottom of a block, with an SVG plus. */
 export function AddButton({
   children,
   onClick,
@@ -181,7 +180,7 @@ export function AddButton({
   )
 }
 
-/** Fase 13.3: whose a purchase is, the owner's or the other person's. */
+/** Whose a purchase is, the owner's or the other person's. */
 export function WhoField({
   other,
   forOther,

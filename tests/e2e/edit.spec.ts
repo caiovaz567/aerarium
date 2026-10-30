@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { signedIn } from './session'
 
-// Read only: every project, in parallel. Opens each Phase 8 screen and dialog.
+// Read only: every project, in parallel. Opens each edit screen and dialog.
 signedIn()
 
 const noSideScroll = async (page: Page, dialog?: Locator) => {

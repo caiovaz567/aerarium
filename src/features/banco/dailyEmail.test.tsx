@@ -5,7 +5,7 @@ import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
-// Fase 14.3: the switch of the daily email, in Ajustes → Bancos conectados.
+// The switch of the daily email, in Ajustes → Bancos conectados.
 const fake = vi.hoisted(() => ({
   current: null as ReturnType<
     typeof import('../../test/fakeSupabase').fakeSupabase

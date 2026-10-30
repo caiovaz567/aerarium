@@ -2,7 +2,7 @@ import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 import { committedPercent } from './monthView'
 
-/** Blue summary. Fixed layout: nothing here changes height between months (7.4 item 2). */
+/** Blue summary. Fixed layout: nothing here changes height between months. */
 export function MonthSummary({
   month,
   balance,

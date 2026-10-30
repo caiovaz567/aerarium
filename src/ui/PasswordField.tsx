@@ -3,7 +3,7 @@ import { EyeIcon, EyeOffIcon } from './icons'
 
 /**
  * Password input whose hint is announced separately from the label. The eye
- * shows what was typed (asked by the user after Fase 11).
+ * shows what was typed.
  */
 export function PasswordField({
   label,

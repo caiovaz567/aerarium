@@ -88,8 +88,8 @@ export function joinedPurchase(
 }
 
 /**
- * Fase 13.3 / 14.1, "Chegou do banco": what came from the bank and the owner
- * has not checked yet, newest first. Only with someone else using the cards.
+ * 3 / 14.1, "Chegou do banco": what came from the bank and the owner has not
+ * checked yet, newest first. Only with someone else using the cards.
  */
 export function pendingReview(finance: Finance): ReviewItem[] {
   if (!finance.otherPerson) return []

@@ -24,11 +24,10 @@ export type LaunchKind = 'gasto' | 'parcelado' | 'entrada'
 export const NO_CARD = 'none'
 
 /**
- * Cards a purchase can be typed on: the ones whose purchases come from the
- * bank (Open Finance) stay out, so nothing is typed and then brought by the
- * bank again (the owner's choice, 24/10/2026); with only the bank's totals,
- * all of them. The card with the most purchases typed by hand comes first:
- * Lançar opens on it.
+ * Cards a purchase can be typed on: the ones whose purchases come from the bank
+ * (Open Finance) stay out, so nothing is typed and then brought by the bank
+ * again; with only the bank's totals, all of them. The card with the most
+ * purchases typed by hand comes first: Lançar opens on it.
  */
 export function launchCards(finance: Finance): readonly Card[] {
   const fed = new Set(
@@ -120,11 +119,11 @@ export interface LaunchInput {
   readonly paid: boolean
   readonly month: Month
   readonly today: ISODate
-  /** Fase 11: spending category (not for Entrada). */
+  /** Spending category (not for Entrada). */
   readonly categoryId?: string | null
-  /** Fase 12: when it happened (ISO instant); its day wins over `today`. */
+  /** When it happened (ISO instant); its day wins over `today`. */
   readonly occurredAt?: string | null
-  /** Fase 13.3, owner only: a card purchase or a plan of the other person. */
+  /** Owner only: a card purchase or a plan of the other person. */
   readonly forOther?: boolean
   /** A Pix, boleto or cash bill: the bank it came from, or 'cash'. */
   readonly paidFrom?: string | null

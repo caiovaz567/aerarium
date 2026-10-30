@@ -795,7 +795,7 @@ body.has-stuck .app-header.scrolled {
 .modal-scrim {
   position: absolute;
   inset: 0;
-  /* The app stays visible behind, blurred (the owner's choice). */
+  /* The app stays visible behind, blurred. */
   background: var(--scrim);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);

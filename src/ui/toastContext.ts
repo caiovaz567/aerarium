@@ -5,7 +5,7 @@ export interface ToastAction {
   readonly onClick: () => void
 }
 
-/** Same timing as v1: 6 s when there is something to undo, 2.2 s otherwise. */
+/** 6 s when there is something to undo, 2.2 s otherwise. */
 export const TOAST_MS = { withAction: 6000, plain: 2200 }
 
 export type ShowToast = (message: string, action?: ToastAction) => void

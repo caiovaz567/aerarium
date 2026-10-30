@@ -8,7 +8,7 @@ export interface Point {
 }
 
 /**
- * Monotone cubic spline (Fritsch–Carlson), as in v1: smooth, and the curve never
+ * Monotone cubic spline (Fritsch–Carlson): smooth, and the curve never
  * goes above or below its neighbouring points.
  */
 export function monotonePath(points: readonly Point[]): string {

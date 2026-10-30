@@ -19,9 +19,9 @@ export interface Card {
   readonly name: string
   readonly color: string | null
   readonly closingDay: number | null
-  /** Fase 13.1: invoice due day, when known. */
+  /** Invoice due day, when known. */
   readonly dueDay?: number | null
-  /** Fase 13.1: bank for the logo; null = guessed from the name, 'none' = no logo. */
+  /** Bank for the logo; null = guessed from the name, 'none' = no logo. */
   readonly bank?: string | null
   readonly sortOrder: number
 }
@@ -36,7 +36,7 @@ export type IncomeRow = Income & {
 export type BillRow = Bill & {
   readonly id: string
   readonly monthId: string
-  /** Fase 12: exact instant (ISO), when known. */
+  /** Exact instant (ISO), when known. */
   readonly occurredAt?: string | null
   /** Where a Pix, boleto or cash payment came from: a bank key or 'cash'. */
   readonly paidFrom?: string | null
@@ -46,7 +46,7 @@ export type ExpenseRow = InvoiceExpense & {
   readonly id: string
   readonly description: string
   readonly spentOn: ISODate
-  /** Fase 12: exact instant (ISO), when known; spentOn follows it. */
+  /** Exact instant (ISO), when known; spentOn follows it. */
   readonly occurredAt?: string | null
   /** Open Finance: the bank transaction it came from or was matched to. */
   readonly externalId?: string | null
@@ -54,7 +54,7 @@ export type ExpenseRow = InvoiceExpense & {
   readonly note?: string | null
   /** When it was saved (ISO); marks bank purchases as new for a few days. */
   readonly createdAt?: string | null
-  /** Fase 13.3: when the owner checked whose it is (bank purchases). */
+  /** When the owner checked whose it is (bank purchases). */
   readonly reviewedAt?: string | null
 }
 export type PlanRow = InstallmentPlan & {
@@ -71,7 +71,7 @@ export interface BankAccountRow {
   readonly name: string
   readonly number: string | null
   readonly cardId: string | null
-  /** Fase 13.2: the limit as the bank last said it. */
+  /** The limit as the bank last said it. */
   readonly creditLimit?: Cents | null
   readonly availableLimit?: Cents | null
   readonly limitAt?: string | null
@@ -106,8 +106,7 @@ export interface Finance {
   readonly bankAccounts: readonly BankAccountRow[]
   readonly bankRecords: readonly BankRecordRow[]
   /**
-   * Fase 13.3, only for the Open Finance owner: who else uses the cards
-   * ("Pai").
+   * Only for the Open Finance owner: who else uses the cards ("Pai").
    */
   readonly otherPerson?: string | null
   /**
@@ -115,11 +114,11 @@ export interface Finance {
    * month before it is due. Everyone else: due in its own month.
    */
   readonly dueNextMonth?: boolean
-  /** Fase 14.3, Open Finance owner: the daily email at 18h is on. */
+  /** Open Finance owner: the daily email at 18h is on. */
   readonly dailyEmail?: boolean
   /**
-   * Open Finance owner (user_settings.bank_purchases): bank purchases come
-   * in; false, only the totals of the closed bills (28/10/2026).
+   * Open Finance owner (user_settings.bank_purchases): bank purchases come in;
+   * false, only the totals of the closed bills.
    */
   readonly bankPurchases?: boolean
   /** Owner only (user_settings.other_bank_until): see InvoiceContext. */

@@ -11,15 +11,14 @@ import type {
   Subscription,
 } from './types'
 
-// Fase 11: spending categories (outflows only). Pure rules; the data layer
-// stores categories per person and links bills, card expenses, plans and
-// subscriptions to them.
+// Spending categories (outflows only). Pure rules; the data layer stores
+// categories per person and links bills, card expenses, plans and subscriptions
+// to them.
 
 export interface Category {
   readonly id: string
   readonly name: string
   readonly color: string
-  /** One of CATEGORY_ICONS, chosen by the person. */
   readonly icon: string
   readonly sortOrder: number
 }
@@ -366,7 +365,7 @@ export function monthOutflowItems(
   month(target)
   const items: OutflowItem[] = []
   const category = (value: string | null | undefined) => value ?? null
-  // Fase 13.3: whose outflows these are; bills and subscriptions are the owner's.
+  // Whose outflows these are; bills and subscriptions are the owner's.
   const asOther = data.viewAs === 'other'
   const theirs = (forOther: boolean | undefined) =>
     (forOther ?? false) === asOther
@@ -385,7 +384,7 @@ export function monthOutflowItems(
       .filter((item) => item.month === target)
       .map((item) => ({ plan, item })),
   )
-  // Fase 13.3: what the other person bought is not the owner's outflow.
+  // What the other person bought is not the owner's outflow.
   for (const { plan, item } of schedule.filter(
     ({ plan }) => plan.cardId === null && theirs(plan.forOther),
   ))
@@ -505,7 +504,7 @@ export function groupByCategory(
 }
 
 /**
- * One-time suggestion for things that already existed (the v1 import): only
+ * One-time suggestion for things that already existed (the backup import): only
  * items without a category, only keyword matches. Returns id → category id.
  */
 export function suggestExisting(

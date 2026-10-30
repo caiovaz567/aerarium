@@ -14,8 +14,8 @@ const NAME: Record<Theme, string> = {
 }
 
 /**
- * Light, dark or the device's, in the main area (the owner's choice): three
- * buttons on a computer, one that cycles on a phone.
+ * Light, dark or the device's, in the main area: three buttons on a computer,
+ * one that cycles on a phone.
  */
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>(readTheme)

@@ -17,9 +17,8 @@ const VIEWS: [View, string][] = [
 ]
 
 /**
- * Fase 13.3, profile of the other person ("Pai"): what they spent on the
- * owner's cards this month (the total once), card by card, by date or by
- * category.
+ * Profile of the other person ("Pai"): what they spent on the owner's cards
+ * this month (the total once), card by card, by date or by category.
  */
 export function OtherMonth({
   finance,

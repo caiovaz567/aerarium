@@ -11,9 +11,8 @@ export interface InstallmentPlan {
   readonly finalAdjustment: Cents
   readonly totalInstallments: number
   readonly firstMonth: Month
-  /** Fase 11: optional spending category. */
   readonly categoryId?: string | null
-  /** Fase 13.3: bought by the other person who uses the cards. */
+  /** Bought by the other person who uses the cards. */
   readonly forOther?: boolean
 }
 
@@ -48,8 +47,8 @@ export interface Invoice {
   readonly closedTotal: Cents | null
   readonly note: string | null
   /**
-   * Fase 13.3: the whole invoice at the bank (the owner's use and the other
-   * person's), from Open Finance or typed. Never changes the owner's numbers.
+   * The whole invoice at the bank (the owner's use and the other person's),
+   * from Open Finance or typed. Never changes the owner's numbers.
    */
   readonly bankTotal?: Cents | null
 }
@@ -58,7 +57,7 @@ export interface InvoiceExpense {
   readonly invoiceId: string
   readonly amount: Cents
   readonly categoryId?: string | null
-  /** Fase 13.3: bought by the other person who uses the cards. */
+  /** Bought by the other person who uses the cards. */
   readonly forOther?: boolean
 }
 
@@ -87,8 +86,8 @@ export interface InvoiceContext {
   readonly subscriptions: readonly Subscription[]
   readonly expenses: readonly InvoiceExpense[]
   /**
-   * Fase 13.3, only for the owner: someone else ("Pai") uses the cards, any
-   * of them. Their part of an invoice is what was marked theirs.
+   * Only for the owner: someone else ("Pai") uses the cards, any of them. Their
+   * part of an invoice is what was marked theirs.
    */
   readonly otherPerson?: string | null
   /**
@@ -98,8 +97,8 @@ export interface InvoiceContext {
    */
   readonly otherBankUntil?: Month | null
   /**
-   * Fase 13.3, profile "Pai": the month's outflows seen as the other person's
-   * (their purchases, plans and the rest of the invoices), not the owner's.
+   * Profile "Pai": the month's outflows seen as the other person's (their
+   * purchases, plans and the rest of the invoices), not the owner's.
    */
   readonly viewAs?: 'owner' | 'other'
 }

@@ -22,8 +22,8 @@ export function invoiceMonthForExpense(
   if (selectedMonth !== undefined) return month(selectedMonth)
   const current = monthOf(spentOn)
   const day = Number(spentOn.slice(8))
-  // On the closing day the bill is already closed (like the banks, the
-  // owner's choice on 28/10/2026): that day's purchase goes to the next one.
+  // On the closing day the bill is already closed, like at the banks: that
+  // day's purchase goes to the next one.
   return closingDay !== null &&
     day >= Math.min(closingDay, daysInMonth(current))
     ? addMonths(current, 1)

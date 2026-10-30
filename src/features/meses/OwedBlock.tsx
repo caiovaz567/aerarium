@@ -4,10 +4,10 @@ import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 
 /**
- * Fase 13.3: the owner pays the whole invoice and the other person sends
- * their part back. Always shown while someone else is set, so nothing below
- * jumps between months. "Pai pagou" adds what is due as an income; once all
- * is back, the block says so, with a way to undo it.
+ * The owner pays the whole invoice and the other person sends their part back.
+ * Always shown while someone else is set, so nothing below jumps between
+ * months. "Pai pagou" adds what is due as an income; once all is back, the
+ * block says so, with a way to undo it.
  */
 export function OwedBlock({
   finance,

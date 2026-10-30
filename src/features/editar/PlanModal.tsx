@@ -23,7 +23,6 @@ import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
 import { launchCards } from '../lancar/launch'
 
-/** New or edit installment plan, with its payment history. */
 export function PlanModal({
   finance,
   plan,

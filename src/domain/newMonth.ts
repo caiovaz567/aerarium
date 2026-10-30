@@ -3,7 +3,7 @@ import { cents } from './money'
 import { addMonths, month, type Month } from './months'
 import type { Bill, FinancialData, Income, Invoice } from './types'
 
-/** Only the first counter advances, matching v1; 12/12 stays 12/12. */
+/** Only the first counter advances; 12/12 stays 12/12. */
 export function advanceCounter(text: string): string {
   return text.replace(
     /\b(\d{1,3})\/(\d{1,3})\b/,
@@ -88,9 +88,9 @@ export function newMonthDraft(options: NewMonthOptions, data: FinancialData) {
 }
 
 /**
- * The month to start by itself (owner's choice, 01/10/2026, for everyone):
- * today's, when the last month created is the one right before it. With no
- * month yet, or a gap of more months, nothing (the person creates it).
+ * The month to start by itself: today's, when the last month created is the one
+ * right before it. With no month yet, or a gap of more months, nothing (the
+ * person creates it).
  */
 export function monthToStart(
   refs: readonly Month[],

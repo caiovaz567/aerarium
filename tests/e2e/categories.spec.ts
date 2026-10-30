@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { signedIn } from './session'
 
-// Fase 11: categories. Read only (the flow that writes is in flow.spec.ts).
+// Categories. Read only (the flow that writes is in flow.spec.ts).
 signedIn()
 
 const noSideScroll = async (page: Page) => {

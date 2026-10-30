@@ -91,8 +91,8 @@ function Header({
 }
 
 /**
- * Fase 11: the first time there are no categories, create the default list and
- * apply the name suggestion once to what already exists. Once per session.
+ * The first time there are no categories, create the default list and apply the
+ * name suggestion once to what already exists. Once per session.
  */
 function useCategorySetup(finance: Finance | undefined) {
   const run = useFinanceOp()
@@ -105,8 +105,8 @@ function useCategorySetup(finance: Finance | undefined) {
 }
 
 /**
- * Fase 13.3: when purchases from the bank wait to be checked, "Chegou do
- * banco" opens by itself once per session; a banner in Meses reopens it.
+ * When purchases from the bank wait to be checked, "Chegou do banco" opens by
+ * itself once per session; a banner in Meses reopens it.
  */
 function useReview(finance: Finance | undefined) {
   const pending = finance ? pendingReview(finance).length : 0
@@ -132,7 +132,7 @@ export function AppShell() {
   const review = useReview(finance.data)
   const inMonths = useMatch('/meses/:ym')
   const openLaunch = () => {
-    // Like v1: nothing to put things in yet.
+    // Nothing to put things in yet.
     if (finance.data && !finance.data.months.length)
       return toast('Crie um mês primeiro, na aba Meses.')
     // Opens right away; the form shows up as soon as the data arrives.

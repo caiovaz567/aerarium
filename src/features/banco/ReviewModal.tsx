@@ -16,9 +16,9 @@ import {
 } from './review'
 
 /**
- * Fase 13.3, "Chegou do banco" (only for the owner, with someone else using
- * the cards): new purchases by day, each marked as the owner's or the other
- * person's, starting from the app's guess.
+ * "Chegou do banco" (only for the owner, with someone else using the cards):
+ * new purchases by day, each marked as the owner's or the other person's,
+ * starting from the app's guess.
  */
 export function ReviewModal({
   finance,

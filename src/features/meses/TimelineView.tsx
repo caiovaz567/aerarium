@@ -85,9 +85,9 @@ export function OutflowRow({
 }
 
 /**
- * Fase 12, "Por data": the month's outflows newest first, grouped by day, with
- * the time when known; what has no date goes to "Fixos do mês". A row of the
- * month's cards filters it.
+ * "Por data": the month's outflows newest first, grouped by day, with the time
+ * when known; what has no date goes to "Fixos do mês". A row of the month's
+ * cards filters it.
  */
 export function TimelineView({
   finance,
@@ -127,8 +127,8 @@ export function TimelineView({
   return (
     <div className="timeline">
       {cardIds.size > 1 && (
-        // One row of cards that slides sideways (asked by the user); only
-        // this row scrolls, never the page. Categories live in "Por categoria".
+        // One row of cards that slides sideways; only this row scrolls, never
+        // the page. Categories live in "Por categoria".
         <div
           className="card-filter"
           role="group"

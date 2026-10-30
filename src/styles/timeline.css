@@ -1,4 +1,4 @@
-/* Fase 12: Saídas by date, type or category. */
+/* Saídas by date, type or category. */
 
 /* The views are tabs: an accent underline on the chosen one. */
 .segmented.views {
@@ -211,7 +211,7 @@
   vertical-align: 2px;
 }
 
-/* Fase 13.3: a purchase of the other person who uses the cards. */
+/* A purchase of the other person who uses the cards. */
 .other-pill {
   display: inline-block;
   margin-left: 6px;
@@ -224,7 +224,7 @@
   vertical-align: 2px;
 }
 
-/* Paid circle at the start of bills and loose plans (asked by the user). */
+/* Paid circle at the start of bills and loose plans. */
 .timeline-list li.with-check {
   display: flex;
   align-items: center;

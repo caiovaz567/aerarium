@@ -24,8 +24,8 @@ function groupColor(finance: Finance, key: string) {
 }
 
 /**
- * Fase 12 (asked by the user): the month's outflows as a ring, one slice per
- * category, with the total in the middle. The list below is the legend.
+ * The month's outflows as a ring, one slice per category, with the total in the
+ * middle. The list below is the legend.
  */
 export function SpendingDonut({
   finance,

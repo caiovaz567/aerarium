@@ -86,10 +86,10 @@ export function formatMoney(value: Cents): string {
 }
 
 /**
- * Typing an amount like a bank app (the owner's choice, 30/09/2026): only
- * digits, filling from the cents, so there is no comma to type. "2" → "0,02",
- * "2390" → "23,90", "123456" → "1.234,56"; deleting takes off the last digit.
- * Up to 12 digits; where it may be negative, a minus sign anywhere makes it so.
+ * Typing an amount like a bank app: only digits, filling from the cents, so
+ * there is no comma to type. "2" → "0,02", "2390" → "23,90", "123456" →
+ * "1.234,56"; deleting takes off the last digit. Up to 12 digits; where it may
+ * be negative, a minus sign anywhere makes it so.
  */
 export function maskMoneyInput(input: string, allowNegative = false): string {
   const sign = allowNegative && input.includes('-') ? '-' : ''

@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { signedIn } from './session'
 
-// Fase 12: Saídas by date. Read only.
+// Saídas by date. Read only.
 signedIn()
 
 const noSideScroll = async (page: Page) => {

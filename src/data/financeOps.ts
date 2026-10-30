@@ -288,8 +288,8 @@ export const ops = {
   },
 
   /**
-   * Fase 13.3: the whole invoice at the bank, typed for a card without Open
-   * Finance (null clears it).
+   * The whole invoice at the bank, typed for a card without Open Finance (null
+   * clears it).
    */
   setBankTotal(invoice: InvoiceRow, bankTotal: Cents | null): FinanceOp {
     return {

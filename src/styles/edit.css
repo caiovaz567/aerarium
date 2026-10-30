@@ -1,4 +1,4 @@
-/* Phase 8: edit dialogs, subscriptions, Excel and hover. Measures from v1. */
+/* Edit dialogs, subscriptions, Excel and hover. */
 
 .pill-button,
 .excel-button {
@@ -116,7 +116,7 @@
   outline-offset: 4px;
 }
 
-/* Fase 13.1: bank logos to pick from, like the color swatches. */
+/* Bank logos to pick from, like the color swatches. */
 .bank-options {
   display: flex;
   flex-wrap: wrap;
@@ -254,8 +254,10 @@
   color: var(--accent);
 }
 
-/* Hover, only with a mouse (7.4 item 12): the thumbnail lifts and tilts with a
-   passing shine; the big card tilts in 3D following the pointer. */
+/*
+ * Hover, only with a mouse: the thumbnail lifts and tilts with a passing shine;
+ * the big card tilts in 3D following the pointer.
+ */
 .card-art::after {
   background:
     radial-gradient(

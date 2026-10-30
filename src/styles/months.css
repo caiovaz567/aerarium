@@ -1,4 +1,4 @@
-/* Meses: month bar, summary, blocks and rows. Measures from v1. */
+/* Meses: month bar, summary, blocks and rows. */
 
 .icon-button[disabled] {
   opacity: 0.35;
@@ -333,8 +333,10 @@
   font-size: 13.5px;
 }
 
-/* Card rows: name and total on top, the full width note and composition below.
-   Wraps between items, never inside one (7.4 item 3). */
+/*
+ * Card rows: name and total on top, the full width note and composition below.
+ * Wraps between items, never inside one.
+ */
 .card-row {
   align-items: center;
 }
@@ -626,7 +628,7 @@
   }
 }
 
-/* Fase 13.3: the other person's spending, card by card, in their hero. */
+/* The other person's spending, card by card, in their hero. */
 .profile-switch {
   margin: 0 0 12px;
 }

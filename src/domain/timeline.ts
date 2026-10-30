@@ -16,9 +16,9 @@ import {
 } from './months'
 import type { Bill, InvoiceExpense } from './types'
 
-// Fase 12: the month's outflows by day and time, filters, and two short
-// insights. Everything is built on monthOutflowItems, so the list always adds
-// up to the month's outflows.
+// The month's outflows by day and time, filters, and two short insights.
+// Everything is built on monthOutflowItems, so the list always adds up to the
+// month's outflows.
 
 // ---------------------------------------------------------------------------
 // São Paulo local time. Brazil has had no daylight saving since 2019, so the

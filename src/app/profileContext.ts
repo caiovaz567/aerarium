@@ -1,7 +1,7 @@
 import { createContext, use } from 'react'
 
-// Fase 13.3, only for the owner with someone else using the cards: whose
-// spending Meses shows. Remembered per device (a convenience).
+// Only for the owner with someone else using the cards: whose spending Meses
+// shows. Remembered per device (a convenience).
 export type Profile = 'me' | 'other'
 export const PROFILE_KEY = 'aerarium.perfil'
 

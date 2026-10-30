@@ -11,10 +11,10 @@ export interface BillNotice {
 }
 
 /**
- * Bills the bank closed in this import, in plain words (asked by the owner
- * on 28/10/2026): "A fatura do Nubank de outubro fechou: R$ 4.123,45.
- * Sua parte R$ 1.200,00, do Pai R$ 2.923,45." `finance` already has the
- * import applied. A total the bank only corrected is not told again.
+ * Bills the bank closed in this import, in plain words: "A fatura do Nubank de
+ * outubro fechou: R$ 4.123,45. Sua parte R$ 1.200,00, do Pai R$ 2.923,45."
+ * `finance` already has the import applied. A total the bank only corrected is
+ * not told again.
  */
 export function billNotices(
   finance: Finance,

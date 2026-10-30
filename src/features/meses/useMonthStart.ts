@@ -48,7 +48,7 @@ function useToday(): Month {
 }
 
 /**
- * A new month starts by itself (01/10/2026, for everyone): the first time the
+ * A new month starts by itself: the first time the
  * app is open in it, the month is created like "Criar" does by default
  * (bills and incomes copied, the rest carried over) and opened, with Desfazer.
  * Once per month: a month deleted afterwards is not created again. With the

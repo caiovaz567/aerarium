@@ -5,7 +5,7 @@ import { fakeSupabase } from '../../test/fakeSupabase'
 import { categoryId, financeFixture } from '../../test/financeFixture'
 import { renderApp as render } from '../../test/renderApp'
 
-// Fase 12: Saídas by date, the three views and the short summary.
+// Saídas by date, the three views and the short summary.
 const fake = vi.hoisted(() => ({
   current: null as ReturnType<
     typeof import('../../test/fakeSupabase').fakeSupabase

@@ -15,9 +15,8 @@ interface ModalProps {
 }
 
 /**
- * Centered dialog (7.4 item 5): dimmed and blurred backdrop, short pop,
- * Esc and backdrop close, focus kept inside and returned on close.
- * Mount it only while open.
+ * Centered dialog: dimmed and blurred backdrop, short pop, Esc and backdrop
+ * close, focus kept inside and returned on close. Mount it only while open.
  */
 export function Modal({
   title,

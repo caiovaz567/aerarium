@@ -57,10 +57,10 @@ const Chevron = () => (
 )
 
 /**
- * Ajustes (the owner's layout, 30/09/2026): the account on top, then tabs:
+ * Ajustes: the account on top, then tabs:
  * Geral (categories, your data), Bancos and Pai (Open Finance owner only) and
  * Conta (ways in, this device, deleting apart in red). One icon color per
- * card, so it does not look like a carnival.
+ * card.
  */
 export function SettingsPage() {
   const auth = useAuth()

@@ -1,7 +1,7 @@
 import { bankColor, cardBank } from './banks'
 
-// Card colors, same rules as v1. Fase 13.1: a card with a bank (chosen or
-// guessed) takes the bank's color; only cards without a logo pick one.
+// Card colors: a card with a bank takes the bank's color; only cards without a
+// logo pick one.
 
 const BRAND: readonly (readonly [RegExp, string])[] = [
   [/nu ?bank|^nu\b/, '#820AD1'],

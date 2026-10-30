@@ -10,10 +10,10 @@ import {
 } from './months'
 import type { Subscription } from './types'
 
-// Fase 13.2: the dates of a card's invoice, like a bank app shows them. For
-// everyone, an invoice is due in its own month. Only the owner (dueNextMonth,
-// 29/09/2026) counts an invoice as the month before it is due: the bill due in
-// October is their September's; nothing changes for anyone else.
+// The dates of a card's invoice, like a bank app shows them. For everyone, an
+// invoice is due in its own month. Only the owner (dueNextMonth) counts an
+// invoice as the month before it is due: the bill due in October is their
+// September's; nothing changes for anyone else.
 
 /** The due date of the invoice of `target` (day clamped to the month's end). */
 export function dueDate(

@@ -7,7 +7,7 @@ import {
 import type { Finance } from './finance'
 import { ok, patch, table, without, type FinanceOp } from './financeOps'
 
-// Fase 11: categories and the category of each outflow.
+// Categories and the category of each outflow.
 
 /** The four kinds of things that can have a category, and their tables. */
 export const CATEGORIZED = {

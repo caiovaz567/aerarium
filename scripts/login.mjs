@@ -77,9 +77,9 @@ function kept(file) {
 }
 
 /**
- * A client signed in as the owner: with the kept session when it still
- * works, otherwise with the e-mail and password (asked once). `samePassword`
- * offers the password just typed for the other environment.
+ * A client signed in as the owner: with the kept session when it still works,
+ * otherwise with the e-mail and password. `samePassword` offers the password
+ * just typed for the other environment.
  */
 export async function signedIn({ url, key, label, name, samePassword }) {
   const file = `scripts/data/acesso-${name}.json`

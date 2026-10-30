@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react'
 
-// Same strokes as v1. Decorative: buttons carry the aria-label.
+// Decorative: buttons carry the aria-label.
 function Stroke({ children, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg

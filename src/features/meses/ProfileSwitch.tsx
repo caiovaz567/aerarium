@@ -1,8 +1,8 @@
 import { useProfile } from '../../app/profileContext'
 
 /**
- * Fase 13.3: Eu | Pai at the top of Meses, only when someone else uses the
- * cards. Full width with finger-sized buttons (the header was too cramped).
+ * Eu | Pai at the top of Meses, only when someone else uses the cards. Full
+ * width with finger-sized buttons (the header was too cramped).
  */
 export function ProfileSwitch({ other }: { readonly other: string }) {
   const { profile, setProfile } = useProfile(other)

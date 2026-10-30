@@ -14,11 +14,11 @@ export interface ChartPoint {
 
 /**
  * Whose part of a card's invoices: all of it, the owner's (without what is the
- * other person's) or the other person's (Fase 13.3, the Eu | Pai views).
+ * other person's) or the other person's.
  */
 export type CardPart = 'total' | 'mine' | 'other'
 
-/** At least +/-6 months. As in v1, projections extend at most 12 months. */
+/** At least +/-6 months; projections extend at most 12 months. */
 export function chartSeries(
   cardId: string,
   current: Month,

@@ -3,8 +3,8 @@ import type { Category } from '../domain/categories'
 import { CategoryIcon } from './CategoryIcon'
 
 /**
- * Fase 11: optional category, as chips. "Sem categoria" first; the chosen one
- * is marked. Radios underneath, so it works with the keyboard and screen readers.
+ * Optional category, as chips. "Sem categoria" first; the chosen one is marked.
+ * Radios underneath, so it works with the keyboard and screen readers.
  */
 export function CategoryPicker({
   categories,

@@ -71,7 +71,7 @@ export function MonthsPage() {
   const { profile } = useProfile(query.data?.otherPerson)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
-  // Like v1: a new month starts from the top; back from a card in Cartões,
+  // A new month starts from the top; back from a card in Cartões,
   // where it was. Braces matter: newer browsers return a promise from scrollTo.
   useEffect(() => {
     window.scrollTo(0, takeScroll(`/meses/${ym}`) ?? 0)

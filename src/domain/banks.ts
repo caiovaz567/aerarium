@@ -1,6 +1,6 @@
 import { normalizeText } from './categories'
 
-// Fase 13.1: banks with a logo (public/banks/KEY.png, drawn by
+// Banks with a logo (public/banks/KEY.png, drawn by
 // scripts/make-bank-logos.mjs). A card without a chosen bank gets one guessed
 // from its name; "none" means the person chose no logo.
 
@@ -75,7 +75,7 @@ export function bankName(key: BankKey): string {
   return BANKS.find((bank) => bank.key === key)!.name
 }
 
-/** The bank's own color: a card with a bank takes it (the user's choice). */
+/** The bank's own color: a card with a bank takes it. */
 export function bankColor(key: BankKey): string {
   return BANKS.find((bank) => bank.key === key)!.color
 }

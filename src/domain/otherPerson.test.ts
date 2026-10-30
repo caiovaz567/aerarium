@@ -6,10 +6,10 @@ import { invoiceTotals } from './invoices'
 import { cents, sumMoney } from './money'
 import { isoDate, month } from './months'
 
-// Fase 13.3: the owner's father uses some of the same cards. The owner
-// launches what is theirs ("outros" included); what the father bought is
-// marked. In months before otherBankUntil (before Open Finance brought each
-// purchase), the whole invoice at the bank also tells the rest of his part.
+// The owner's father uses some of the same cards. The owner launches what is
+// theirs ("outros" included); what the father bought is marked. In months
+// before otherBankUntil (before Open Finance brought each purchase), the whole
+// invoice at the bank also tells the rest of his part.
 const sep = month('2026-09')
 const data = (bankTotal: number | null = null, withOther = true) =>
   emptyData({

@@ -188,7 +188,7 @@ export function BillModal({
   )
 }
 
-/** A launched card expense (Fase 11): description, value and category. */
+/** A launched card expense: description, value and category. */
 export function ExpenseModal({
   expense,
   categories,
@@ -204,7 +204,7 @@ export function ExpenseModal({
   /** The invoice month it is in, and the ones it can go to (expenseMonths). */
   readonly month?: Month
   readonly months?: readonly Month[]
-  /** Fase 13.3: who else uses the cards, if anyone. */
+  /** Who else uses the cards, if anyone. */
   readonly otherPerson?: string | null
   readonly onClose: () => void
   readonly onSave: (changes: {

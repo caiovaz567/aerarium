@@ -53,8 +53,8 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
   const total = invoice.paid
     ? nonNegative(invoice.closedTotal!)
     : calculatedTotal
-  // Fase 13.3: the owner launches what is theirs ("outros" included); what
-  // the other person bought is marked. The owner's part is the rest.
+  // The owner launches what is theirs ("outros" included); what the other
+  // person bought is marked. The owner's part is the rest.
   const marked = sumMoney([
     ...context.plans
       .filter((plan) => plan.cardId === invoice.cardId && plan.forOther)

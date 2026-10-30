@@ -9,7 +9,7 @@ interface CardLook {
   readonly bank?: string | null
 }
 
-/** On a mouse, the big card tilts in 3D following the pointer (7.4 item 12). */
+/** On a mouse, the big card tilts in 3D following the pointer. */
 function tilt(event: PointerEvent<HTMLSpanElement>) {
   if (event.pointerType !== 'mouse') return
   const node = event.currentTarget
@@ -31,8 +31,8 @@ function untilt(event: PointerEvent<HTMLSpanElement>) {
 
 /**
  * Card picture: color gradient and a gold chip; the large one also shows the
- * name and the contactless symbol. Fase 13.1 (the user's choice): with a known
- * bank, small pictures are the bank's logo and the large card carries it.
+ * name and the contactless symbol. With a known bank, small pictures
+ * are the bank's logo and the large card carries it.
  */
 export function CardArt({
   card,

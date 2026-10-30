@@ -9,8 +9,8 @@ import { useToast } from '../../ui/toastContext'
 import { readMoney } from '../meses/forms'
 
 /**
- * Fase 13.3 (owner only): the whole invoice at the bank, typed from the card
- * page. The other person's part is it minus the owner's part.
+ * The whole invoice at the bank, typed from the card page. The other person's
+ * part is it minus the owner's part.
  */
 export function BankTotalModal({
   invoice,

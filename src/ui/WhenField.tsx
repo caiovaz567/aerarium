@@ -2,8 +2,8 @@ import { useId } from 'react'
 import { DateInput } from './DateInput'
 
 /**
- * Fase 12: date and time something happened ("2026-09-26T14:30", São Paulo).
- * The phone shows its own date and time picker; the date reads dd/mm/aaaa.
+ * Date and time something happened ("2026-09-26T14:30", São Paulo). The phone
+ * shows its own date and time picker; the date reads dd/mm/aaaa.
  */
 export function WhenField({
   label = 'Quando',

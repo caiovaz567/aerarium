@@ -98,8 +98,8 @@ export async function askBankUpdate(): Promise<boolean> {
 }
 
 /**
- * Fase 14.3: turns the daily email on (the server saves the switch and the
- * daily job) and sends a first one; how many purchases it had.
+ * Turns the daily email on (the server saves the switch and the daily job) and
+ * sends a first one; how many purchases it had.
  */
 export async function setupDailyEmail(): Promise<number> {
   const { data, error } = await supabase().functions.invoke('daily-email', {
@@ -172,7 +172,6 @@ export function importState(finance: Finance): ImportState {
   }
 }
 
-/** A short, plain summary of what an import does. */
 export function importSummary(result: ImportResult) {
   const count = (kind: string) =>
     result.records.filter((item) => item.kind === kind).length
@@ -221,7 +220,6 @@ export const bankOps = {
     }
   },
 
-  /** The limit of each bank card, as the bank says it now. */
   updateLimits(finance: Finance, data: BankData): FinanceOp | null {
     const at = new Date().toISOString()
     const changes = finance.bankAccounts.flatMap((row) => {
@@ -270,8 +268,8 @@ export const bankOps = {
   },
 
   /**
-   * Fase 13.3: the owner checked what came from the bank; each one keeps
-   * whose it was set to.
+   * The owner checked what came from the bank; each one keeps whose it was set
+   * to.
    */
   review(
     choices: readonly {

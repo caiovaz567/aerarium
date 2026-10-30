@@ -15,8 +15,8 @@ const VIEWS: [View, string][] = [
 ]
 
 /**
- * Fase 12: Saídas with three ways to see them (by date, by type, by category).
- * Only one shows at a time.
+ * Saídas with three ways to see them (by date, by type, by category). Only one
+ * shows at a time.
  */
 export function OutflowViews({
   finance,
@@ -29,7 +29,7 @@ export function OutflowViews({
   /** Opens an item from the date and category views. */
   readonly onOpen: (item: OutflowItem) => void
 } & ComponentProps<typeof OutflowsByType>) {
-  // Always opens "Por tipo" (the owner's choice, 29/09/2026).
+  // Always opens "Por tipo".
   const [view, setView] = useState<View>('tipo')
   const { view: summary } = byType
   return (
@@ -39,9 +39,10 @@ export function OutflowViews({
         <span className="meta">
           {summary.paidCount} de {summary.outflowCount} pagas
         </span>
-        {/* What is still to pay: it goes down as each one is marked paid
-            (the owner's choice, 29/09/2026). The month's total and Disponível
-            stay in the summary above. */}
+        {/*
+         * What is still to pay: it goes down as each one is marked paid. The
+         * month's total and Disponível stay in the summary above.
+         */}
         <span
           className={summary.balance.unpaid > 0 ? 'sum neg' : 'sum'}
           aria-label={`Falta pagar ${formatMoney(summary.balance.unpaid)}`}

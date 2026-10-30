@@ -49,7 +49,6 @@ function rememberedFrom() {
   }
 }
 
-/** Lançar: Gasto, Parcelado or Entrada in a few taps. */
 export function LaunchModal({
   finance,
   openMonth,
@@ -80,7 +79,7 @@ export function LaunchModal({
   const [pickedCategory, setPickedCategory] = useState<{
     readonly id: string | null
   } | null>(null)
-  // Fase 12: when it happened; now, unless the person changes it.
+  // When it happened; now, unless the person changes it.
   const [when, setWhen] = useState(() => instantToSaoPaulo(new Date()))
   const [error, setError] = useState('')
   const ids = { count: useId(), text: useId(), month: useId() }
@@ -94,8 +93,8 @@ export function LaunchModal({
     today: day,
   })
   const target = pickedMonth ?? suggested
-  // Fase 13.3, owner only: card purchases and plans can be the other person's
-  // (a Pix bill cannot).
+  // Owner only: card purchases and plans can be the other person's (a Pix bill
+  // cannot).
   const canMarkOther =
     Boolean(finance.otherPerson) &&
     usesCard &&

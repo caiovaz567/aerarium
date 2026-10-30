@@ -26,7 +26,7 @@ const plain = (text: string) =>
     .replace(/\s+/g, ' ')
     .trim()
 
-/** The note only shows when it says more than the card's default name (7.4 item 10). */
+/** The note only shows when it says more than the card's default name. */
 export function visibleNote(note: string | null, card: Card): string | null {
   const text = plain(note ?? '')
   if (
@@ -43,7 +43,7 @@ export function compositionParts(
   invoice: InvoiceRow,
   finance: Finance,
 ): string[] {
-  // Fase 13.3: the owner's parts; the other person's show as one piece.
+  // The owner's parts; the other person's show as one piece.
   const installments = finance.plans
     .filter((plan) => plan.cardId === invoice.cardId && !plan.forOther)
     .flatMap((plan) =>
@@ -123,7 +123,7 @@ export function monthView(finance: Finance, ref: Month) {
         {
           invoice,
           card,
-          // Fase 13.3: the owner's part; the other person's is in the parts.
+          // The owner's part; the other person's is in the parts.
           total: invoiceTotals(invoice, finance).mine,
           note: visibleNote(invoice.note, card),
           parts: compositionParts(invoice, finance),
@@ -204,9 +204,9 @@ export function defaultMonth(finance: Finance, today: Month): Month | null {
 }
 
 /**
- * The months that are over go to "Arquivados" (owner's choice, 01/10/2026):
- * once today's month (or a later one) exists, navigation starts at it and the
- * months before it are archived. With nothing from today on, none is.
+ * The months that are over go to "Arquivados": once today's month (or a later
+ * one) exists, navigation starts at it and the months before it are archived.
+ * With nothing from today on, none is.
  */
 export function archiveSplit(refs: readonly Month[], today: Month) {
   const started = refs.some((ref) => ref >= today)
