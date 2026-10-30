@@ -28,13 +28,13 @@ describe('aviso de fatura fechada', () => {
   )!
   const closed: ImportResult = {
     ...empty,
-    bankTotals: [{ invoiceId: invoice.id, bankTotal: cents(547036) }],
+    bankTotals: [{ invoiceId: invoice.id, bankTotal: cents(412345) }],
     records: [
       {
         externalId: 'bill:b9',
         kind: 'bill',
         refId: invoice.id,
-        amount: cents(547036),
+        amount: cents(412345),
       },
     ],
   }
@@ -42,7 +42,7 @@ describe('aviso de fatura fechada', () => {
     ...base,
     ...extra,
     invoices: base.invoices.map((item) =>
-      item.id === invoice.id ? { ...item, bankTotal: cents(547036) } : item,
+      item.id === invoice.id ? { ...item, bankTotal: cents(412345) } : item,
     ),
   })
 
@@ -55,19 +55,19 @@ describe('aviso de fatura fechada', () => {
       finance.invoices.find((item) => item.id === invoice.id)!,
       finance,
     )
-    expect(totals.otherShare).toBe(cents(547036 - totals.mine))
+    expect(totals.otherShare).toBe(cents(412345 - totals.mine))
     expect(billNotices(finance, closed)).toEqual([
       {
         cardId: 'c1',
         month: sep,
-        message: `A fatura do Nubank Teste de setembro fechou: ${formatMoney(cents(547036))}. Sua parte ${formatMoney(totals.mine)}, do Pai ${formatMoney(totals.otherShare)}.`,
+        message: `A fatura do Nubank Teste de setembro fechou: ${formatMoney(cents(412345))}. Sua parte ${formatMoney(totals.mine)}, do Pai ${formatMoney(totals.otherShare)}.`,
       },
     ])
   })
 
   it('sem outra pessoa, só o total; total só corrigido pelo banco: nada', () => {
     expect(billNotices(saved(), closed)[0]?.message).toBe(
-      `A fatura do Nubank Teste de setembro fechou: ${formatMoney(cents(547036))}.`,
+      `A fatura do Nubank Teste de setembro fechou: ${formatMoney(cents(412345))}.`,
     )
     expect(billNotices(saved(), { ...closed, records: [] })).toEqual([])
     expect(

@@ -366,7 +366,7 @@ describe('só o total do banco (28/10/2026)', () => {
       id: 'b10',
       accountId: 'acc',
       dueDate: isoDate('2026-11-01'),
-      total: cents(547036),
+      total: cents(412345),
     },
     // Due 01/12: November's, a month the app does not have yet.
     {
@@ -418,7 +418,7 @@ describe('só o total do banco (28/10/2026)', () => {
     const created = result.invoices.find((item) => item.month === oct)!
     expect(created).toMatchObject({ cardId: 'card', monthId: 'm10' })
     expect(result.bankTotals).toEqual([
-      { invoiceId: created.id, bankTotal: cents(547036) },
+      { invoiceId: created.id, bankTotal: cents(412345) },
     ])
     // November does not exist: its bill waits.
     expect(result.invoices.some((item) => item.month === nov)).toBe(false)
@@ -453,7 +453,7 @@ describe('só o total do banco (28/10/2026)', () => {
     expect(result.moves).toEqual([])
     expect(result.bankTotals).toContainEqual({
       invoiceId: 'inv10',
-      bankTotal: cents(547036),
+      bankTotal: cents(412345),
     })
   })
 })
