@@ -206,11 +206,9 @@ export function OutflowsByType({
                     <span className={`val${item.total ? '' : ' zero'}`}>
                       {formatMoney(item.total)}
                     </span>
-                    {(item.invoice.estimated ||
-                      item.note ||
-                      item.parts.length > 0) && (
+                    {(item.estimated || item.note || item.parts.length > 0) && (
                       <span className="card-sub">
-                        {item.invoice.estimated && (
+                        {item.estimated && (
                           <span className="est">estimada</span>
                         )}
                         {item.note && <span className="note">{item.note}</span>}

@@ -85,7 +85,8 @@ describe('Meses: números batem com as contas feitas à mão', () => {
     expect(
       within(outflows).queryByText(/^Fatura Cartão com um nome/),
     ).not.toBeInTheDocument()
-    expect(within(outflows).getByText('estimada')).toBeInTheDocument()
+    // September has started: no invoice of it is a guess any more.
+    expect(within(outflows).queryByText('estimada')).not.toBeInTheDocument()
     expect(
       within(outflows).getByText('2/4 · faltam 3 · aparelho'),
     ).toBeVisible()

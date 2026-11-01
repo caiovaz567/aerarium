@@ -17,7 +17,7 @@ import {
   type ISODate,
   type Month,
 } from '../../domain/months'
-import { buildNewMonth } from '../meses/monthView'
+import { archiveSplit, buildNewMonth } from '../meses/monthView'
 
 export type LaunchKind = 'gasto' | 'parcelado' | 'entrada'
 /** A card id, or NO_CARD for Pix, boleto ou dinheiro. */
@@ -47,11 +47,30 @@ export function launchCards(finance: Finance): readonly Card[] {
     .sort((a, b) => (typed.get(b.id) ?? 0) - (typed.get(a.id) ?? 0))
 }
 
-/** Months Lançar can put something in: the existing ones and the next one. */
-export function launchMonths(finance: Finance): Month[] {
+/** Every existing month and the next one. */
+function openableMonths(finance: Finance): Month[] {
   const refs = finance.months.map((item) => item.ref)
   const last = refs[refs.length - 1]
   return last ? [...refs, addMonths(last, 1)] : []
+}
+
+/**
+ * Months "Entra em" lists: the ones not archived and the next one, plus
+ * `keep` (the month picked or suggested) when it is an archived one, like a
+ * card whose open invoice is still last month's.
+ */
+export function launchMonths(
+  finance: Finance,
+  today: Month,
+  keep: Month | null = null,
+): Month[] {
+  const { active } = archiveSplit(
+    finance.months.map((item) => item.ref),
+    today,
+  )
+  const last = active[active.length - 1]
+  const months = last ? [...active, addMonths(last, 1)] : []
+  return keep && !months.includes(keep) ? [keep, ...months].sort() : months
 }
 
 /**
@@ -66,7 +85,7 @@ export function suggestMonth(
     readonly today: ISODate
   },
 ): Month | null {
-  const allowed = launchMonths(finance)
+  const allowed = openableMonths(finance)
   if (!allowed.length) return null
   const current = monthOf(options.today)
   let target = options.openMonth ?? current

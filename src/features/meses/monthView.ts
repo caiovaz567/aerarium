@@ -1,10 +1,11 @@
+import { currentMonth } from '../../app/paths'
 import { chargedIn } from '../../domain/cardDates'
 import { monthBalance } from '../../domain/balance'
 import {
   installmentSchedule,
   installmentStatus,
 } from '../../domain/installments'
-import { invoiceTotals } from '../../domain/invoices'
+import { invoiceTotals, isEstimate } from '../../domain/invoices'
 import { formatMoney, sumMoney, type Cents } from '../../domain/money'
 import { addMonths, type Month } from '../../domain/months'
 import { newMonthDraft } from '../../domain/newMonth'
@@ -42,6 +43,7 @@ export function visibleNote(note: string | null, card: Card): string | null {
 export function compositionParts(
   invoice: InvoiceRow,
   finance: Finance,
+  estimate = invoice.estimated,
 ): string[] {
   // The owner's parts; the other person's show as one piece.
   const installments = finance.plans
@@ -78,7 +80,7 @@ export function compositionParts(
       expenses.map((item) => ({ name: item.description, amount: item.amount })),
       (count) => `${count} gastos`,
     ),
-    ...(!invoice.estimated && invoice.otherAmount > 0
+    ...(!estimate && invoice.otherAmount > 0
       ? [`outros ${formatMoney(invoice.otherAmount)}`]
       : []),
     ...(otherShare > 0 && finance.otherPerson
@@ -93,6 +95,8 @@ export interface CardOutflow {
   readonly total: Cents
   readonly note: string | null
   readonly parts: readonly string[]
+  /** Still a guess: only before its month starts, while unpaid. */
+  readonly estimated: boolean
 }
 export interface LooseOutflow {
   readonly plan: PlanRow
@@ -119,6 +123,7 @@ export function monthView(finance: Finance, ref: Month) {
     .flatMap((invoice) => {
       const card = finance.cards.find((item) => item.id === invoice.cardId)
       if (!card) return []
+      const estimated = isEstimate(invoice, currentMonth())
       return [
         {
           invoice,
@@ -126,7 +131,8 @@ export function monthView(finance: Finance, ref: Month) {
           // The owner's part; the other person's is in the parts.
           total: invoiceTotals(invoice, finance).mine,
           note: visibleNote(invoice.note, card),
-          parts: compositionParts(invoice, finance),
+          parts: compositionParts(invoice, finance, estimated),
+          estimated,
         },
       ]
     })

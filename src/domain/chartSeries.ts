@@ -1,5 +1,5 @@
 import { installmentSchedule } from './installments'
-import { fixedCardAmounts, invoiceTotals } from './invoices'
+import { fixedCardAmounts, invoiceTotals, isEstimate } from './invoices'
 import { cents, divideMoney, sumMoney, type Cents } from './money'
 import { addMonths, month, monthRange, type Month } from './months'
 import type { FinancialData } from './types'
@@ -53,7 +53,7 @@ export function chartSeries(
       return {
         month: target,
         total: partOf(invoiceTotals(invoice, data), part),
-        kind: invoice.paid || !invoice.estimated ? 'real' : 'forecast',
+        kind: isEstimate(invoice, current) ? 'forecast' : 'real',
         paid: invoice.paid,
         invoiceId: invoice.id,
       }

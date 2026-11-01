@@ -69,9 +69,19 @@ let counter = 0
 const ids = () => `novo-${++counter}`
 
 describe('mês sugerido', () => {
-  it('meses possíveis: os que existem e o próximo', () => {
-    expect(launchMonths(financeFixture())).toEqual([
+  it('meses possíveis: os não arquivados e o próximo, mais o escolhido', () => {
+    const today = month('2026-09')
+    expect(launchMonths(financeFixture(), today)).toEqual([
+      '2026-09',
+      '2026-10',
+    ])
+    // August is archived, but a card's open invoice can still be it.
+    expect(launchMonths(financeFixture(), today, month('2026-08'))).toEqual([
       '2026-08',
+      '2026-09',
+      '2026-10',
+    ])
+    expect(launchMonths(financeFixture(), today, month('2026-10'))).toEqual([
       '2026-09',
       '2026-10',
     ])

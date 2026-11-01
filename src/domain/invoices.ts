@@ -26,6 +26,14 @@ export function fixedCardAmounts(
   }
 }
 
+/**
+ * An invoice is a guess only until its month starts: from then on it is what
+ * was launched, paid or not.
+ */
+export function isEstimate(invoice: Invoice, current: Month) {
+  return invoice.estimated && !invoice.paid && invoice.month > current
+}
+
 /** Whether the bank total gives the other person the rest of this month's invoice. */
 export function bankFillsOther(target: Month, context: InvoiceContext) {
   return Boolean(

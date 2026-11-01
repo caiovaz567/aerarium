@@ -61,7 +61,7 @@ describe('série do gráfico', () => {
         invoice({ id: 'old', month: month('2025-12'), estimated: false }),
         invoice({
           id: 'estimated',
-          month: month('2026-08'),
+          month: month('2026-10'),
           otherAmount: cents(1200),
         }),
         invoice({
@@ -92,9 +92,15 @@ describe('série do gráfico', () => {
       kind: 'real',
       total: 0,
     })
-    expect(series.find((item) => item.month === '2026-08')).toMatchObject({
+    expect(series.find((item) => item.month === '2026-10')).toMatchObject({
       kind: 'forecast',
     })
+    // Once its month starts, an estimated invoice is what was launched.
+    expect(
+      chartSeries('card', month('2026-10'), data).find(
+        (item) => item.month === '2026-10',
+      ),
+    ).toMatchObject({ kind: 'real' })
     expect(series.find((item) => item.month === '2026-09')).toMatchObject({
       kind: 'real',
       total: 1500,

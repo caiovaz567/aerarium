@@ -102,7 +102,7 @@ export function LaunchModal({
   const categoryId = pickedCategory
     ? pickedCategory.id
     : suggestCategory(description, finance.categories, categoryHistory(finance))
-  const months = launchMonths(finance)
+  const months = launchMonths(finance, monthOf(day), target)
   const existing = new Set(finance.months.map((item) => item.ref))
   const typed = (() => {
     const read = value.trim() ? readMoney(value) : null
