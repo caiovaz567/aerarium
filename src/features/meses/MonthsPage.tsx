@@ -16,6 +16,7 @@ import { ops } from '../../data/financeOps'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
 import { monthLabel, monthName, type Month } from '../../domain/months'
 import { addMonths } from '../../domain/months'
+import { formatMoney } from '../../domain/money'
 import { EmptyState } from '../../ui/EmptyState'
 import { SharedEntry } from '../compartilhado/SharedEntry'
 import { LoadError, Loading } from '../../ui/LoadStates'
@@ -37,6 +38,7 @@ import { forecastFinance, forecastUntil } from './forecast'
 import {
   buildNewMonth,
   defaultMonth,
+  monthDone,
   monthView,
   type CardOutflow,
   type LooseOutflow,
@@ -239,6 +241,46 @@ export function MonthsPage() {
   }
 
   const summary = <MonthSummary month={selected} balance={view.balance} />
+  // All paid and settled: the person closes the month and goes to the next,
+  // which starts with what was left. Done that way, it goes to "Arquivados".
+  const next = addMonths(selected, 1)
+  const finish = () => {
+    const snapshot = buildNewMonth(finance, next, selected, {
+      copy: true,
+      carryover: true,
+    })
+    run(ops.createMonth(snapshot))
+    navigate(monthPath(next))
+    toast(
+      `${monthName(selected)} finalizado: ${monthName(next).toLowerCase()} começou com a sobra de ${formatMoney(view.balance.available)}`,
+      {
+        label: 'Desfazer',
+        onClick: () => {
+          run(ops.removeMonth(snapshot))
+          navigate(monthPath(selected))
+        },
+      },
+    )
+  }
+  const finishBlock = !forecast &&
+    !refs.includes(next) &&
+    monthDone(finance, selected) && (
+      <section className="block finish-block" aria-labelledby="finalizar">
+        <div className="owed-text">
+          <h2 id="finalizar">Tudo pago em {monthName(selected)}</h2>
+          <small>
+            {finance.otherPerson
+              ? `${finance.otherPerson} também acertou a parte dele. `
+              : ''}
+            {monthName(next)} começa com a sobra de{' '}
+            {formatMoney(view.balance.available)}.
+          </small>
+        </div>
+        <button type="button" className="btn primary" onClick={finish}>
+          Finalizar {monthName(selected).toLowerCase()}
+        </button>
+      </section>
+    )
   // "Pai pagou", in your view and in his: settles his part of the month.
   const otherPaid = (income: IncomeRow) => {
     run(ops.restoreIncome(income))
@@ -367,6 +409,7 @@ export function MonthsPage() {
               <>
                 <div className="page-main">
                   {summary}
+                  {finishBlock}
                   {outflows}
                 </div>
                 <div className="page-side">
@@ -378,6 +421,7 @@ export function MonthsPage() {
             ) : (
               <>
                 {summary}
+                {finishBlock}
                 {owed}
                 {outflows}
                 {incomes}

@@ -750,6 +750,23 @@
 .owed-block .btn {
   flex: none;
 }
+/* Everything paid and settled: the month can be finished. */
+.finish-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--pos) 12%, transparent);
+}
+.finish-block h2 {
+  margin: 0;
+  color: var(--pos);
+  font: 800 18px / 1.2 var(--display);
+}
+.finish-block .btn {
+  flex: none;
+}
 /* All sent back: green, with a check. */
 .owed-block.settled {
   background: color-mix(in srgb, var(--pos) 12%, transparent);

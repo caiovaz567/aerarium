@@ -17,7 +17,7 @@ import {
   type ISODate,
   type Month,
 } from '../../domain/months'
-import { archiveSplit, buildNewMonth } from '../meses/monthView'
+import { archiveSplit, buildNewMonth, openFrom } from '../meses/monthView'
 
 export type LaunchKind = 'gasto' | 'parcelado' | 'entrada'
 /** A card id, or NO_CARD for Pix, boleto ou dinheiro. */
@@ -66,7 +66,7 @@ export function launchMonths(
 ): Month[] {
   const { active } = archiveSplit(
     finance.months.map((item) => item.ref),
-    today,
+    openFrom(finance, today),
   )
   const last = active[active.length - 1]
   const months = last ? [...active, addMonths(last, 1)] : []

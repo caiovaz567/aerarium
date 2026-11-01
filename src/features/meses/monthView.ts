@@ -161,11 +161,39 @@ export function committedPercent(ratio: number | null): number | null {
   return ratio === null ? null : Math.round(ratio * 100)
 }
 
-/** Which month to open for /meses: today's, else the closest before, else the first. */
+/** Everything paid, and the other person's part of it paid back. */
+export function monthDone(finance: Finance, ref: Month): boolean {
+  const view = monthView(finance, ref)
+  return (
+    view.outflowCount > 0 &&
+    view.paidCount === view.outflowCount &&
+    view.balance.otherDue <= 0
+  )
+}
+
+/**
+ * Where the open months start: today's, or later when a month was finished
+ * early ("Finalizar": all done and the next one created). Months before it
+ * are archived.
+ */
+export function openFrom(finance: Finance, today: Month): Month {
+  const refs = finance.months.map((item) => item.ref)
+  let from = today
+  while (
+    refs.includes(from) &&
+    refs.includes(addMonths(from, 1)) &&
+    monthDone(finance, from)
+  )
+    from = addMonths(from, 1)
+  return from
+}
+
+/** Which month to open for /meses: the first open one, else the closest before, else the first. */
 export function defaultMonth(finance: Finance, today: Month): Month | null {
   const refs = finance.months.map((item) => item.ref)
-  if (refs.includes(today)) return today
-  const before = refs.filter((ref) => ref < today)
+  const from = openFrom(finance, today)
+  if (refs.includes(from)) return from
+  const before = refs.filter((ref) => ref < from)
   return before[before.length - 1] ?? refs[0] ?? null
 }
 

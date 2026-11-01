@@ -159,6 +159,36 @@ describe('Meses: mudanças', () => {
     )
   })
 
+  it('tudo pago: finalizar leva pro próximo mês com a sobra, e dá pra desfazer', async () => {
+    renderApp('/meses/2026-09')
+    expect(
+      screen.queryByRole('button', { name: 'Finalizar setembro' }),
+    ).not.toBeInTheDocument()
+    for (const check of within(block('Saídas')).getAllByRole('button', {
+      name: /^Marcar como pago/,
+    }))
+      fireEvent.click(check)
+    await settle()
+    expect(
+      screen.getByRole('region', { name: 'Tudo pago em Setembro' }),
+    ).toHaveTextContent(/Outubro começa com a sobra de R\$\s4\.226,83/)
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar setembro' }))
+    await settle()
+    expect(
+      await screen.findByRole('button', { name: 'Outubro 2026. Escolher mês' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/^Setembro finalizado: outubro começou com a sobra/),
+    ).toHaveTextContent(/R\$\s4\.226,83$/)
+    // Finished with the next one created: September is archived already.
+    expect(screen.getByRole('button', { name: 'Mês anterior' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
+    await settle()
+    expect(
+      await screen.findByRole('button', { name: 'Finalizar setembro' }),
+    ).toBeInTheDocument()
+  })
+
   it('quando não salva, volta atrás e avisa', async () => {
     renderApp('/meses/2026-09')
     fake.current!.failNext()

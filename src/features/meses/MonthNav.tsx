@@ -8,7 +8,7 @@ import { addMonths, monthLabel, type Month } from '../../domain/months'
 import { useToast } from '../../ui/toastContext'
 import { MonthBar } from './MonthBar'
 import { MonthListModal, NewMonthModal } from './MonthModals'
-import { archiveSplit, buildNewMonth } from './monthView'
+import { archiveSplit, buildNewMonth, openFrom } from './monthView'
 
 /**
  * Month bar shared by Meses and Cartões,
@@ -40,7 +40,10 @@ export function MonthNav({
       ahead.push(ref)
   const forecast = selected > last
   // The current month comes first; the ones before it are archived.
-  const { active, archived } = archiveSplit(refs, currentMonth())
+  const { active, archived } = archiveSplit(
+    refs,
+    openFrom(finance, currentMonth()),
+  )
   const inArchive = archived.includes(selected)
 
   const create = (options: { copy: boolean; carryover: boolean }) => {
