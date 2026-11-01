@@ -5,55 +5,55 @@ import { CardIcon, ChevronDownIcon, WalletIcon } from '../../ui/icons'
 import type { BillRow, IncomeRow } from '../../data/finance'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName } from '../../domain/months'
-import {
-  UNCATEGORIZED,
-  UNDETAILED,
-  type Category,
-  type CategoryGroup,
-} from '../../domain/categories'
+import type { Category } from '../../domain/categories'
 import { CardArt } from '../../ui/CardArt'
 import { CategoryBadge } from '../../ui/CategoryBadge'
 import { CheckButton, TrashButton } from '../../ui/controls'
-import type { CardOutflow, CarryHint, LooseOutflow } from './monthView'
+import type {
+  CardOutflow,
+  CarryHint,
+  InvoiceLine,
+  LooseOutflow,
+} from './monthView'
 
 const EMPTY = 'Toca no + pra lançar.'
 
-/** What an invoice holds of the owner's, category by category. */
-function InvoiceBreakdown({
+/** What an invoice holds of the owner's, item by item. */
+function InvoiceLines({
   id,
-  groups,
+  lines,
   categories,
 }: {
   readonly id: string
-  readonly groups: readonly CategoryGroup[]
+  readonly lines: readonly InvoiceLine[]
   readonly categories: readonly Category[]
 }) {
   return (
-    <ul className="invoice-breakdown" id={id}>
-      {groups.map((group) => {
-        const category = categories.find((item) => item.id === group.key)
-        const name =
-          group.key === UNDETAILED
-            ? 'Outros gastos'
-            : group.key === UNCATEGORIZED || !category
-              ? 'Sem categoria'
-              : category.name
+    <ul className="invoice-lines" id={id}>
+      {lines.map((line) => {
+        const category = categories.find((item) => item.id === line.categoryId)
+        // "Assinatura · Assinaturas" says the same thing twice.
+        const named =
+          category &&
+          !category.name.toLowerCase().startsWith(line.detail.toLowerCase())
+            ? category.name
+            : null
         return (
-          <li key={group.key}>
-            {group.key === UNDETAILED ? (
+          <li key={line.key}>
+            {line.rest ? (
               <span className="cat-badge round none" aria-hidden="true">
                 <CardIcon />
               </span>
             ) : (
               <CategoryBadge category={category ?? null} shape="round" />
             )}
-            <span className="name">
-              {name}
-              {group.items.length > 1 && (
-                <span className="count">{group.items.length} itens</span>
-              )}
+            <span className="line-text">
+              <span className="name">{line.name}</span>
+              <span className="detail">
+                {[line.detail, named].filter(Boolean).join(' · ')}
+              </span>
             </span>
-            <span className="amount">{formatMoney(group.amount)}</span>
+            <span className="amount">{formatMoney(line.amount)}</span>
           </li>
         )
       })}
@@ -276,7 +276,7 @@ export function OutflowsByType({
                     )}
                   </span>
                 </button>
-                {item.breakdown.length > 0 ? (
+                {item.lines.length > 0 ? (
                   <button
                     type="button"
                     className="expand"
@@ -297,9 +297,9 @@ export function OutflowsByType({
                   onClick={() => onInvoiceDelete(item)}
                 />
                 {open === item.invoice.id && (
-                  <InvoiceBreakdown
+                  <InvoiceLines
                     id={`fatura-${item.invoice.id}`}
-                    groups={item.breakdown}
+                    lines={item.lines}
                     categories={categories}
                   />
                 )}

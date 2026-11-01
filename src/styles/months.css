@@ -416,29 +416,34 @@
     transition: none;
   }
 }
-.invoice-breakdown {
+.invoice-lines {
   flex-basis: 100%;
   margin: 0 0 10px;
   padding: 0 60px 0 58px;
   list-style: none;
 }
-.invoice-breakdown li {
+.invoice-lines li {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
-  font-size: 14px;
+  padding: 7px 0;
 }
-.invoice-breakdown .name {
+.invoice-lines .line-text {
+  display: flex;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
 }
-.invoice-breakdown .count {
-  margin-left: 6px;
+.invoice-lines .name {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.invoice-lines .detail {
   color: var(--muted);
   font-size: 12.5px;
 }
-.invoice-breakdown .amount {
+.invoice-lines .amount {
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -690,7 +695,7 @@
   .expand-space {
     width: 32px;
   }
-  .invoice-breakdown {
+  .invoice-lines {
     padding: 0 12px 0 44px;
   }
   .card-art.xs {

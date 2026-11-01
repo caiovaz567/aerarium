@@ -79,14 +79,14 @@ describe('Meses: números batem com as contas feitas à mão', () => {
     fireEvent.click(expand)
     expect(expand).toHaveAttribute('aria-expanded', 'true')
     expect(
-      [...outflows.querySelectorAll('.invoice-breakdown li')].map((node) =>
+      [...outflows.querySelectorAll('.invoice-lines li')].map((node) =>
         text(node.textContent),
       ),
     ).toEqual([
-      'ComprasR$ 120,00',
-      'AssinaturasR$ 39,90',
-      'TransporteR$ 12,00',
-      'Outros gastosR$ 271,02',
+      'NotebookParcela 2 de 10 · ComprasR$ 120,00',
+      'StreamingAssinaturaR$ 39,90',
+      'Uber03/09 · TransporteR$ 12,00',
+      'Outros gastosO resto da fatura, sem detalheR$ 271,02',
     ])
     // The long-name card's note just repeats its name, so it is hidden.
     expect(

@@ -6,11 +6,7 @@ import {
 } from '../../domain/installments'
 import { invoiceTotals, isEstimate } from '../../domain/invoices'
 import { cents, sumMoney, type Cents } from '../../domain/money'
-import {
-  groupByCategory,
-  monthOutflowItems,
-  type CategoryGroup,
-} from '../../domain/categories'
+import { monthOutflowItems, type OutflowItem } from '../../domain/categories'
 import { addMonths, type Month } from '../../domain/months'
 import { newMonthDraft } from '../../domain/newMonth'
 import type { MonthSnapshot } from '../../data/financeOps'
@@ -43,6 +39,74 @@ export function visibleNote(note: string | null, card: Card): string | null {
   return note!.trim()
 }
 
+/** One thing an invoice holds: an installment, a subscription, a purchase. */
+export interface InvoiceLine {
+  readonly key: string
+  readonly name: string
+  /** "Parcela 3 de 10", "Assinatura", "29/09" or the rest's explanation. */
+  readonly detail: string
+  readonly categoryId: string | null
+  readonly amount: Cents
+  /** The invoice's rest, typed without detail. */
+  readonly rest: boolean
+}
+
+const LINE_ORDER = ['installment', 'subscription', 'expense', 'other']
+
+/** An invoice's pieces as rows: installments, subscriptions, purchases (newest first), the rest. */
+function invoiceLines(
+  finance: Finance,
+  items: readonly OutflowItem[],
+): InvoiceLine[] {
+  const day = (id: string) =>
+    finance.expenses.find((item) => item.id === id)?.spentOn ?? ''
+  return [...items]
+    .sort(
+      (a, b) =>
+        LINE_ORDER.indexOf(a.source) - LINE_ORDER.indexOf(b.source) ||
+        (a.source === 'expense' ? day(b.id).localeCompare(day(a.id)) : 0),
+    )
+    .map((item): InvoiceLine => {
+      const base = {
+        key: `${item.source}:${item.id}`,
+        categoryId: item.categoryId,
+        amount: item.amount,
+        rest: false,
+      }
+      if (item.source === 'installment') {
+        const plan = finance.plans.find((row) => row.id === item.id)
+        return {
+          ...base,
+          name: plan?.description ?? 'Parcela',
+          detail: `Parcela ${item.number} de ${plan?.totalInstallments ?? '?'}`,
+        }
+      }
+      if (item.source === 'subscription')
+        return {
+          ...base,
+          name:
+            finance.subscriptions.find((row) => row.id === item.id)?.name ??
+            'Assinatura',
+          detail: 'Assinatura',
+        }
+      if (item.source === 'expense') {
+        const expense = finance.expenses.find((row) => row.id === item.id)
+        const spent = expense?.spentOn ?? ''
+        return {
+          ...base,
+          name: expense?.description ?? 'Gasto',
+          detail: spent ? `${spent.slice(8, 10)}/${spent.slice(5, 7)}` : '',
+        }
+      }
+      return {
+        ...base,
+        name: 'Outros gastos',
+        detail: 'O resto da fatura, sem detalhe',
+        rest: true,
+      }
+    })
+}
+
 export interface CardOutflow {
   readonly invoice: InvoiceRow
   readonly card: Card
@@ -50,8 +114,8 @@ export interface CardOutflow {
   readonly note: string | null
   /** The other person's part of it (0 without someone else). */
   readonly other: Cents
-  /** The owner's part by category, biggest first, to open on the row. */
-  readonly breakdown: readonly CategoryGroup[]
+  /** The owner's part, item by item, to open on the row. */
+  readonly lines: readonly InvoiceLine[]
   /** Still a guess: only before its month starts, while unpaid. */
   readonly estimated: boolean
 }
@@ -89,7 +153,8 @@ export function monthView(finance: Finance, ref: Month) {
           total: totals.mine,
           note: visibleNote(invoice.note, card),
           other: finance.otherPerson ? totals.otherShare : cents(0),
-          breakdown: groupByCategory(
+          lines: invoiceLines(
+            finance,
             items.filter((item) => item.cardId === card.id),
           ),
           estimated: isEstimate(invoice, currentMonth()),
