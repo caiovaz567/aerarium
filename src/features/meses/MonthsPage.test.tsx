@@ -71,15 +71,22 @@ describe('Meses: números batem com as contas feitas à mão', () => {
     for (const group of ['Cartões', 'Parcelas', 'Contas e outros'])
       expect(within(outflows).getByText(group)).toBeInTheDocument()
     expect(within(outflows).getByText('iPhone 2/12')).toBeInTheDocument()
+    // The row stays short; the arrow opens the invoice by category.
+    const expand = within(outflows).getByRole('button', {
+      name: 'O que tem na fatura Nubank Teste',
+    })
+    expect(expand).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(expand)
+    expect(expand).toHaveAttribute('aria-expanded', 'true')
     expect(
-      [...outflows.querySelectorAll('.part')].map((node) =>
+      [...outflows.querySelectorAll('.invoice-breakdown li')].map((node) =>
         text(node.textContent),
       ),
     ).toEqual([
-      'Notebook R$ 120,00',
-      'Streaming R$ 39,90',
-      'Uber R$ 12,00',
-      'outros R$ 271,02',
+      'ComprasR$ 120,00',
+      'AssinaturasR$ 39,90',
+      'TransporteR$ 12,00',
+      'Outros gastosR$ 271,02',
     ])
     // The long-name card's note just repeats its name, so it is hidden.
     expect(
@@ -533,7 +540,6 @@ describe('Pai usa os cartões', () => {
     expect(heroValue('Saídas')).toBe('R$ 861,17')
     const nubank = screen.getByRole('button', { name: /^Nubank Teste/ })
     expect(text(nubank.textContent)).toContain('R$ 430,92')
-    expect(text(nubank.textContent)).toContain('outros R$ 271')
     expect(text(nubank.textContent)).toContain('Pai R$ 12')
     const owed = screen.getByRole('region', { name: 'O que o Pai te deve' })
     expect(text(owed.textContent)).toContain('Pai te deve em SetembroR$ 12,00')

@@ -1,17 +1,65 @@
 import { useState } from 'react'
 import { CASH, isBankKey, paidFromName } from '../../domain/banks'
 import { BankLogo } from '../../ui/BankLogo'
-import { WalletIcon } from '../../ui/icons'
+import { CardIcon, ChevronDownIcon, WalletIcon } from '../../ui/icons'
 import type { BillRow, IncomeRow } from '../../data/finance'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName } from '../../domain/months'
-import type { Category } from '../../domain/categories'
+import {
+  UNCATEGORIZED,
+  UNDETAILED,
+  type Category,
+  type CategoryGroup,
+} from '../../domain/categories'
 import { CardArt } from '../../ui/CardArt'
 import { CategoryBadge } from '../../ui/CategoryBadge'
 import { CheckButton, TrashButton } from '../../ui/controls'
 import type { CardOutflow, CarryHint, LooseOutflow } from './monthView'
 
 const EMPTY = 'Toca no + pra lançar.'
+
+/** What an invoice holds of the owner's, category by category. */
+function InvoiceBreakdown({
+  id,
+  groups,
+  categories,
+}: {
+  readonly id: string
+  readonly groups: readonly CategoryGroup[]
+  readonly categories: readonly Category[]
+}) {
+  return (
+    <ul className="invoice-breakdown" id={id}>
+      {groups.map((group) => {
+        const category = categories.find((item) => item.id === group.key)
+        const name =
+          group.key === UNDETAILED
+            ? 'Outros gastos'
+            : group.key === UNCATEGORIZED || !category
+              ? 'Sem categoria'
+              : category.name
+        return (
+          <li key={group.key}>
+            {group.key === UNDETAILED ? (
+              <span className="cat-badge round none" aria-hidden="true">
+                <CardIcon />
+              </span>
+            ) : (
+              <CategoryBadge category={category ?? null} shape="round" />
+            )}
+            <span className="name">
+              {name}
+              {group.items.length > 1 && (
+                <span className="count">{group.items.length} itens</span>
+              )}
+            </span>
+            <span className="amount">{formatMoney(group.amount)}</span>
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
 
 /**
  * A bill's tile: the bank it was paid from (its logo, like the cards), cash,
@@ -148,6 +196,7 @@ export function GroupHead({
 export function OutflowsByType({
   view,
   categories,
+  otherPerson,
   onInvoice,
   onInvoicePaid,
   onInvoiceDelete,
@@ -167,6 +216,8 @@ export function OutflowsByType({
     readonly balance: { readonly outflows: Cents; readonly unpaid: Cents }
   }
   readonly categories: readonly Category[]
+  /** Who else uses the cards: their part shows on each invoice. */
+  readonly otherPerson?: string | null
   readonly onInvoice: (item: CardOutflow) => void
   readonly onInvoicePaid: (item: CardOutflow, paid: boolean) => void
   readonly onInvoiceDelete: (item: CardOutflow) => void
@@ -177,6 +228,8 @@ export function OutflowsByType({
   readonly onBillDelete: (bill: BillRow) => void
 }) {
   const { cards, loose, bills } = view
+  // One invoice open at a time, showing what it holds.
+  const [open, setOpen] = useState<string | null>(null)
   const category = (id: string | null | undefined) =>
     categories.find((item) => item.id === id) ?? null
   return (
@@ -187,7 +240,7 @@ export function OutflowsByType({
           <ul className="rows">
             {cards.map((item) => (
               <li
-                className={`row${item.invoice.paid ? ' paid' : ''}`}
+                className={`row card-line${item.invoice.paid ? ' paid' : ''}`}
                 key={item.invoice.id}
               >
                 <CheckButton
@@ -206,27 +259,50 @@ export function OutflowsByType({
                     <span className={`val${item.total ? '' : ' zero'}`}>
                       {formatMoney(item.total)}
                     </span>
-                    {(item.estimated || item.note || item.parts.length > 0) && (
+                    {(item.estimated ||
+                      item.note ||
+                      (otherPerson && item.other > 0)) && (
                       <span className="card-sub">
                         {item.estimated && (
                           <span className="est">estimada</span>
                         )}
-                        {item.note && <span className="note">{item.note}</span>}
-                        {item.note && item.parts.length > 0 && ' · '}
-                        {item.parts.map((part, index) => (
-                          <span key={part}>
-                            {index > 0 && ' · '}
-                            <span className="part">{part}</span>
+                        {otherPerson && item.other > 0 && (
+                          <span className="who">
+                            {otherPerson} {formatMoney(item.other)}
                           </span>
-                        ))}
+                        )}
+                        {item.note && <span className="note">{item.note}</span>}
                       </span>
                     )}
                   </span>
                 </button>
+                {item.breakdown.length > 0 ? (
+                  <button
+                    type="button"
+                    className="expand"
+                    aria-expanded={open === item.invoice.id}
+                    aria-controls={`fatura-${item.invoice.id}`}
+                    aria-label={`O que tem na fatura ${item.card.name}`}
+                    onClick={() =>
+                      setOpen(open === item.invoice.id ? null : item.invoice.id)
+                    }
+                  >
+                    <ChevronDownIcon />
+                  </button>
+                ) : (
+                  <span className="expand-space" />
+                )}
                 <TrashButton
                   label={`fatura ${item.card.name}`}
                   onClick={() => onInvoiceDelete(item)}
                 />
+                {open === item.invoice.id && (
+                  <InvoiceBreakdown
+                    id={`fatura-${item.invoice.id}`}
+                    groups={item.breakdown}
+                    categories={categories}
+                  />
+                )}
               </li>
             ))}
           </ul>

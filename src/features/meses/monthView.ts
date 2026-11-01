@@ -1,12 +1,16 @@
 import { currentMonth } from '../../app/paths'
-import { chargedIn } from '../../domain/cardDates'
 import { monthBalance } from '../../domain/balance'
 import {
   installmentSchedule,
   installmentStatus,
 } from '../../domain/installments'
 import { invoiceTotals, isEstimate } from '../../domain/invoices'
-import { formatMoney, sumMoney, type Cents } from '../../domain/money'
+import { cents, sumMoney, type Cents } from '../../domain/money'
+import {
+  groupByCategory,
+  monthOutflowItems,
+  type CategoryGroup,
+} from '../../domain/categories'
 import { addMonths, type Month } from '../../domain/months'
 import { newMonthDraft } from '../../domain/newMonth'
 import type { MonthSnapshot } from '../../data/financeOps'
@@ -39,62 +43,15 @@ export function visibleNote(note: string | null, card: Card): string | null {
   return note!.trim()
 }
 
-/** "3 parcelas R$ 876", "Netflix R$ 40", "outros R$ 271": short, whole reais. */
-export function compositionParts(
-  invoice: InvoiceRow,
-  finance: Finance,
-  estimate = invoice.estimated,
-): string[] {
-  // The owner's parts; the other person's show as one piece.
-  const installments = finance.plans
-    .filter((plan) => plan.cardId === invoice.cardId && !plan.forOther)
-    .flatMap((plan) =>
-      installmentSchedule(plan, finance.payments)
-        .filter((item) => item.month === invoice.month)
-        .map((item) => ({ name: plan.description, amount: item.amount })),
-    )
-  const subscriptions = finance.subscriptions.filter(
-    (item) => item.cardId === invoice.cardId && chargedIn(item, invoice.month),
-  )
-  const expenses = finance.expenses.filter(
-    (item) => item.invoiceId === invoice.id && !item.forOther,
-  )
-  const otherShare = invoiceTotals(invoice, finance).otherShare
-  const group = (
-    items: readonly { name: string; amount: Cents }[],
-    many: (count: number) => string,
-  ) => {
-    if (!items.length) return []
-    const total = formatMoney(sumMoney(items.map((item) => item.amount)))
-    return [
-      `${items.length === 1 ? items[0]!.name : many(items.length)} ${total}`,
-    ]
-  }
-  return [
-    ...group(installments, (count) => `${count} parcelas`),
-    ...group(
-      subscriptions.map((item) => ({ name: item.name, amount: item.amount })),
-      () => 'assinaturas',
-    ),
-    ...group(
-      expenses.map((item) => ({ name: item.description, amount: item.amount })),
-      (count) => `${count} gastos`,
-    ),
-    ...(!estimate && invoice.otherAmount > 0
-      ? [`outros ${formatMoney(invoice.otherAmount)}`]
-      : []),
-    ...(otherShare > 0 && finance.otherPerson
-      ? [`${finance.otherPerson} ${formatMoney(otherShare)}`]
-      : []),
-  ]
-}
-
 export interface CardOutflow {
   readonly invoice: InvoiceRow
   readonly card: Card
   readonly total: Cents
   readonly note: string | null
-  readonly parts: readonly string[]
+  /** The other person's part of it (0 without someone else). */
+  readonly other: Cents
+  /** The owner's part by category, biggest first, to open on the row. */
+  readonly breakdown: readonly CategoryGroup[]
   /** Still a guess: only before its month starts, while unpaid. */
   readonly estimated: boolean
 }
@@ -118,21 +75,24 @@ export function monthView(finance: Finance, ref: Month) {
   const incomes = finance.incomes.filter(
     (item) => item.month === ref && item.kind !== 'from_other',
   )
+  const items = monthOutflowItems(ref, finance)
   const cards: CardOutflow[] = finance.invoices
     .filter((item) => item.month === ref)
     .flatMap((invoice) => {
       const card = finance.cards.find((item) => item.id === invoice.cardId)
       if (!card) return []
-      const estimated = isEstimate(invoice, currentMonth())
+      const totals = invoiceTotals(invoice, finance)
       return [
         {
           invoice,
           card,
-          // The owner's part; the other person's is in the parts.
-          total: invoiceTotals(invoice, finance).mine,
+          total: totals.mine,
           note: visibleNote(invoice.note, card),
-          parts: compositionParts(invoice, finance, estimated),
-          estimated,
+          other: finance.otherPerson ? totals.otherShare : cents(0),
+          breakdown: groupByCategory(
+            items.filter((item) => item.cardId === card.id),
+          ),
+          estimated: isEstimate(invoice, currentMonth()),
         },
       ]
     })

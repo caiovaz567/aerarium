@@ -274,6 +274,7 @@ export function MonthsPage() {
       onOpen={openOutflow}
       view={view}
       categories={finance.categories}
+      otherPerson={finance.otherPerson}
       onInvoice={(item) => openInvoice(item.invoice.id)}
       onInvoicePaid={(item, paid) =>
         run(ops.invoicePaid(item.invoice, paid, today()))

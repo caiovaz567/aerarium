@@ -364,7 +364,82 @@
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
-.card-sub .part {
+/* A card's invoice opens what it holds, category by category. */
+.row.card-line {
+  flex-wrap: wrap;
+}
+.card-sub .who {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.expand,
+.expand-space {
+  flex: none;
+  width: 40px;
+  height: 40px;
+}
+.expand {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+}
+.expand svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.15s ease;
+}
+.expand[aria-expanded='true'] {
+  color: var(--ink);
+}
+.expand[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+@media (hover: hover) and (pointer: fine) {
+  .expand:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .expand svg {
+    transition: none;
+  }
+}
+.invoice-breakdown {
+  flex-basis: 100%;
+  margin: 0 0 10px;
+  padding: 0 60px 0 58px;
+  list-style: none;
+}
+.invoice-breakdown li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 14px;
+}
+.invoice-breakdown .name {
+  flex: 1;
+  min-width: 0;
+}
+.invoice-breakdown .count {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.invoice-breakdown .amount {
+  font-weight: 600;
   white-space: nowrap;
 }
 .card-sub .note {
@@ -610,6 +685,13 @@
   }
   .trash-space {
     width: 34px;
+  }
+  .expand,
+  .expand-space {
+    width: 32px;
+  }
+  .invoice-breakdown {
+    padding: 0 12px 0 44px;
   }
   .card-art.xs {
     width: 30px;
