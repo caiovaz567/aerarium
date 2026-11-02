@@ -82,3 +82,7 @@ Os outros comandos estão em [AGENTS.md](AGENTS.md).
 ## Como foi feito
 
 Desenvolvido com a ajuda de agentes de IA (Claude Code). As regras que eles seguem estão em [AGENTS.md](AGENTS.md): uma mudança por vez, testes antes do commit e nada vai pra produção sem aprovação. Toda regra de negócio foi decidida por mim e está registrada em [docs/APP.md](docs/APP.md).
+
+## Licença
+
+O Aerarium é software livre, sob a [GNU General Public License v3.0](LICENSE).
