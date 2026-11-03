@@ -383,6 +383,7 @@ export function CardsPage() {
           expense={expense}
           categories={finance.categories}
           otherPerson={finance.otherPerson}
+          people={finance.people}
           month={expenseMonth(finance, expense)}
           months={expenseMonths(finance, expense)}
           onClose={close}

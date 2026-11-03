@@ -5,6 +5,10 @@
   flex-direction: column;
   gap: 14px;
 }
+/* With many people in "De quem", the options go on to a new line. */
+.segmented.who {
+  flex-wrap: wrap;
+}
 /* HeroUI's segmented control: a sunken track, the chosen one lifted. */
 .segmented {
   display: flex;

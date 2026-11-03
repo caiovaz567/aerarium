@@ -69,18 +69,24 @@ export function CardDetail({
     finance.categories.find((item) => item.id === id) ?? null
 
   // Eu | Pai: only what is theirs, or only what is yours.
-  const whose = (forOther: boolean | undefined) =>
-    part === 'total' || (part === 'other') === Boolean(forOther)
+  // Your view keeps the purchases of people in your list, tagged, to edit them.
+  const whose = (row: { forOther?: boolean }) =>
+    part === 'total' || (part === 'other') === Boolean(row.forOther)
+  const personOf = (row: { personId?: string | null }) =>
+    row.personId
+      ? (finance.people?.find((item) => item.id === row.personId)?.name ??
+        'Outra pessoa')
+      : null
   const days = purchaseDays(card.id, month, finance)
     .map((day) => ({
       ...day,
-      items: day.items.filter((item) => whose(item.forOther)),
+      items: day.items.filter((item) => whose(item)),
     }))
     .filter((day) => day.items.length > 0)
   const purchases = days.reduce((sum, day) => sum + day.items.length, 0)
   const newest = days[0]?.items[0]?.id
   const lines = finance.plans
-    .filter((plan) => plan.cardId === card.id && whose(plan.forOther))
+    .filter((plan) => plan.cardId === card.id && whose(plan))
     .flatMap((plan) => planLine(plan, month, finance) ?? [])
   // Subscriptions and the invoice's rest are the owner's.
   const subscriptions =
@@ -94,13 +100,17 @@ export function CardDetail({
   const restNote = rest && visibleNote(rest.note, card)
   const monthly = lines.length + subscriptions.length + (rest ? 1 : 0)
   const openPlans = finance.plans
-    .filter((plan) => plan.cardId === card.id && whose(plan.forOther))
+    .filter((plan) => plan.cardId === card.id && whose(plan))
     .map((plan) => ({
       plan,
       status: installmentStatus(plan, finance.payments),
     }))
     .filter((item) => !item.status.settled)
-  const outstanding = sumMoney(openPlans.map((item) => item.status.outstanding))
+  const outstanding = sumMoney(
+    openPlans
+      .filter((item) => !item.plan.personId)
+      .map((item) => item.status.outstanding),
+  )
   const lastMonth = openPlans
     .map((item) => item.status.lastMonth)
     .sort()
@@ -135,6 +145,11 @@ export function CardDetail({
                     {expense.id === newest && (
                       <span className="feed-tag last">última</span>
                     )}
+                    {personOf(expense) && (
+                      <span className="feed-tag person">
+                        {personOf(expense)}
+                      </span>
+                    )}
                   </span>
                   <small>
                     {[expense.note, category?.name, time]
@@ -165,7 +180,12 @@ export function CardDetail({
         >
           <CategoryBadge category={category} shape="round" />
           <span className="feed-text">
-            <span className="feed-name">{plan.description}</span>
+            <span className="feed-name">
+              {plan.description}
+              {personOf(plan) && (
+                <span className="feed-tag person">{personOf(plan)}</span>
+              )}
+            </span>
             <small>
               {[
                 category?.name,
@@ -322,10 +342,10 @@ export function CardDetail({
               </small>
             )}
           </div>
-          {other && view.invoice && (
+          {(other || view.people.length > 0) && view.invoice && (
             <div className="card-hero-split">
               {/* The whole invoice, with both parts under it. */}
-              {bankFillsOther(view.invoice.month, finance) ? (
+              {other && bankFillsOther(view.invoice.month, finance) ? (
                 <button
                   type="button"
                   className="whole"
@@ -341,17 +361,29 @@ export function CardDetail({
               ) : (
                 <div className="whole">
                   <small>Fatura toda</small>
-                  <b>{formatMoney(cents(view.mine + view.otherShare))}</b>
+                  <b>
+                    {formatMoney(
+                      cents(view.mine + view.otherShare + view.peopleShare),
+                    )}
+                  </b>
                 </div>
               )}
               <div>
                 <small>Sua parte</small>
                 <b>{formatMoney(view.mine)}</b>
               </div>
-              <div className="other">
-                <small>Parte do {other}</small>
-                <b>{formatMoney(view.otherShare)}</b>
-              </div>
+              {other && (
+                <div className="other">
+                  <small>Parte do {other}</small>
+                  <b>{formatMoney(view.otherShare)}</b>
+                </div>
+              )}
+              {view.people.map((item) => (
+                <div className="other" key={item.name}>
+                  <small>Parte de {item.name}</small>
+                  <b>{formatMoney(item.amount)}</b>
+                </div>
+              ))}
             </div>
           )}
           {view.invoice && (

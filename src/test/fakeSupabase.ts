@@ -8,7 +8,7 @@ export interface Call {
 
 export function fakeSupabase() {
   const calls: Call[] = []
-  let failNext = false
+  let failNext: string | boolean = false
   // What reads of a table answer (an empty list otherwise).
   const tableResults: Record<string, unknown[]> = {}
   const from = (table: string) => {
@@ -62,7 +62,12 @@ export function fakeSupabase() {
             error: null,
           }).then(resolve)
         calls.push(call)
-        const error = failNext ? { message: 'offline' } : null
+        const error = failNext
+          ? {
+              message: 'offline',
+              ...(typeof failNext === 'string' && { code: failNext }),
+            }
+          : null
         failNext = false
         return Promise.resolve({ data: [], error }).then(resolve)
       },
@@ -91,8 +96,8 @@ export function fakeSupabase() {
     functionResults,
     functionCalls,
     calls,
-    failNext: () => {
-      failNext = true
+    failNext: (code?: string) => {
+      failNext = code ?? true
     },
   }
 }

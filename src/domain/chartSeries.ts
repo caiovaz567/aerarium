@@ -138,14 +138,20 @@ function forecastPart(
 ): Cents {
   const fixed = fixedCardAmounts(cardId, target, data)
   if (part === 'total') return sumMoney(Object.values(fixed))
-  const theirs = sumMoney(
-    data.plans
-      .filter((plan) => plan.cardId === cardId && plan.forOther)
-      .flatMap((plan) => installmentSchedule(plan, data.payments))
-      .filter((item) => item.month === target)
-      .map((item) => item.amount),
-  )
+  const planned = (of: (plan: FinancialData['plans'][number]) => unknown) =>
+    sumMoney(
+      data.plans
+        .filter((plan) => plan.cardId === cardId && of(plan))
+        .flatMap((plan) => installmentSchedule(plan, data.payments))
+        .filter((item) => item.month === target)
+        .map((item) => item.amount),
+    )
   return part === 'other'
-    ? theirs
-    : cents(fixed.installmentsAmount - theirs + fixed.subscriptionsAmount)
+    ? planned((plan) => plan.forOther)
+    : cents(
+        fixed.installmentsAmount -
+          planned((plan) => plan.forOther) -
+          planned((plan) => plan.personId) +
+          fixed.subscriptionsAmount,
+      )
 }

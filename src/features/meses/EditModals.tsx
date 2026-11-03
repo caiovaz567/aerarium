@@ -14,6 +14,7 @@ import { CategoryPicker } from '../../ui/CategoryPicker'
 import { WhenField } from '../../ui/WhenField'
 import { instantToSaoPaulo, saoPauloToInstant } from '../../domain/timeline'
 import { dayMonth, monthLabel, type Month } from '../../domain/months'
+import { whoFields, whoOf, type Who } from '../../domain/people'
 import { Modal } from '../../ui/Modal'
 import { readMoney } from './forms'
 
@@ -193,6 +194,7 @@ export function ExpenseModal({
   expense,
   categories,
   otherPerson = null,
+  people,
   month,
   months = [],
   onClose,
@@ -206,6 +208,7 @@ export function ExpenseModal({
   readonly months?: readonly Month[]
   /** Who else uses the cards, if anyone. */
   readonly otherPerson?: string | null
+  readonly people?: readonly { readonly id: string; readonly name: string }[]
   readonly onClose: () => void
   readonly onSave: (changes: {
     description: string
@@ -214,12 +217,14 @@ export function ExpenseModal({
     occurredAt: string | null
     note?: string | null
     forOther?: boolean
+    personId?: string | null
     /** Only when the person picked another invoice month. */
     month?: Month
   }) => void
   readonly onDelete: () => void
 }) {
-  const [forOther, setForOther] = useState(expense.forOther ?? false)
+  const [who, setWho] = useState<Who>(whoOf(expense))
+  const showWho = Boolean(otherPerson || people?.length)
   const [invoiceMonth, setInvoiceMonth] = useState(month)
   const monthId = useId()
   // A purchase from the bank keeps the bank's name; the person adds a note.
@@ -257,7 +262,7 @@ export function ExpenseModal({
           categoryId,
           occurredAt,
           ...(fromBank && { note: note.trim().slice(0, 200) || null }),
-          ...(otherPerson && { forOther }),
+          ...(showWho && whoFields(who)),
           ...(invoiceMonth !== month && { month: invoiceMonth }),
         })
       }}
@@ -283,11 +288,12 @@ export function ExpenseModal({
           placeholder="Ex.: Uber"
         />
       )}
-      {otherPerson && (
+      {showWho && (
         <WhoField
           other={otherPerson}
-          forOther={forOther}
-          onChange={setForOther}
+          people={people}
+          value={who}
+          onChange={setWho}
         />
       )}
       <MoneyField label="Valor (R$)" value={value} onChange={setValue} />

@@ -3,6 +3,7 @@ import { installmentSchedule } from './installments'
 import { invoiceTotals } from './invoices'
 import { cents, nonNegative, sumMoney, type Cents } from './money'
 import { month, type Month } from './months'
+import { isOwners } from './people'
 import type {
   Bill,
   FinancialData,
@@ -367,8 +368,8 @@ export function monthOutflowItems(
   const category = (value: string | null | undefined) => value ?? null
   // Whose outflows these are; bills and subscriptions are the owner's.
   const asOther = data.viewAs === 'other'
-  const theirs = (forOther: boolean | undefined) =>
-    (forOther ?? false) === asOther
+  const theirs = (row: { forOther?: boolean; personId?: string | null }) =>
+    asOther ? row.forOther === true : isOwners(row)
   for (const bill of data.bills.filter(
     (item) => item.month === target && !asOther,
   ))
@@ -386,7 +387,7 @@ export function monthOutflowItems(
   )
   // What the other person bought is not the owner's outflow.
   for (const { plan, item } of schedule.filter(
-    ({ plan }) => plan.cardId === null && theirs(plan.forOther),
+    ({ plan }) => plan.cardId === null && theirs(plan),
   ))
     items.push({
       source: 'installment',
@@ -399,9 +400,7 @@ export function monthOutflowItems(
   for (const invoice of data.invoices.filter((item) => item.month === target)) {
     const parts: OutflowItem[] = [
       ...schedule
-        .filter(
-          ({ plan }) => plan.cardId === invoice.cardId && theirs(plan.forOther),
-        )
+        .filter(({ plan }) => plan.cardId === invoice.cardId && theirs(plan))
         .map(({ plan, item }) => ({
           source: 'installment' as const,
           id: plan.id,
@@ -425,9 +424,7 @@ export function monthOutflowItems(
           categoryId: category(item.categoryId),
         })),
       ...data.expenses
-        .filter(
-          (item) => item.invoiceId === invoice.id && theirs(item.forOther),
-        )
+        .filter((item) => item.invoiceId === invoice.id && theirs(item))
         .map((item) => ({
           source: 'expense' as const,
           id: item.id,

@@ -43,6 +43,31 @@ export function bankFillsOther(target: Month, context: InvoiceContext) {
   )
 }
 
+/** What each person in the owner's list has in this invoice. */
+export function peopleParts(invoice: Invoice, context: InvoiceContext) {
+  const rows = [
+    ...context.plans
+      .filter((plan) => plan.cardId === invoice.cardId && plan.personId)
+      .flatMap((plan) =>
+        installmentSchedule(plan, context.payments)
+          .filter((item) => item.month === invoice.month)
+          .map((item) => ({ personId: plan.personId!, amount: item.amount })),
+      ),
+    ...context.expenses
+      .filter((item) => item.invoiceId === invoice.id && item.personId)
+      .map((item) => ({
+        personId: item.personId!,
+        amount: nonNegative(item.amount),
+      })),
+  ]
+  return [...new Set(rows.map((row) => row.personId))].map((personId) => ({
+    personId,
+    amount: sumMoney(
+      rows.filter((row) => row.personId === personId).map((row) => row.amount),
+    ),
+  }))
+}
+
 export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
   const fixed = fixedCardAmounts(invoice.cardId, invoice.month, context)
   const expensesAmount = sumMoney(
@@ -73,13 +98,16 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
       .filter((item) => item.invoiceId === invoice.id && item.forOther)
       .map((item) => nonNegative(item.amount)),
   ])
-  const mine = cents(Math.max(0, total - marked))
+  const peopleShare = sumMoney(
+    peopleParts(invoice, context).map((item) => item.amount),
+  )
+  const mine = cents(Math.max(0, total - marked - peopleShare))
   // Before otherBankUntil (owner only), the bank's total has everything, so
   // the other person's part is all of it that is not the owner's.
   const bank = invoice.bankTotal
   const otherShare =
     bankFillsOther(invoice.month, context) && bank != null
-      ? cents(Math.max(marked, bank - mine))
+      ? cents(Math.max(marked, bank - mine - peopleShare))
       : marked
   return {
     ...fixed,
@@ -88,6 +116,7 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
     calculatedTotal,
     total,
     otherShare,
+    peopleShare,
     mine,
   }
 }

@@ -223,6 +223,7 @@ export const editOps = {
               note: plan.note,
               category_id: plan.categoryId ?? null,
               for_other: plan.forOther ?? false,
+              person_id: plan.personId ?? null,
             })
             .eq('id', plan.id),
         ),

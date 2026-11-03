@@ -1,3 +1,24 @@
+/** Whose a purchase is: "me", "other" (the Pai) or a person's id. */
+export type Who = string
+export const ME: Who = 'me'
+export const OTHER: Who = 'other'
+
+interface Owned {
+  readonly forOther?: boolean
+  readonly personId?: string | null
+}
+
+export const whoOf = (row: Owned): Who =>
+  row.personId ?? (row.forOther ? OTHER : ME)
+
+export const whoFields = (who: Who) => ({
+  forOther: who === OTHER,
+  personId: who === ME || who === OTHER ? null : who,
+})
+
+/** Neither the other person's nor anyone else's. */
+export const isOwners = (row: Owned) => !row.forOther && !row.personId
+
 /** What the person typed, as usernames are stored: "@Caio " is "caio". */
 export const cleanUsername = (value: string) =>
   value.trim().replace(/^@+/, '').toLowerCase()

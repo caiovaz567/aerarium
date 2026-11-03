@@ -2,6 +2,7 @@ import { installmentSchedule } from './installments'
 import { invoiceTotals } from './invoices'
 import { cents, nonNegative, sumMoney } from './money'
 import { month, type Month } from './months'
+import { isOwners } from './people'
 import type { FinancialData } from './types'
 
 export function monthBalance(target: Month, data: FinancialData) {
@@ -28,7 +29,7 @@ export function monthBalance(target: Month, data: FinancialData) {
       paid: item.paid,
     }))
   const installments = data.plans
-    .filter((item) => item.cardId === null && !item.forOther)
+    .filter((item) => item.cardId === null && isOwners(item))
     .flatMap((plan) => installmentSchedule(plan, data.payments))
     .filter((item) => item.month === target)
   const outgoings = [...bills, ...invoices, ...installments]

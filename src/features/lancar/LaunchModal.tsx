@@ -4,6 +4,7 @@ import { useId, useState, type FormEvent } from 'react'
 import type { Finance } from '../../data/finance'
 import { today as todayDate, useFinanceOp } from '../../data/useFinance'
 import { monthLabel, monthOf, type Month } from '../../domain/months'
+import { ME, whoFields, type Who } from '../../domain/people'
 import { CardArt } from '../../ui/CardArt'
 import { CheckField, WhoField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
@@ -71,7 +72,7 @@ export function LaunchModal({
     () => launchCards(finance)[0]?.id ?? NO_CARD,
   )
   const [paid, setPaid] = useState(true)
-  const [forOther, setForOther] = useState(false)
+  const [who, setWho] = useState<Who>(ME)
   const [paidFrom, setPaidFrom] = useState(rememberedFrom)
   // Follows the card's closing day until the person picks a month themselves.
   const [pickedMonth, setPickedMonth] = useState<Month | null>(null)
@@ -93,10 +94,9 @@ export function LaunchModal({
     today: day,
   })
   const target = pickedMonth ?? suggested
-  // Owner only: card purchases and plans can be the other person's (a Pix bill
-  // cannot).
+  // Card purchases and plans can be someone else's (a Pix bill cannot).
   const canMarkOther =
-    Boolean(finance.otherPerson) &&
+    Boolean(finance.otherPerson || finance.people?.length) &&
     usesCard &&
     (where !== NO_CARD || kind === 'parcelado')
   const categoryId = pickedCategory
@@ -145,7 +145,7 @@ export function LaunchModal({
         today: day,
         categoryId: usesCard ? categoryId : null,
         occurredAt,
-        forOther: canMarkOther && forOther,
+        ...whoFields(canMarkOther ? who : ME),
         paidFrom: kind === 'gasto' && where === NO_CARD ? paidFrom : null,
       })
     } catch (reason) {
@@ -279,9 +279,10 @@ export function LaunchModal({
 
         {canMarkOther && (
           <WhoField
-            other={finance.otherPerson!}
-            forOther={forOther}
-            onChange={setForOther}
+            other={finance.otherPerson}
+            people={finance.people}
+            value={who}
+            onChange={setWho}
           />
         )}
 

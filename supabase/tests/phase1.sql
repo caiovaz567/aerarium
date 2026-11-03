@@ -253,7 +253,18 @@ select pg_temp.assert_true((select count(*) = 1 and bool_and(source = 'manual') 
 -- Leave another paid invoice to exercise account cascades with automatic payments.
 update public.invoices set paid = true where id = '50000000-0000-4000-8000-000000000012';
 reset role;
+-- A person with purchases must not stop the account from being deleted.
+insert into public.people (id, user_id, name) values ('10000000-0000-4000-8000-0000000000f1', '10000000-0000-4000-8000-000000000001', 'Pessoa');
+insert into public.cards (id, user_id, name, sort_order) values ('10000000-0000-4000-8000-0000000000f2', '10000000-0000-4000-8000-000000000001', 'Cartao da pessoa', 99);
+insert into public.months (id, user_id, ref) values ('10000000-0000-4000-8000-0000000000f3', '10000000-0000-4000-8000-000000000001', '2031-01-01');
+insert into public.invoices (id, user_id, card_id, month_id) values ('10000000-0000-4000-8000-0000000000f4', '10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000f2', '10000000-0000-4000-8000-0000000000f3');
+insert into public.invoice_expenses (user_id, invoice_id, description, amount, spent_on, person_id) values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000f4', 'Compra', 10, '2031-01-02', '10000000-0000-4000-8000-0000000000f1');
+insert into public.installment_plans (user_id, card_id, description, installment_amount, total_installments, first_month, person_id) values ('10000000-0000-4000-8000-000000000001', '10000000-0000-4000-8000-0000000000f2', 'Parcela', 10, 2, '2031-01-01', '10000000-0000-4000-8000-0000000000f1');
+select pg_temp.assert_true((select people_share = 20 from public.v_invoice_totals where invoice_id = '10000000-0000-4000-8000-0000000000f4'), 'A parte da pessoa aparece na fatura');
+select pg_temp.expect_error($q$delete from public.people where id = '10000000-0000-4000-8000-0000000000f1'; set constraints all immediate$q$, '23503', 'Pessoa com compras nao sai da lista');
 delete from auth.users where id = '10000000-0000-4000-8000-000000000001';
+-- What a commit would check: the test itself rolls back.
+set constraints all immediate;
 do $$ declare t text; remaining bigint; begin
   foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories','bank_accounts','bank_records','usernames','people'] loop
     execute format('select count(*) from public.%I where user_id = %L', t, '10000000-0000-4000-8000-000000000001') into remaining;

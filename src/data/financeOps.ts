@@ -82,6 +82,7 @@ const expenseRecord = (row: ExpenseRow) => ({
   note: row.note ?? null,
   external_id: row.externalId ?? null,
   for_other: row.forOther ?? false,
+  person_id: row.personId ?? null,
   reviewed_at: row.reviewedAt ?? null,
 })
 
@@ -340,6 +341,7 @@ export const ops = {
       occurredAt?: string | null
       note?: string | null
       forOther?: boolean
+      personId?: string | null
     },
   ): FinanceOp {
     // The database moves spent_on to the day of occurred_at; so does the screen.
@@ -360,6 +362,9 @@ export const ops = {
               ...(changes.note !== undefined && { note: changes.note }),
               ...(changes.forOther !== undefined && {
                 for_other: changes.forOther,
+              }),
+              ...(changes.personId !== undefined && {
+                person_id: changes.personId,
               }),
             })
             .eq('id', expense.id),
@@ -471,6 +476,7 @@ export const ops = {
             category_id: plan.categoryId ?? null,
             external_key: plan.externalKey ?? null,
             for_other: plan.forOther ?? false,
+            person_id: plan.personId ?? null,
             reviewed_at: plan.reviewedAt ?? null,
           }),
         )

@@ -964,6 +964,10 @@ a.row-main {
   background: var(--accent);
   color: var(--accent-ink);
 }
+.feed-tag.person {
+  background: var(--surface-2);
+  color: var(--ink);
+}
 .feed-progress {
   display: inline-block;
   width: 64px;

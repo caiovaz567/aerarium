@@ -6,6 +6,7 @@ import { ops } from '../../data/financeOps'
 import { today, useFinanceOp } from '../../data/useFinance'
 import { installmentSchedule } from '../../domain/installments'
 import { formatMoneyInput } from '../../domain/money'
+import { ME, whoFields, whoOf, type Who } from '../../domain/people'
 import {
   addMonths,
   dateBR,
@@ -50,7 +51,7 @@ export function PlanModal({
   )
   const [note, setNote] = useState(plan?.note ?? '')
   const [categoryId, setCategoryId] = useState(plan?.categoryId ?? null)
-  const [forOther, setForOther] = useState(plan?.forOther ?? false)
+  const [who, setWho] = useState<Who>(plan ? whoOf(plan) : ME)
   const [value, setValue] = useState(
     plan ? formatMoneyInput(plan.installmentAmount) : '',
   )
@@ -93,7 +94,7 @@ export function PlanModal({
       firstMonth: first,
       note: note.trim() || null,
       categoryId,
-      forOther,
+      ...whoFields(who),
     }
     const next: PlanRow = {
       ...draft,
@@ -184,11 +185,12 @@ export function PlanModal({
           value={categoryId}
           onChange={setCategoryId}
         />
-        {finance.otherPerson && (
+        {Boolean(finance.otherPerson || finance.people?.length) && (
           <WhoField
             other={finance.otherPerson}
-            forOther={forOther}
-            onChange={setForOther}
+            people={finance.people}
+            value={who}
+            onChange={setWho}
           />
         )}
         <TextField

@@ -4,7 +4,8 @@ import {
   installmentSchedule,
   installmentStatus,
 } from '../../domain/installments'
-import { invoiceTotals, isEstimate } from '../../domain/invoices'
+import { invoiceTotals, isEstimate, peopleParts } from '../../domain/invoices'
+import { isOwners } from '../../domain/people'
 import { cents, sumMoney, type Cents } from '../../domain/money'
 import { monthOutflowItems, type OutflowItem } from '../../domain/categories'
 import { addMonths, type Month } from '../../domain/months'
@@ -107,6 +108,16 @@ function invoiceLines(
     })
 }
 
+/** Each person's part of an invoice, with their name. */
+export function namedParts(invoice: InvoiceRow, finance: Finance) {
+  return peopleParts(invoice, finance).map((part) => ({
+    name:
+      finance.people?.find((item) => item.id === part.personId)?.name ??
+      'Outra pessoa',
+    amount: part.amount,
+  }))
+}
+
 export interface CardOutflow {
   readonly invoice: InvoiceRow
   readonly card: Card
@@ -114,6 +125,8 @@ export interface CardOutflow {
   readonly note: string | null
   /** The other person's part of it (0 without someone else). */
   readonly other: Cents
+  /** What each person in the list has in it. */
+  readonly people: readonly { readonly name: string; readonly amount: Cents }[]
   /** The owner's part, item by item, to open on the row. */
   readonly lines: readonly InvoiceLine[]
   /** Still a guess: only before its month starts, while unpaid. */
@@ -153,6 +166,7 @@ export function monthView(finance: Finance, ref: Month) {
           total: totals.mine,
           note: visibleNote(invoice.note, card),
           other: finance.otherPerson ? totals.otherShare : cents(0),
+          people: namedParts(invoice, finance),
           lines: invoiceLines(
             finance,
             items.filter((item) => item.cardId === card.id),
@@ -167,7 +181,7 @@ export function monthView(finance: Finance, ref: Month) {
         a.card.name.localeCompare(b.card.name),
     )
   const loose: LooseOutflow[] = finance.plans
-    .filter((plan) => plan.cardId === null && !plan.forOther)
+    .filter((plan) => plan.cardId === null && isOwners(plan))
     .flatMap((plan) => {
       const item = installmentSchedule(plan, finance.payments).find(
         (entry) => entry.month === ref,

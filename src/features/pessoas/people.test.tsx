@@ -241,3 +241,122 @@ describe('convites que você recebeu', () => {
     )
   })
 })
+
+describe('compras das pessoas da lista', () => {
+  const vini = { id: 'vini', name: 'Vini' }
+  const withVini = () => {
+    const finance = financeFixture()
+    const invoice = finance.invoices.find(
+      (item) => item.cardId === 'c1' && item.month === '2026-09',
+    )!
+    return {
+      finance: {
+        ...finance,
+        otherPerson: 'Pai',
+        people: [vini],
+        expenses: [
+          ...finance.expenses,
+          {
+            id: 'do-vini',
+            invoiceId: invoice.id,
+            description: 'Compra do Vini',
+            amount: 16151 as never,
+            spentOn: '2026-09-10' as never,
+            categoryId: null,
+            personId: 'vini',
+          },
+        ],
+      },
+      plain: finance,
+    }
+  }
+
+  it('não muda o disponível; aparece na linha da fatura com o nome', async () => {
+    const { finance, plain } = withVini()
+    const first = renderApp('/meses/2026-09', undefined, plain)
+    await settle()
+    const before = screen.getByRole('region', {
+      name: 'Resumo do mês',
+    }).textContent
+    first.unmount()
+    renderApp('/meses/2026-09', undefined, finance)
+    await settle()
+    expect(
+      screen.getByRole('region', { name: 'Resumo do mês' }).textContent,
+    ).toBe(before)
+    expect(screen.getByText(/^Vini R\$\s161,51$/)).toBeVisible()
+  })
+
+  it('o cartão mostra a parte dele e a compra com etiqueta, pra editar', async () => {
+    renderApp('/cartoes?mes=2026-09&cartao=c1', undefined, withVini().finance)
+    await settle()
+    expect(screen.getByText('Parte de Vini')).toBeVisible()
+    const row = screen.getByRole('button', { name: /Compra do Vini/ })
+    expect(within(row).getByText('Vini')).toBeVisible()
+    fireEvent.click(row)
+    const form = dialog('Editar gasto')
+    expect(within(form).getByRole('button', { name: 'Vini' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    fireEvent.click(within(form).getByRole('button', { name: 'Meu' }))
+    fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
+    await waitFor(() =>
+      expect(fake.current!.calls[0]).toMatchObject({
+        table: 'invoice_expenses',
+        op: 'update',
+        payload: { for_other: false, person_id: null },
+      }),
+    )
+  })
+
+  it('o Lançar lista a pessoa e grava de quem é', async () => {
+    renderApp('/meses/2026-09', undefined, withVini().finance)
+    await settle()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lançar gasto ou entrada' }),
+    )
+    const form = dialog('Lançar')
+    fireEvent.change(within(form).getByLabelText('Valor'), {
+      target: { value: '161,51' },
+    })
+    fireEvent.change(within(form).getByLabelText('Descrição'), {
+      target: { value: 'Compra do Vini' },
+    })
+    fireEvent.click(within(form).getByRole('button', { name: 'Vini' }))
+    fireEvent.click(within(form).getByRole('button', { name: 'Lançar' }))
+    await waitFor(() => {
+      const insert = fake.current!.calls.find(
+        (item) => item.table === 'invoice_expenses' && item.op === 'insert',
+      )
+      expect(JSON.stringify(insert?.payload)).toContain('"person_id":"vini"')
+      expect(JSON.stringify(insert?.payload)).toContain('"for_other":false')
+    })
+  })
+
+  it('sem ninguém além de você, não pergunta de quem é', async () => {
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [],
+    })
+    await settle()
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lançar gasto ou entrada' }),
+    )
+    expect(within(dialog('Lançar')).queryByText('De quem')).toBeNull()
+  })
+
+  it('pessoa com compra marcada não sai da lista, e avisa', async () => {
+    answers.list = {
+      people: [{ id: 'vini', name: 'Vini', username: null, accepted: false }],
+    }
+    await open()
+    fake.current!.failNext('23503')
+    fireEvent.click(screen.getByRole('button', { name: 'Remover' }))
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
+    )
+    expect(await screen.findByText(/tem compras marcadas/)).toBeVisible()
+  })
+})

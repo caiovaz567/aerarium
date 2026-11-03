@@ -21,6 +21,7 @@ import type {
   InvoiceRow,
   PlanRow,
 } from '../../data/finance'
+import { namedParts } from '../meses/monthView'
 
 /** "9 out" and "9 de outubro". */
 export const shortDate = (date: ISODate) =>
@@ -63,6 +64,8 @@ export function cardInvoiceView(
     invoice,
     bankTotal: invoice?.bankTotal ?? null,
     otherShare: totals?.otherShare ?? cents(0),
+    peopleShare: totals?.peopleShare ?? cents(0),
+    people: invoice ? namedParts(invoice, finance) : [],
     final: cardFinal(account?.number),
     status: !invoice ? 'none' : invoice.paid ? 'paid' : 'open',
     total: totals?.total ?? cents(0),

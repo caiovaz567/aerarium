@@ -261,7 +261,8 @@ export function OutflowsByType({
                     </span>
                     {(item.estimated ||
                       item.note ||
-                      (otherPerson && item.other > 0)) && (
+                      (otherPerson && item.other > 0) ||
+                      item.people.length > 0) && (
                       <span className="card-sub">
                         {item.estimated && (
                           <span className="est">estimada</span>
@@ -271,6 +272,11 @@ export function OutflowsByType({
                             {otherPerson} {formatMoney(item.other)}
                           </span>
                         )}
+                        {item.people.map((part) => (
+                          <span className="who" key={part.name}>
+                            {part.name} {formatMoney(part.amount)}
+                          </span>
+                        ))}
                         {item.note && <span className="note">{item.note}</span>}
                       </span>
                     )}

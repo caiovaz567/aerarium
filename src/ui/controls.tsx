@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import { ME, OTHER, type Who } from '../domain/people'
 import { maskMoneyInput } from '../domain/money'
 import { CheckIcon, PlusIcon, TrashIcon } from './icons'
 
@@ -180,35 +181,38 @@ export function AddButton({
   )
 }
 
-/** Whose a purchase is, the owner's or the other person's. */
+/** Whose a purchase is: the owner's, the other person's or someone's in the list. */
 export function WhoField({
   other,
-  forOther,
+  people,
+  value,
   onChange,
 }: {
-  /** The other person's name ("Pai"). */
-  readonly other: string
-  readonly forOther: boolean
-  readonly onChange: (forOther: boolean) => void
+  /** The other person's name ("Pai"), if any. */
+  readonly other?: string | null
+  readonly people?: readonly { readonly id: string; readonly name: string }[]
+  readonly value: Who
+  readonly onChange: (who: Who) => void
 }) {
+  const options: [Who, string][] = [
+    [ME, 'Meu'],
+    ...(other ? ([[OTHER, other]] as [Who, string][]) : []),
+    ...(people ?? []).map((item): [Who, string] => [item.id, item.name]),
+  ]
   return (
     <div className="field">
       <span id="de-quem">De quem</span>
       <div className="segmented who" role="group" aria-labelledby="de-quem">
-        <button
-          type="button"
-          aria-pressed={!forOther}
-          onClick={() => onChange(false)}
-        >
-          Meu
-        </button>
-        <button
-          type="button"
-          aria-pressed={forOther}
-          onClick={() => onChange(true)}
-        >
-          {other}
-        </button>
+        {options.map(([key, label]) => (
+          <button
+            type="button"
+            key={key}
+            aria-pressed={value === key}
+            onClick={() => onChange(key)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   )

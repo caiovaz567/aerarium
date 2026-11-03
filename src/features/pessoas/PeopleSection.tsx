@@ -14,6 +14,7 @@ import {
   useUsername,
   type AddResult,
 } from '../../data/people'
+import { financeKey } from '../../data/finance'
 import { useUserId } from '../../data/useFinance'
 import {
   cleanUsername,
@@ -115,6 +116,7 @@ function AddPersonModal({ onClose }: { readonly onClose: () => void }) {
         if (result !== 'ok') return setError(ADD_PROBLEM[result])
       } else await addPerson(userId, input.name)
       await client.invalidateQueries({ queryKey: peopleKey(userId) })
+      void client.invalidateQueries({ queryKey: financeKey(userId) })
       toast(
         input.kind === 'username'
           ? `Convite enviado pra @${input.username}`
@@ -218,10 +220,21 @@ export function PeopleSection({
                   <ArmedButton
                     className="link-button"
                     onConfirm={() =>
-                      change(
-                        removePerson(person.id),
-                        `${person.name} saiu da sua lista`,
-                      )
+                      void removePerson(person.id)
+                        .then((removed) => {
+                          if (!removed)
+                            return toast(
+                              'Essa pessoa tem compras marcadas. Troca o "De quem" delas antes.',
+                            )
+                          void client.invalidateQueries({
+                            queryKey: peopleKey(userId),
+                          })
+                          void client.invalidateQueries({
+                            queryKey: financeKey(userId),
+                          })
+                          toast(`${person.name} saiu da sua lista`)
+                        })
+                        .catch(() => toast(NOT_SAVED))
                     }
                   >
                     Remover

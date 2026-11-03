@@ -55,9 +55,12 @@ export async function addPerson(userId: string, name: string) {
   return id
 }
 
+/** False when purchases are still marked as this person's. */
 export async function removePerson(id: string) {
   const { error } = await supabase().from('people').delete().eq('id', id)
+  if ((error as { code?: string } | null)?.code === '23503') return false
   if (error) throw error
+  return true
 }
 
 /** Adds and invites in one step; nothing is saved unless it answers ok. */

@@ -14,6 +14,8 @@ export interface InstallmentPlan {
   readonly categoryId?: string | null
   /** Bought by the other person who uses the cards. */
   readonly forOther?: boolean
+  /** Bought by someone in the owner's list; never with forOther. */
+  readonly personId?: string | null
 }
 
 export interface InstallmentPayment {
@@ -59,6 +61,8 @@ export interface InvoiceExpense {
   readonly categoryId?: string | null
   /** Bought by the other person who uses the cards. */
   readonly forOther?: boolean
+  /** Bought by someone in the owner's list; never with forOther. */
+  readonly personId?: string | null
 }
 
 export interface Income {

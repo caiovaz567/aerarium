@@ -142,8 +142,10 @@ export interface LaunchInput {
   readonly categoryId?: string | null
   /** When it happened (ISO instant); its day wins over `today`. */
   readonly occurredAt?: string | null
-  /** Owner only: a card purchase or a plan of the other person. */
+  /** A card purchase or a plan of the other person. */
   readonly forOther?: boolean
+  /** A card purchase or a plan of someone in the owner's list. */
+  readonly personId?: string | null
   /** A Pix, boleto or cash bill: the bank it came from, or 'cash'. */
   readonly paidFrom?: string | null
 }
@@ -185,6 +187,7 @@ export function buildLaunch(
       note: null,
       categoryId: input.categoryId ?? null,
       ...(input.forOther && { forOther: true }),
+      ...(input.personId && { personId: input.personId }),
     }
     return {
       op: ops.restorePlan(plan, []),
@@ -301,6 +304,7 @@ export function buildLaunch(
     categoryId: input.categoryId ?? null,
     occurredAt,
     ...(input.forOther && { forOther: true }),
+    ...(input.personId && { personId: input.personId }),
   }
   const message = `${formatMoney(input.amount)} na fatura ${card.name}${invoice.paid ? ' (ela já estava paga)' : ''}`
   if (created)
