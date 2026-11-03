@@ -14,7 +14,7 @@ import {
   useUsername,
   type AddResult,
 } from '../../data/people'
-import { financeKey } from '../../data/finance'
+import { financeKey, type Finance } from '../../data/finance'
 import { useUserId } from '../../data/useFinance'
 import {
   cleanUsername,
@@ -24,6 +24,7 @@ import {
 import { AddButton, ArmedButton, TextField } from '../../ui/controls'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
+import { OtherPersonRows } from './OtherPersonRows'
 
 const NOT_SAVED = 'Não consegui salvar. Confere a internet e tenta de novo.'
 
@@ -160,11 +161,7 @@ function AddPersonModal({ onClose }: { readonly onClose: () => void }) {
 }
 
 /** Who uses your cards, and who added you. */
-export function PeopleSection({
-  otherPerson,
-}: {
-  readonly otherPerson?: string | null
-}) {
+export function PeopleSection({ finance }: { readonly finance?: Finance }) {
   const userId = useUserId()
   const client = useQueryClient()
   const toast = useToast()
@@ -182,13 +179,6 @@ export function PeopleSection({
       .catch(() => toast(NOT_SAVED))
   }
 
-  if (people.isError)
-    return (
-      <p className="muted small" role="alert">
-        Não consegui carregar suas pessoas. Confere a internet e abre de novo.
-      </p>
-    )
-
   return (
     <>
       <section aria-labelledby="ajustes-pessoas">
@@ -196,11 +186,14 @@ export function PeopleSection({
           Quem usa seus cartões
         </h3>
         <ul className="settings-card">
-          {otherPerson && (
-            <li className="settings-row">
+          {finance && <OtherPersonRows finance={finance} />}
+          {people.isError && (
+            <li className="settings-row" role="alert">
               <span className="settings-text">
-                <b>{otherPerson}</b>
-                <small>Fica com o resto das faturas.</small>
+                <small>
+                  Não consegui carregar as outras pessoas. Confere a internet e
+                  abre de novo.
+                </small>
               </span>
             </li>
           )}

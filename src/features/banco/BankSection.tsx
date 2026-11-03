@@ -9,12 +9,10 @@ import {
   CardIcon,
   ChevronRightIcon,
   MailIcon,
-  PeopleIcon,
   RefreshIcon,
 } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
-import { ShareSettings } from '../compartilhado/ShareSettings'
 import { bankItemLines, savedItems } from './bankItems'
 import { billNotices } from './billNotice'
 import { PreviewCards } from './PreviewCards'
@@ -35,30 +33,6 @@ const when = (date: Date | null) =>
 const SHOWN_MS = 30_000
 
 /** Name of the other person, saved when the field loses focus. */
-function OtherName({
-  name,
-  onSave,
-}: {
-  readonly name: string
-  readonly onSave: (name: string) => void
-}) {
-  const [draft, setDraft] = useState(name)
-  return (
-    <input
-      className="other-name"
-      aria-label="Nome de quem usa seus cartões"
-      maxLength={30}
-      value={draft}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        const clean = draft.trim()
-        if (clean && clean !== name) onSave(clean)
-        else setDraft(name)
-      }}
-    />
-  )
-}
-
 /** "6 cartões · 5 entram no app". */
 function accountsText(finance: Finance) {
   const total = finance.bankAccounts.length
@@ -359,58 +333,6 @@ export function BankSection({ finance }: { readonly finance: Finance }) {
           </div>
         </Modal>
       )}
-    </section>
-  )
-}
-
-/**
- * Ajustes → Pai (only for the Open Finance owner): someone else uses the
- * cards, their name, and sharing with their own account.
- */
-export function OtherPersonSection({ finance }: { readonly finance: Finance }) {
-  const enabled = useBankEnabled()
-  const run = useFinanceOp()
-  if (!enabled) return null
-  return (
-    <section aria-labelledby="ajustes-outra-pessoa">
-      <h3 id="ajustes-outra-pessoa" className="settings-label">
-        Quem usa seus cartões
-      </h3>
-      <ul className="settings-card">
-        <li className="settings-row">
-          <span className="settings-icon warn" aria-hidden="true">
-            <PeopleIcon />
-          </span>
-          <label className="settings-text" htmlFor="outra-pessoa">
-            <b>Outra pessoa usa seus cartões</b>
-            <small>
-              {finance.otherPerson
-                ? finance.bankPurchases === false
-                  ? `Você lança só o que é seu. O resto da fatura do banco é de ${finance.otherPerson}.`
-                  : `Cada compra que chega do banco você marca: sua ou de ${finance.otherPerson}. O que for de ${finance.otherPerson} fica separado.`
-                : 'Liga pra separar o que é seu do que é de outra pessoa.'}
-            </small>
-          </label>
-          {finance.otherPerson && (
-            <OtherName
-              name={finance.otherPerson}
-              onSave={(name) => run(settingsOps.setOtherPerson(name))}
-            />
-          )}
-          <input
-            id="outra-pessoa"
-            type="checkbox"
-            className="toggle"
-            checked={Boolean(finance.otherPerson)}
-            onChange={(event) =>
-              run(
-                settingsOps.setOtherPerson(event.target.checked ? 'Pai' : null),
-              )
-            }
-          />
-        </li>
-        {finance.otherPerson && <ShareSettings other={finance.otherPerson} />}
-      </ul>
     </section>
   )
 }

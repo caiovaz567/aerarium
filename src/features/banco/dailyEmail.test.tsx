@@ -149,11 +149,5 @@ describe('trazer as compras do banco (28/10/2026)', () => {
     expect(
       screen.getByText(/vem só o total do banco\. O resto é de Pai\./),
     ).toBeVisible()
-    fireEvent.click(screen.getByRole('link', { name: 'Pai' }))
-    expect(
-      screen.getByText(
-        'Você lança só o que é seu. O resto da fatura do banco é de Pai.',
-      ),
-    ).toBeVisible()
   })
 })

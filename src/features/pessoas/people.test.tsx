@@ -401,6 +401,28 @@ describe('compras das pessoas da lista', () => {
   })
 })
 
+describe('o Pai na lista', () => {
+  it('fora dos Ajustes: as abas são Geral e Conta', async () => {
+    await open('/config', 'Pai')
+    expect(
+      within(screen.getByRole('navigation', { name: 'Partes dos ajustes' }))
+        .getAllByRole('link')
+        .map((item) => item.textContent),
+    ).toEqual(['Geral', 'Conta'])
+  })
+
+  it('quem não é o dono do banco só vê o nome', async () => {
+    await open('/pessoas', 'Pai')
+    const list = screen.getByRole('region', { name: 'Quem usa seus cartões' })
+    expect(within(list).getByText('Pai')).toBeVisible()
+    expect(
+      within(list).queryByRole('checkbox', {
+        name: 'Alguém fica com o resto das faturas',
+      }),
+    ).toBeNull()
+  })
+})
+
 describe('onde fica', () => {
   it('os Ajustes têm só uma porta; o usuário fica na Conta', async () => {
     await open('/config')

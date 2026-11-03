@@ -7,7 +7,7 @@ export function PeoplePage() {
   return (
     <div className="settings">
       <h2 className="settings-title">Pessoas</h2>
-      <PeopleSection otherPerson={finance?.otherPerson} />
+      <PeopleSection finance={finance} />
     </div>
   )
 }
