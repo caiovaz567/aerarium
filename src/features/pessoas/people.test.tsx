@@ -347,6 +347,49 @@ describe('compras das pessoas da lista', () => {
     expect(within(dialog('Lançar')).queryByText('De quem')).toBeNull()
   })
 
+  it('o seletor lista todo mundo e mostra só o que é da pessoa', async () => {
+    localStorage.removeItem('aerarium.perfil')
+    renderApp('/meses/2026-09', undefined, withVini().finance)
+    await settle()
+    const seletor = screen.getByRole('group', { name: 'Ver gastos de' })
+    for (const name of ['Eu', 'Pai', 'Vini'])
+      expect(within(seletor).getByRole('button', { name })).toBeVisible()
+    fireEvent.click(within(seletor).getByRole('button', { name: 'Vini' }))
+    const resumo = screen.getByRole('region', { name: 'Resumo de Vini' })
+    expect(resumo).toHaveTextContent(/Gastos de Vini em Setembro/)
+    expect(resumo).toHaveTextContent(/R\$\s161,51/)
+    fireEvent.click(within(seletor).getByRole('button', { name: 'Eu' }))
+    localStorage.removeItem('aerarium.perfil')
+  })
+
+  it('na sua visão: Vini te deve, e Vini pagou grava de quem veio', async () => {
+    localStorage.removeItem('aerarium.perfil')
+    renderApp('/meses/2026-09', undefined, withVini().finance)
+    await settle()
+    const bloco = screen.getByRole('region', { name: 'O que Vini te deve' })
+    expect(bloco).toHaveTextContent(/R\$\s161,51/)
+    fireEvent.click(within(bloco).getByRole('button', { name: 'Vini pagou' }))
+    await waitFor(() => {
+      const insert = fake.current!.calls.find(
+        (item) => item.table === 'incomes' && item.op === 'insert',
+      )
+      expect(insert?.payload).toMatchObject({
+        kind: 'from_other',
+        person_id: 'vini',
+      })
+    })
+  })
+
+  it('sem ninguém além de você, não aparece seletor', async () => {
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [],
+    })
+    await settle()
+    expect(screen.queryByRole('group', { name: 'Ver gastos de' })).toBeNull()
+  })
+
   it('pessoa com compra marcada não sai da lista, e avisa', async () => {
     answers.list = {
       people: [{ id: 'vini', name: 'Vini', username: null, accepted: false }],

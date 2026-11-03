@@ -345,7 +345,8 @@ body.has-stuck .app-header.scrolled {
   }
   /* Eu | Pai at the right, beside Salvo: it never moves with the month. */
   .header-slot .profile-switch {
-    width: 200px;
+    width: auto;
+    max-width: 420px;
     margin: 0 0 0 auto;
   }
   .header-slot .profile-switch button {

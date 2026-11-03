@@ -72,7 +72,7 @@ export function CardsPage() {
   const run = useFinanceOp()
   const toast = useToast()
   const editor = useEditor()
-  const { profile } = useProfile(query.data?.otherPerson)
+  const { profile } = useProfile(query.data)
   const [archiveOpen, setArchiveOpen] = useState(readArchiveOpen)
   const [dialog, setDialog] = useState<{
     kind: 'expense' | 'invoice'
@@ -125,11 +125,14 @@ export function CardsPage() {
 
   const view = cardsView(finance, selected)
   // Eu | Pai, like Meses: your part of each invoice, or theirs.
-  const part: CardPart = !finance.otherPerson
-    ? 'total'
+  const person = finance.people?.find((item) => item.id === profile)
+  const part: CardPart = person
+    ? `person:${person.id}`
     : profile === 'other'
       ? 'other'
-      : 'mine'
+      : finance.otherPerson || finance.people?.length
+        ? 'mine'
+        : 'total'
   const shown = new Map(
     view.blocks.map((block) => [
       block.card.id,
@@ -192,14 +195,16 @@ export function CardsPage() {
           pathFor={(month) => pathFor(month)}
         />
         <p className="all-invoices">
-          {part === 'other'
-            ? `Do ${finance.otherPerson} nas faturas`
-            : part === 'mine'
-              ? 'Sua parte das faturas'
-              : 'Todas as faturas'}{' '}
+          {person
+            ? `De ${person.name} nas faturas`
+            : part === 'other'
+              ? `Do ${finance.otherPerson} nas faturas`
+              : part === 'mine'
+                ? 'Sua parte das faturas'
+                : 'Todas as faturas'}{' '}
           <b>{formatMoney(allInvoices)}</b>
         </p>
-        {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
+        <ProfileSwitch finance={finance} />
       </HeaderSlot>
 
       {fromMonths && (

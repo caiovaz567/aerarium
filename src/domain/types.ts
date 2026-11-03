@@ -71,6 +71,8 @@ export interface Income {
   readonly amount: Cents
   /** 'from_other': money the other person sent back for their part. */
   readonly kind: 'normal' | 'carryover' | 'from_other'
+  /** Money sent back by someone in the owner's list, not the other person. */
+  readonly personId?: string | null
   readonly sortOrder: number
 }
 
@@ -105,6 +107,8 @@ export interface InvoiceContext {
    * purchases, plans and the rest of the invoices), not the owner's.
    */
   readonly viewAs?: 'owner' | 'other'
+  /** Someone in the owner's list: the month's outflows seen as theirs. */
+  readonly viewPerson?: string | null
 }
 
 export interface FinancialData extends InvoiceContext {

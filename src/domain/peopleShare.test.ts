@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { emptyData, invoice, plan } from './__fixtures__/seed'
-import { monthBalance } from './balance'
+import { monthBalance, personBalance } from './balance'
 import { monthOutflowItems } from './categories'
-import { chartSeries } from './chartSeries'
+import { chartSeries, partOf, partPerson } from './chartSeries'
 import { invoiceTotals, peopleParts } from './invoices'
 import { cents, sumMoney } from './money'
 import { isoDate, month } from './months'
@@ -176,5 +176,74 @@ describe('de quem é', () => {
     expect(isOwners({ forOther: false, personId: null })).toBe(true)
     expect(isOwners({ forOther: true })).toBe(false)
     expect(isOwners({ personId: 'vini' })).toBe(false)
+  })
+})
+
+describe('vendo como uma pessoa da lista', () => {
+  const paidBack = (amount: number, personId?: string) => ({
+    month: sep,
+    description: 'pagou',
+    amount: cents(amount),
+    kind: 'from_other' as const,
+    sortOrder: 9,
+    ...(personId && { personId }),
+  })
+
+  it('só o que é dela, sem resto de fatura nem assinatura', () => {
+    const data = withPeople()
+    const hers = monthOutflowItems(sep, { ...data, viewPerson: 'vini' })
+    expect(hers.map((item) => item.id).sort()).toEqual([
+      'do-vini',
+      'gasto-vini',
+      'vini-fora',
+    ])
+    expect(
+      monthOutflowItems(sep, { ...data, viewPerson: 'prima' }).map(
+        (item) => item.id,
+      ),
+    ).toEqual(['gasto-prima'])
+  })
+
+  it('quanto deve, com o que ficou fora do cartão', () => {
+    const data = withPeople()
+    expect(personBalance(sep, data, 'vini')).toEqual({
+      owed: 22051,
+      due: 22051,
+    })
+    expect(personBalance(sep, data, 'ninguem')).toEqual({ owed: 0, due: 0 })
+  })
+
+  it('o que ela devolve não acerta o Pai nem entra nas suas entradas', () => {
+    const data = withPeople()
+    const paid = {
+      ...data,
+      incomes: [...data.incomes, paidBack(10000, 'vini')],
+    }
+    expect(personBalance(sep, paid, 'vini').due).toBe(12051)
+    expect(personBalance(sep, paid, 'prima').due).toBe(1000)
+    expect(monthBalance(sep, paid)).toEqual(monthBalance(sep, data))
+    const paidMore = {
+      ...data,
+      incomes: [...data.incomes, paidBack(99999, 'vini')],
+    }
+    expect(personBalance(sep, paidMore, 'vini').due).toBe(0)
+    const fromPai = { ...data, incomes: [...data.incomes, paidBack(1000)] }
+    expect(monthBalance(sep, fromPai).otherDue).toBe(
+      monthBalance(sep, data).otherDue - 1000,
+    )
+    expect(personBalance(sep, fromPai, 'vini').due).toBe(22051)
+  })
+
+  it('o gráfico e a parte da fatura', () => {
+    const data = withPeople()
+    expect(partPerson('person:vini')).toBe('vini')
+    expect(partPerson('mine')).toBeNull()
+    const totalsOf = totals(data)
+    expect(partOf(totalsOf, 'person:vini')).toBe(21151)
+    expect(partOf(totalsOf, 'person:ninguem')).toBe(0)
+    const october = chartSeries('card', sep, data, 'person:vini').find(
+      (item) => item.month === '2026-10',
+    )
+    expect(october?.total).toBe(5000)
   })
 })

@@ -14,6 +14,7 @@ import type {
 import type { OutflowItem } from '../../domain/categories'
 import { ops } from '../../data/financeOps'
 import { today, useFinance, useFinanceOp } from '../../data/useFinance'
+import { personBalance } from '../../domain/balance'
 import { monthLabel, monthName, type Month } from '../../domain/months'
 import { addMonths } from '../../domain/months'
 import { formatMoney } from '../../domain/money'
@@ -70,7 +71,7 @@ export function MonthsPage() {
   const toast = useToast()
   const editor = useEditor()
   const wide = useWide()
-  const { profile } = useProfile(query.data?.otherPerson)
+  const { profile } = useProfile(query.data)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
   // A new month starts from the top; back from a card in Cartões,
@@ -299,6 +300,42 @@ export function MonthsPage() {
       },
     })
   }
+  const personLooked = finance.people?.find((item) => item.id === profile)
+  const undoPersonPaid = (person: { id: string; name: string }) => {
+    const back = paidBack(finance, selected, person.id)
+    for (const income of back) run(ops.removeIncome(income))
+    toast(`${person.name} pagou: desfeito`, {
+      label: 'Refazer',
+      onClick: () => {
+        for (const income of back) run(ops.restoreIncome(income))
+      },
+    })
+  }
+  const personPaid = (income: IncomeRow) => {
+    run(ops.restoreIncome(income))
+    toast(`${income.description}: parte acertada`, {
+      label: 'Desfazer',
+      onClick: () => run(ops.removeIncome(income)),
+    })
+  }
+  // In your view: who in your list owes you this month.
+  const peopleOwed = (finance.people ?? []).flatMap((person) => {
+    const { owed, due } = personBalance(selected, shown, person.id)
+    return owed > 0
+      ? [
+          <OwedBlock
+            key={person.id}
+            finance={shown}
+            month={selected}
+            owed={owed}
+            due={due}
+            person={person}
+            onPaid={personPaid}
+            onUndo={() => undoPersonPaid(person)}
+          />,
+        ]
+      : []
+  })
   const owed = finance.otherPerson && (
     <OwedBlock
       finance={shown}
@@ -353,7 +390,7 @@ export function MonthsPage() {
       <h2 className="visually-hidden">Meses</h2>
       <SharedEntry />
       <HeaderSlot>
-        {finance.otherPerson && <ProfileSwitch other={finance.otherPerson} />}
+        <ProfileSwitch finance={finance} />
         <MonthNav
           finance={finance}
           selected={selected}
@@ -386,14 +423,26 @@ export function MonthsPage() {
       <div
         className={[
           'month-grid',
-          wide && profile !== 'other' && 'page-cols',
+          wide && profile === 'me' && 'page-cols',
           forecast && 'forecast-view',
         ]
           .filter(Boolean)
           .join(' ')}
         onClickCapture={forecast ? onlyLook : undefined}
       >
-        {profile === 'other' ? (
+        {personLooked ? (
+          <OtherMonth
+            key={personLooked.id}
+            finance={shown}
+            month={selected}
+            person={personLooked}
+            owed={personBalance(selected, shown, personLooked.id).owed}
+            due={personBalance(selected, shown, personLooked.id).due}
+            onOpen={openOutflow}
+            onPaid={personPaid}
+            onUndo={() => undoPersonPaid(personLooked)}
+          />
+        ) : profile === 'other' ? (
           <OtherMonth
             finance={shown}
             month={selected}
@@ -414,6 +463,7 @@ export function MonthsPage() {
                 </div>
                 <div className="page-side">
                   {owed}
+                  {peopleOwed}
                   {incomes}
                   <MoneyPlaces finance={shown} month={selected} />
                 </div>
@@ -423,6 +473,7 @@ export function MonthsPage() {
                 {summary}
                 {finishBlock}
                 {owed}
+                {peopleOwed}
                 {outflows}
                 {incomes}
               </>

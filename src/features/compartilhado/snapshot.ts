@@ -94,7 +94,7 @@ export function shareData(finance: Finance) {
         sortOrder: item.sortOrder,
       })),
     paidBack: finance.incomes
-      .filter((item) => item.kind === 'from_other')
+      .filter((item) => item.kind === 'from_other' && !item.personId)
       .map((item) => ({ month: item.month, amount: toDecimal(item.amount) })),
   }
 }

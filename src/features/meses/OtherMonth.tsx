@@ -17,7 +17,7 @@ const VIEWS: [View, string][] = [
 ]
 
 /**
- * Profile of the other person ("Pai"): what they spent on the owner's cards
+ * Profile of the other person ("Pai") or of someone in the list: what they spent on the owner's cards
  * this month (the total once), card by card, by date or by category.
  */
 export function OtherMonth({
@@ -25,6 +25,7 @@ export function OtherMonth({
   month,
   owed,
   due,
+  person,
   onOpen,
   onPaid,
   onUndo,
@@ -34,20 +35,25 @@ export function OtherMonth({
   /** Their part this month, and what they have not sent back yet. */
   readonly owed: Cents
   readonly due: Cents
+  /** Someone in the list, instead of the other person. */
+  readonly person?: { readonly id: string; readonly name: string }
   readonly onOpen: (item: OutflowItem) => void
   readonly onPaid: (income: IncomeRow) => void
   readonly onUndo: () => void
 }) {
   const [view, setView] = useState<View>('tipo')
-  const seen: Finance = { ...finance, viewAs: 'other' }
+  const seen: Finance = person
+    ? { ...finance, viewPerson: person.id }
+    : { ...finance, viewAs: 'other' }
   const items = monthOutflowItems(month, seen)
   const total = sumMoney(items.map((item) => item.amount))
-  const name = finance.otherPerson!
+  const name = person?.name ?? finance.otherPerson!
+  const of = person ? `de ${name}` : `do ${name}`
   return (
     <>
-      <section className="hero" aria-label={`Resumo do ${name}`}>
+      <section className="hero" aria-label={`Resumo ${of}`}>
         <div className="hero-label">
-          Gastos do {name} em {monthName(month)}
+          Gastos {of} em {monthName(month)}
         </div>
         <p className="hero-num">{formatMoney(total)}</p>
         {owed > 0 && due === 0 ? (
@@ -60,19 +66,21 @@ export function OtherMonth({
         ) : (
           <p className="bar-cap">
             {due > 0
-              ? `Falta ele te devolver ${formatMoney(due)}${
+              ? `Falta ${person ? '' : 'ele '}te devolver ${formatMoney(due)}${
                   owed > due
                     ? ` (já devolveu ${formatMoney(cents(owed - due))})`
                     : ''
                 }.`
-              : 'Nos seus cartões. Você paga a fatura e ele te devolve.'}
+              : person
+                ? 'Nos seus cartões. Você paga a fatura e a pessoa te devolve.'
+                : 'Nos seus cartões. Você paga a fatura e ele te devolve.'}
           </p>
         )}
         {due > 0 && (
           <button
             type="button"
             className="btn primary self-start"
-            onClick={() => onPaid(paidIncome(finance, month, due))}
+            onClick={() => onPaid(paidIncome(finance, month, due, person))}
           >
             {name} pagou
           </button>
@@ -80,12 +88,12 @@ export function OtherMonth({
       </section>
       <section className="block" aria-labelledby="compras-outro">
         <div className="block-head">
-          <h2 id="compras-outro">Compras do {name}</h2>
+          <h2 id="compras-outro">Compras {of}</h2>
         </div>
         <div
           className="segmented views"
           role="group"
-          aria-label={`Ver compras do ${name}`}
+          aria-label={`Ver compras ${of}`}
         >
           {VIEWS.map(([key, label]) => (
             <button
@@ -99,7 +107,12 @@ export function OtherMonth({
           ))}
         </div>
         {view === 'tipo' && (
-          <OtherByType finance={seen} month={month} onOpen={onOpen} />
+          <OtherByType
+            finance={seen}
+            month={month}
+            onOpen={onOpen}
+            empty={`Nada ${of} neste mês.`}
+          />
         )}
         {view === 'data' && (
           <TimelineView finance={seen} month={month} onOpen={onOpen} />

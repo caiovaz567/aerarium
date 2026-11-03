@@ -3,7 +3,7 @@ import { PROFILE_KEY, ProfileContext, type Profile } from './profileContext'
 
 function remembered(): Profile {
   try {
-    return localStorage.getItem(PROFILE_KEY) === 'other' ? 'other' : 'me'
+    return localStorage.getItem(PROFILE_KEY) ?? 'me'
   } catch {
     return 'me'
   }

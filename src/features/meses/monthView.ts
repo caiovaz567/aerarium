@@ -1,5 +1,5 @@
 import { currentMonth } from '../../app/paths'
-import { monthBalance } from '../../domain/balance'
+import { monthBalance, personBalance } from '../../domain/balance'
 import {
   installmentSchedule,
   installmentStatus,
@@ -111,6 +111,7 @@ function invoiceLines(
 /** Each person's part of an invoice, with their name. */
 export function namedParts(invoice: InvoiceRow, finance: Finance) {
   return peopleParts(invoice, finance).map((part) => ({
+    personId: part.personId,
     name:
       finance.people?.find((item) => item.id === part.personId)?.name ??
       'Outra pessoa',
@@ -246,7 +247,10 @@ export function monthDone(finance: Finance, ref: Month): boolean {
   return (
     view.outflowCount > 0 &&
     view.paidCount === view.outflowCount &&
-    view.balance.otherDue <= 0
+    view.balance.otherDue <= 0 &&
+    (finance.people ?? []).every(
+      (person) => personBalance(ref, finance, person.id).due <= 0,
+    )
   )
 }
 

@@ -38,6 +38,7 @@ describe('composição, congelamento e pagamentos', () => {
       total: 17000,
       otherShare: 0,
       peopleShare: 0,
+      people: [],
       mine: 17000,
     })
     expect(invoiceTotals(invoice(), emptyData()).total).toBe(0)

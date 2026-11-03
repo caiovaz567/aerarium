@@ -1,5 +1,5 @@
 import { installmentSchedule } from './installments'
-import { invoiceTotals } from './invoices'
+import { invoiceTotals, peopleParts } from './invoices'
 import { cents, nonNegative, sumMoney } from './money'
 import { month, type Month } from './months'
 import { isOwners } from './people'
@@ -48,7 +48,10 @@ export function monthBalance(target: Month, data: FinancialData) {
   ])
   const otherPaid = sumMoney(
     data.incomes
-      .filter((item) => item.month === target && item.kind === 'from_other')
+      .filter(
+        (item) =>
+          item.month === target && item.kind === 'from_other' && !item.personId,
+      )
       .map((item) => nonNegative(item.amount)),
   )
   return {
@@ -62,4 +65,36 @@ export function monthBalance(target: Month, data: FinancialData) {
     ),
     committedRatio: incomes > 0 ? outflows / incomes : null,
   }
+}
+
+/** What someone in the owner's list owes this month, and what is still due. */
+export function personBalance(
+  target: Month,
+  data: FinancialData,
+  personId: string,
+) {
+  month(target)
+  const owed = sumMoney([
+    ...data.invoices
+      .filter((item) => item.month === target)
+      .flatMap((item) => peopleParts(item, data))
+      .filter((item) => item.personId === personId)
+      .map((item) => item.amount),
+    ...data.plans
+      .filter((plan) => plan.cardId === null && plan.personId === personId)
+      .flatMap((plan) => installmentSchedule(plan, data.payments))
+      .filter((item) => item.month === target)
+      .map((item) => item.amount),
+  ])
+  const paid = sumMoney(
+    data.incomes
+      .filter(
+        (item) =>
+          item.month === target &&
+          item.kind === 'from_other' &&
+          item.personId === personId,
+      )
+      .map((item) => nonNegative(item.amount)),
+  )
+  return { owed, due: cents(Math.max(0, owed - paid)) }
 }

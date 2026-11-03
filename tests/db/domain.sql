@@ -14,7 +14,8 @@ select jsonb_build_object(
     'id', invoice_id, 'installmentsAmount', installments_amount::numeric(12,2)::text,
     'subscriptionsAmount', subscriptions_amount::numeric(12,2)::text, 'expensesAmount', expenses_amount::numeric(12,2)::text,
     'otherAmount', other_amount::text, 'calculatedTotal', calculated_total::text, 'total', total::text,
-    'otherShare', other_share::numeric(12,2)::text, 'mine', mine::numeric(12,2)::text
+    'otherShare', other_share::numeric(12,2)::text, 'mine', mine::numeric(12,2)::text,
+    'peopleShare', people_share::numeric(12,2)::text
   ) order by invoice_id) from public.v_invoice_totals),
   'months', (select jsonb_agg(jsonb_build_object(
     'month', to_char(ref, 'YYYY-MM'), 'incomes', incomes::text, 'outflows', outflows::text,

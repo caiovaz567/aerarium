@@ -41,6 +41,7 @@ describe('paridade com contas manuais do seed SQL', () => {
       total: 17000,
       otherShare: 0,
       peopleShare: 0,
+      people: [],
       mine: 17000,
     })
   })

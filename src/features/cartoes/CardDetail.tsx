@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { today } from '../../data/useFinance'
 import type { Card, ExpenseRow, Finance, PlanRow } from '../../data/finance'
 import { chargedIn } from '../../domain/cardDates'
-import type { CardPart } from '../../domain/chartSeries'
+import { partPerson, type CardPart } from '../../domain/chartSeries'
 import { installmentStatus } from '../../domain/installments'
 import { bankFillsOther } from '../../domain/invoices'
 import { cents, formatMoney, sumMoney } from '../../domain/money'
@@ -70,10 +70,15 @@ export function CardDetail({
 
   // Eu | Pai: only what is theirs, or only what is yours.
   // Your view keeps the purchases of people in your list, tagged, to edit them.
-  const whose = (row: { forOther?: boolean }) =>
-    part === 'total' || (part === 'other') === Boolean(row.forOther)
+  const looked = partPerson(part)
+  const lookedName = view.people.find((item) => item.personId === looked)?.name
+  const someoneElse = part === 'other' || looked !== null
+  const whose = (row: { forOther?: boolean; personId?: string | null }) =>
+    looked
+      ? row.personId === looked
+      : part === 'total' || (part === 'other') === Boolean(row.forOther)
   const personOf = (row: { personId?: string | null }) =>
-    row.personId
+    row.personId && !looked
       ? (finance.people?.find((item) => item.id === row.personId)?.name ??
         'Outra pessoa')
       : null
@@ -89,14 +94,13 @@ export function CardDetail({
     .filter((plan) => plan.cardId === card.id && whose(plan))
     .flatMap((plan) => planLine(plan, month, finance) ?? [])
   // Subscriptions and the invoice's rest are the owner's.
-  const subscriptions =
-    part === 'other'
-      ? []
-      : finance.subscriptions.filter(
-          (item) => item.cardId === card.id && item.active,
-        )
+  const subscriptions = someoneElse
+    ? []
+    : finance.subscriptions.filter(
+        (item) => item.cardId === card.id && item.active,
+      )
   // The invoice's rest: always there, so it can be filled in.
-  const rest = part === 'other' ? null : view.invoice
+  const rest = someoneElse ? null : view.invoice
   const restNote = rest && visibleNote(rest.note, card)
   const monthly = lines.length + subscriptions.length + (rest ? 1 : 0)
   const openPlans = finance.plans
@@ -289,9 +293,11 @@ export function CardDetail({
     <p className="list-meta">
       {!view.invoice
         ? `Nenhuma fatura desse cartão em ${name}`
-        : part === 'other'
-          ? `Nenhuma compra do ${other} em ${name}`
-          : `Nenhuma compra lançada em ${name}`}
+        : looked
+          ? `Nenhuma compra dessa pessoa em ${name}`
+          : part === 'other'
+            ? `Nenhuma compra do ${other} em ${name}`
+            : `Nenhuma compra lançada em ${name}`}
     </p>
   )
 
@@ -319,9 +325,11 @@ export function CardDetail({
             <small>
               {part === 'mine'
                 ? `Sua parte da fatura de ${name}`
-                : part === 'other'
-                  ? `Parte do ${other} na fatura de ${name}`
-                  : `Fatura de ${name}`}{' '}
+                : looked
+                  ? `${lookedName ? `Parte de ${lookedName}` : 'Parte dessa pessoa'} na fatura de ${name}`
+                  : part === 'other'
+                    ? `Parte do ${other} na fatura de ${name}`
+                    : `Fatura de ${name}`}{' '}
               ·{' '}
               <span className={`status ${view.status}`}>
                 {STATUS[view.status]}
@@ -329,11 +337,14 @@ export function CardDetail({
             </small>
             <b>
               {formatMoney(
-                part === 'mine'
-                  ? view.mine
-                  : part === 'other'
-                    ? view.otherShare
-                    : view.total,
+                looked
+                  ? (view.people.find((item) => item.personId === looked)
+                      ?.amount ?? cents(0))
+                  : part === 'mine'
+                    ? view.mine
+                    : part === 'other'
+                      ? view.otherShare
+                      : view.total,
               )}
             </b>
             {view.due && view.dueText && (
@@ -379,7 +390,7 @@ export function CardDetail({
                 </div>
               )}
               {view.people.map((item) => (
-                <div className="other" key={item.name}>
+                <div className="other" key={item.personId}>
                   <small>Parte de {item.name}</small>
                   <b>{formatMoney(item.amount)}</b>
                 </div>
@@ -518,7 +529,7 @@ export function CardDetail({
             <p className="list-meta">
               {subscriptions.length
                 ? `${formatMoney(charged)} em ${name}`
-                : part === 'other'
+                : someoneElse
                   ? 'As assinaturas são suas'
                   : 'Nenhuma assinatura neste cartão'}
             </p>

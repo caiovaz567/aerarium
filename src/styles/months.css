@@ -717,9 +717,13 @@
 
 /* The other person's spending, card by card, in their hero. */
 .profile-switch {
+  overflow-x: auto;
+  scrollbar-width: none;
   margin: 0 0 12px;
 }
 .profile-switch button {
+  flex: 1 0 auto;
+  padding-inline: 14px;
   min-height: 44px;
   font-size: 15px;
   font-weight: 700;

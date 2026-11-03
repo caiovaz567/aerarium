@@ -14,6 +14,7 @@ export function OwedBlock({
   month,
   owed,
   due,
+  person,
   onPaid,
   onUndo,
 }: {
@@ -21,16 +22,18 @@ export function OwedBlock({
   readonly month: Month
   readonly owed: Cents
   readonly due: Cents
+  /** Someone in the list, instead of the other person. */
+  readonly person?: { readonly id: string; readonly name: string }
   readonly onPaid: (income: IncomeRow) => void
   readonly onUndo: () => void
 }) {
-  const name = finance.otherPerson!
+  const name = person?.name ?? finance.otherPerson!
   const paid = owed - due
   const settled = owed > 0 && due === 0
   return (
     <section
       className={`block owed-block${settled ? ' settled' : ''}`}
-      aria-label={`O que o ${name} te deve`}
+      aria-label={person ? `O que ${name} te deve` : `O que o ${name} te deve`}
     >
       <span className="owed-text">
         <small>
@@ -46,14 +49,16 @@ export function OwedBlock({
               ? 'Devolveu tudo.'
               : paid > 0
                 ? `Já devolveu ${formatMoney(paid as Cents)} de ${formatMoney(owed)}.`
-                : `Parte dele nas faturas: ${formatMoney(owed)}.`}
+                : person
+                  ? `Nos seus cartões: ${formatMoney(owed)}.`
+                  : `Parte dele nas faturas: ${formatMoney(owed)}.`}
         </small>
       </span>
       {due > 0 && (
         <button
           type="button"
           className="btn primary"
-          onClick={() => onPaid(paidIncome(finance, month, due))}
+          onClick={() => onPaid(paidIncome(finance, month, due, person))}
         >
           {name} pagou
         </button>

@@ -127,6 +127,8 @@ export interface Finance {
   readonly otherBankUntil?: Month | null
   /** Profile "Pai": outflows seen as the other person's (not loaded). */
   readonly viewAs?: 'owner' | 'other'
+  /** Someone in the list: outflows seen as theirs (not loaded). */
+  readonly viewPerson?: string | null
 }
 
 export const financeKey = (userId: string) => ['finance', userId] as const
@@ -173,7 +175,10 @@ export async function loadFinance(): Promise<Finance> {
     select('cards', 'id,name,color,closing_day,due_day,bank,sort_order'),
     select('categories', 'id,name,color,icon,sort_order'),
     select('months', 'id,ref'),
-    select('incomes', 'id,month_id,description,amount::text,kind,sort_order'),
+    select(
+      'incomes',
+      'id,month_id,description,amount::text,kind,sort_order,person_id',
+    ),
     select(
       'bills',
       'id,month_id,description,amount::text,paid,paid_on,sort_order,category_id,occurred_at,paid_from',
@@ -250,6 +255,7 @@ export async function loadFinance(): Promise<Finance> {
         description: text(row.description),
         amount: money(row.amount),
         kind: row.kind as IncomeRow['kind'],
+        personId: (row.person_id as string | null) ?? null,
         sortOrder: Number(row.sort_order),
       }))
       .sort((a, b) => a.sortOrder - b.sortOrder),

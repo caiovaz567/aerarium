@@ -79,11 +79,11 @@ describe('TypeScript contra views reais do Supabase', () => {
   it('as 12 faturas coincidem em todas as partes, total atual e congelado', () => {
     const expected = data.invoices.map((invoice) => ({
       id: invoice.id,
+      // Each person's part is in the database only as their sum (peopleShare).
       ...Object.fromEntries(
-        Object.entries(invoiceTotals(invoice, data)).map(([key, value]) => [
-          key,
-          toDecimal(value),
-        ]),
+        Object.entries(invoiceTotals(invoice, data)).flatMap(([key, value]) =>
+          typeof value === 'number' ? [[key, toDecimal(value)]] : [],
+        ),
       ),
     }))
     expect(expected).toHaveLength(12)

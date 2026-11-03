@@ -16,7 +16,11 @@ export interface ChartPoint {
  * Whose part of a card's invoices: all of it, the owner's (without what is the
  * other person's) or the other person's.
  */
-export type CardPart = 'total' | 'mine' | 'other'
+export type CardPart = 'total' | 'mine' | 'other' | `person:${string}`
+
+/** Someone in the owner's list, when the part is theirs. */
+export const partPerson = (part: CardPart) =>
+  part.startsWith('person:') ? part.slice('person:'.length) : null
 
 /** At least +/-6 months; projections extend at most 12 months. */
 export function chartSeries(
@@ -116,9 +120,18 @@ export function partOf(
     readonly total: Cents
     readonly mine: Cents
     readonly otherShare: Cents
+    readonly people: readonly {
+      readonly personId: string
+      readonly amount: Cents
+    }[]
   },
   part: CardPart,
 ): Cents {
+  const person = partPerson(part)
+  if (person)
+    return (
+      totals.people.find((item) => item.personId === person)?.amount ?? cents(0)
+    )
   return part === 'mine'
     ? totals.mine
     : part === 'other'
@@ -146,6 +159,8 @@ function forecastPart(
         .filter((item) => item.month === target)
         .map((item) => item.amount),
     )
+  const person = partPerson(part)
+  if (person) return planned((plan) => plan.personId === person)
   return part === 'other'
     ? planned((plan) => plan.forOther)
     : cents(

@@ -49,6 +49,7 @@ const incomeRecord = (row: IncomeRow) => ({
   amount: toDecimal(row.amount),
   kind: row.kind,
   sort_order: row.sortOrder,
+  person_id: row.personId ?? null,
 })
 const billRecord = (row: BillRow) => ({
   id: row.id,

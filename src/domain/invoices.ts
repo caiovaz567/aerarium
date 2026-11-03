@@ -98,9 +98,8 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
       .filter((item) => item.invoiceId === invoice.id && item.forOther)
       .map((item) => nonNegative(item.amount)),
   ])
-  const peopleShare = sumMoney(
-    peopleParts(invoice, context).map((item) => item.amount),
-  )
+  const people = peopleParts(invoice, context)
+  const peopleShare = sumMoney(people.map((item) => item.amount))
   const mine = cents(Math.max(0, total - marked - peopleShare))
   // Before otherBankUntil (owner only), the bank's total has everything, so
   // the other person's part is all of it that is not the owner's.
@@ -117,6 +116,7 @@ export function invoiceTotals(invoice: Invoice, context: InvoiceContext) {
     total,
     otherShare,
     peopleShare,
+    people,
     mine,
   }
 }

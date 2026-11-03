@@ -7,14 +7,16 @@ export function paidIncome(
   finance: Finance,
   month: Month,
   due: Cents,
+  person?: { readonly id: string; readonly name: string },
 ): IncomeRow {
   return {
     id: crypto.randomUUID(),
     monthId: finance.months.find((item) => item.ref === month)!.id,
     month,
-    description: `${finance.otherPerson} pagou`,
+    description: `${person?.name ?? finance.otherPerson} pagou`,
     amount: due,
     kind: 'from_other',
+    ...(person && { personId: person.id }),
     sortOrder:
       Math.max(
         0,
@@ -26,7 +28,14 @@ export function paidIncome(
 }
 
 /** What the other person sent back this month (to undo "Pai pagou"). */
-export const paidBack = (finance: Finance, month: Month) =>
+export const paidBack = (
+  finance: Finance,
+  month: Month,
+  personId: string | null = null,
+) =>
   finance.incomes.filter(
-    (item) => item.month === month && item.kind === 'from_other',
+    (item) =>
+      item.month === month &&
+      item.kind === 'from_other' &&
+      (item.personId ?? null) === personId,
   )

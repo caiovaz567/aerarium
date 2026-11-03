@@ -368,10 +368,15 @@ export function monthOutflowItems(
   const category = (value: string | null | undefined) => value ?? null
   // Whose outflows these are; bills and subscriptions are the owner's.
   const asOther = data.viewAs === 'other'
+  const asPerson = data.viewPerson ?? null
   const theirs = (row: { forOther?: boolean; personId?: string | null }) =>
-    asOther ? row.forOther === true : isOwners(row)
+    asPerson
+      ? row.personId === asPerson
+      : asOther
+        ? row.forOther === true
+        : isOwners(row)
   for (const bill of data.bills.filter(
-    (item) => item.month === target && !asOther,
+    (item) => item.month === target && !asOther && !asPerson,
   ))
     items.push({
       source: 'bill',
@@ -414,7 +419,8 @@ export function monthOutflowItems(
           (item) =>
             item.cardId === invoice.cardId &&
             chargedIn(item, invoice.month) &&
-            !asOther,
+            !asOther &&
+            !asPerson,
         )
         .map((item) => ({
           source: 'subscription' as const,
@@ -440,7 +446,8 @@ export function monthOutflowItems(
       cents(-itemized),
     ])
     items.push(...parts)
-    if (rest !== 0)
+    // Someone in the list only has what was marked theirs: no rest.
+    if (rest !== 0 && !asPerson)
       items.push({
         source: 'other',
         id: invoice.id,
