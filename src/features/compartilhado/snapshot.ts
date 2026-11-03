@@ -7,14 +7,17 @@ import { cents, sumMoney, toDecimal } from '../../domain/money'
  * What the owner shows the other person (shares.data): only what was marked
  * theirs. Purchases, installments, the part of old bank invoices that is theirs
  * but not itemized, the cards they are on, the categories they use, and what
- * was paid back. Amounts as decimals, like the database.
+ * was paid back. Amounts as decimals, like the database. With `personId`, the
+ * copy of someone in the list: only what is theirs, and no rest of invoice.
  */
-export function shareData(finance: Finance) {
-  const expenses = finance.expenses.filter((item) => item.forOther)
-  const plans = finance.plans.filter((item) => item.forOther)
+export function shareData(finance: Finance, personId: string | null = null) {
+  const theirs = (row: { forOther?: boolean; personId?: string | null }) =>
+    personId ? row.personId === personId : row.forOther === true
+  const expenses = finance.expenses.filter(theirs)
+  const plans = finance.plans.filter(theirs)
   const invoiceOf = new Map(finance.invoices.map((item) => [item.id, item]))
 
-  const rests = finance.invoices.flatMap((invoice) => {
+  const rests = (personId ? [] : finance.invoices).flatMap((invoice) => {
     const marked = sumMoney([
       ...expenses
         .filter((item) => item.invoiceId === invoice.id)
@@ -47,6 +50,8 @@ export function shareData(finance: Finance) {
   )
 
   return {
+    // The database only takes a person's copy when it says it is theirs.
+    ...(personId && { forPerson: personId }),
     cards: finance.cards
       .filter((card) => cardIds.has(card.id))
       .map((card) => ({
@@ -94,7 +99,10 @@ export function shareData(finance: Finance) {
         sortOrder: item.sortOrder,
       })),
     paidBack: finance.incomes
-      .filter((item) => item.kind === 'from_other' && !item.personId)
+      .filter(
+        (item) =>
+          item.kind === 'from_other' && (item.personId ?? null) === personId,
+      )
       .map((item) => ({ month: item.month, amount: toDecimal(item.amount) })),
   }
 }

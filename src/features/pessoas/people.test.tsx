@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp } from '../../test/renderApp'
+import { canonical, shareData } from '../compartilhado/snapshot'
 
 const fake = vi.hoisted(() => ({
   current: null as ReturnType<
@@ -147,7 +148,7 @@ describe('quem usa seus cartões', () => {
     expect(within(list).getByText('Só você vê.')).toBeVisible()
     expect(within(list).getByText('@ana')).toBeVisible()
     expect(within(list).getByText('Esperando aceitar.')).toBeVisible()
-    expect(within(list).getByText('Aceitou. Vê a parte dela.')).toBeVisible()
+    expect(within(list).getByText('Aceitou. Vê só a parte dela.')).toBeVisible()
   })
 
   it('remover pede confirmação', async () => {
@@ -441,5 +442,170 @@ describe('onde fica', () => {
         { name: 'Pessoas' },
       ),
     ).toHaveAttribute('href', '/pessoas')
+  })
+})
+
+describe('quem aceitou vê só o que é dele', () => {
+  const finance = () => {
+    const base = financeFixture()
+    const invoice = base.invoices.find(
+      (item) => item.cardId === 'c1' && item.month === '2026-09',
+    )!
+    const row = (
+      id: string,
+      description: string,
+      extra: { forOther?: boolean; personId?: string },
+    ) => ({
+      id,
+      invoiceId: invoice.id,
+      description,
+      amount: 1000 as never,
+      spentOn: '2026-09-10' as never,
+      categoryId: null,
+      ...extra,
+    })
+    return {
+      ...base,
+      otherPerson: 'Pai',
+      people: [
+        { id: 'vini', name: 'Vini' },
+        { id: 'ana', name: 'Ana' },
+      ],
+      expenses: [
+        row('do-pai', 'Compra do Pai', { forOther: true }),
+        row('do-vini', 'Compra do Vini', { personId: 'vini' }),
+        row('da-ana', 'Compra da Ana', { personId: 'ana' }),
+      ],
+      incomes: [
+        ...base.incomes,
+        {
+          id: 'p1',
+          monthId: base.months[0]!.id,
+          month: invoice.month,
+          description: 'Vini pagou',
+          amount: 500 as never,
+          kind: 'from_other' as const,
+          sortOrder: 90,
+          personId: 'vini',
+        },
+      ],
+    }
+  }
+  const names = (copy: { expenses: { description: string }[] }) =>
+    copy.expenses.map((item) => item.description).sort()
+
+  it('a cópia de cada um não traz nada de outra pessoa', () => {
+    const data = finance()
+    const pai = shareData(data)
+    const vini = shareData(data, 'vini')
+    const ana = shareData(data, 'ana')
+    expect(names(vini)).toEqual(['Compra do Vini'])
+    expect(names(ana)).toEqual(['Compra da Ana'])
+    expect(names(pai)).not.toContain('Compra do Vini')
+    expect(names(pai)).not.toContain('Compra da Ana')
+    // Someone in the list has no rest of invoice, and sees only their payments.
+    expect(vini.rests).toEqual([])
+    expect(vini.forPerson).toBe('vini')
+    expect(pai).not.toHaveProperty('forPerson')
+    expect(vini.paidBack).toEqual([{ month: '2026-09', amount: '5.00' }])
+    expect(ana.paidBack).toEqual([])
+    expect(pai.paidBack).toEqual([])
+    expect(canonical(vini)).not.toContain('Compra do Pai')
+    expect(canonical(vini)).not.toContain('Compra da Ana')
+  })
+
+  it('o app grava cada cópia só na linha daquela pessoa', async () => {
+    fake.current!.tableResults.shares = [
+      {
+        viewer_id: 'conta-pai',
+        person_id: null,
+        viewer_email: 'p@x.test',
+        owner_name: 'Caio',
+        data: {},
+      },
+      {
+        viewer_id: 'conta-vini',
+        person_id: 'vini',
+        viewer_email: 'v@x.test',
+        owner_name: 'Caio',
+        data: {},
+      },
+    ]
+    renderApp('/meses/2026-09', undefined, finance())
+    await waitFor(
+      () =>
+        expect(
+          fake.current!.calls.filter((item) => item.table === 'shares'),
+        ).toHaveLength(2),
+      { timeout: 3000 },
+    )
+    const writes = fake.current!.calls.filter((item) => item.table === 'shares')
+    const of = (viewer: string) =>
+      writes.find((item) =>
+        item.filters.some(
+          ([key, value]) => key === 'viewer_id' && value === viewer,
+        ),
+      )?.payload as { data: { expenses: { description: string }[] } }
+    expect(names(of('conta-vini').data)).toEqual(['Compra do Vini'])
+    expect(names(of('conta-pai').data)).not.toContain('Compra do Vini')
+    expect(names(of('conta-pai').data)).toContain('Compra do Pai')
+    // No write without saying whose row it is.
+    for (const item of writes)
+      expect(item.filters.map(([key]) => key)).toEqual(
+        expect.arrayContaining(['owner_id', 'viewer_id']),
+      )
+  })
+
+  it('o ajuste do Pai olha só a linha dele', async () => {
+    fake.current!.tableResults.shares = [
+      {
+        viewer_id: 'conta-vini',
+        person_id: 'vini',
+        viewer_email: 'vini@x.test',
+        owner_name: 'Caio',
+        data: {},
+      },
+    ]
+    renderApp('/pessoas', undefined, finance())
+    await settle()
+    expect(screen.queryByText(/vini@x\.test/)).toBeNull()
+  })
+
+  it('adicionado por dois donos: uma entrada pra cada', async () => {
+    const copy = {
+      cards: [],
+      expenses: [],
+      plans: [],
+      rests: [],
+      categories: [],
+      paidBack: [],
+    }
+    fake.current!.tableResults.shares = [
+      {
+        owner_id: 'o1',
+        owner_name: '@caio',
+        pix_key: null,
+        pix_bank: null,
+        data: copy,
+      },
+      {
+        owner_id: 'o2',
+        owner_name: '@ana',
+        pix_key: null,
+        pix_bank: null,
+        data: copy,
+      },
+    ]
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [],
+    })
+    expect(
+      await screen.findByRole('link', { name: /Cartões do @caio/ }),
+    ).toHaveAttribute('href', '/compartilhado?de=o1')
+    expect(
+      screen.getByRole('link', { name: /Cartões do @ana/ }),
+    ).toHaveAttribute('href', '/compartilhado?de=o2')
   })
 })

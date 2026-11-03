@@ -122,7 +122,7 @@ export function ShareSettings({ other }: { readonly other: string }) {
   const toast = useToast()
   const shares = useMyShares()
   const [editing, setEditing] = useState(false)
-  const current = shares.data?.[0] ?? null
+  const current = shares.data?.find((row) => !row.personId) ?? null
   const refresh = () => {
     void client.invalidateQueries({ queryKey: mySharesKey(userId) })
   }

@@ -205,7 +205,7 @@ export function PeopleSection({ finance }: { readonly finance?: Finance }) {
                   {!person.username
                     ? 'Só você vê.'
                     : person.accepted
-                      ? 'Aceitou. Vê a parte dela.'
+                      ? 'Aceitou. Vê só a parte dela.'
                       : 'Esperando aceitar.'}
                 </small>
                 <span className="share-actions">

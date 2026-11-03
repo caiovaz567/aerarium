@@ -93,7 +93,8 @@ function SharedMonths({
       </EmptyState>
     )
   const month = sharedMonth(view, finance, selected)
-  const pathFor = (ref: Month) => `${base}?mes=${ref}`
+  const pathFor = (ref: Month) =>
+    `${base}${base.includes('?') ? '&' : '?'}mes=${ref}`
   return (
     <>
       <HeaderSlot>
@@ -182,10 +183,13 @@ function SharedMonths({
  * read only, kept fresh.
  */
 export function SharedPage() {
+  const [params] = useSearchParams()
   const query = useSharedWithMe()
   if (query.isPending) return <Loading />
   if (!query.data) return <LoadError onRetry={() => query.refetch()} />
-  const view = query.data[0]
+  const owner = params.get('de')
+  const view =
+    query.data.find((item) => item.ownerId === owner) ?? query.data[0]
   if (!view)
     return (
       <EmptyState title="Nada compartilhado com você">
@@ -195,7 +199,10 @@ export function SharedPage() {
   return (
     <>
       <h2 className="page-title">Cartões do {view.ownerName}</h2>
-      <SharedMonths view={view} base="/compartilhado" />
+      <SharedMonths
+        view={view}
+        base={owner ? `/compartilhado?de=${owner}` : '/compartilhado'}
+      />
     </>
   )
 }

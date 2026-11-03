@@ -10,6 +10,7 @@ import { supabase } from './supabase'
  * public.my_shared_preview() (the owner, to see it as they do).
  */
 export interface SharedView {
+  readonly ownerId: string
   readonly ownerName: string
   /** One Pix key to pay it all back, and the bank it is at. */
   readonly pixKey: string | null
@@ -64,6 +65,7 @@ const orNull = (value: unknown) => (value == null ? null : String(value))
 export function parseShared(raw: unknown): SharedView {
   const view = raw as Raw
   return {
+    ownerId: text(view.ownerId),
     ownerName: text(view.ownerName),
     pixKey: orNull(view.pixKey),
     pixBank: orNull(view.pixBank),
@@ -118,12 +120,13 @@ export function parseShared(raw: unknown): SharedView {
 export async function loadSharedWithMe(userId: string): Promise<SharedView[]> {
   const { data, error } = await supabase()
     .from('shares')
-    .select('owner_name,pix_key,pix_bank,data')
+    .select('owner_id,owner_name,pix_key,pix_bank,data')
     .eq('viewer_id', userId)
   if (error) throw error
   return list(data).map((row) =>
     parseShared({
       ...((row.data as Raw | null) ?? {}),
+      ownerId: row.owner_id,
       ownerName: row.owner_name,
       pixKey: row.pix_key,
       pixBank: row.pix_bank,
@@ -132,6 +135,9 @@ export async function loadSharedWithMe(userId: string): Promise<SharedView[]> {
 }
 
 export interface ShareRow {
+  readonly viewerId: string
+  /** Someone in the list; null for the other person. */
+  readonly personId: string | null
   readonly viewerEmail: string
   readonly ownerName: string
   readonly pixKey: string | null
@@ -144,10 +150,12 @@ export interface ShareRow {
 export async function loadMyShares(userId: string): Promise<ShareRow[]> {
   const { data, error } = await supabase()
     .from('shares')
-    .select('viewer_email,owner_name,pix_key,pix_bank,data')
+    .select('viewer_id,person_id,viewer_email,owner_name,pix_key,pix_bank,data')
     .eq('owner_id', userId)
   if (error) throw error
   return list(data).map((row) => ({
+    viewerId: text(row.viewer_id),
+    personId: orNull(row.person_id),
     viewerEmail: text(row.viewer_email),
     ownerName: text(row.owner_name),
     pixKey: orNull(row.pix_key),
@@ -174,11 +182,16 @@ export async function shareWith(share: {
 }
 
 /** The owner writes what the other person sees (only their part). */
-export async function saveShareData(userId: string, data: unknown) {
+export async function saveShareData(
+  userId: string,
+  viewerId: string,
+  data: unknown,
+) {
   const { error } = await supabase()
     .from('shares')
     .update({ data, updated_at: new Date().toISOString() })
     .eq('owner_id', userId)
+    .eq('viewer_id', viewerId)
   if (error) throw error
 }
 

@@ -63,7 +63,8 @@ Deno.serve(async (request) => {
         viewer_email = excluded.viewer_email,
         owner_name = excluded.owner_name,
         pix_key = excluded.pix_key,
-        pix_bank = excluded.pix_bank`
+        pix_bank = excluded.pix_bank
+      where public.shares.person_id is null`
     return reply(200, { found: true })
   } catch (error) {
     console.error('share', (error as Error).message)
