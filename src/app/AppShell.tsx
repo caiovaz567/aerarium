@@ -6,12 +6,12 @@ import { useShareSync } from '../features/compartilhado/useShareSync'
 import { pendingReview } from '../features/banco/review'
 import { ReviewModal } from '../features/banco/ReviewModal'
 import type { Finance } from '../data/finance'
-import { useInvitations } from '../data/people'
 import { useFinance, useFinanceOp } from '../data/useFinance'
 import { EditorProvider } from '../features/editar/EditorProvider'
 import { useMonthStart } from '../features/meses/useMonthStart'
 import { ExcelButton } from '../features/exportar/ExcelButton'
 import { LaunchModal } from '../features/lancar/LaunchModal'
+import { InvitationBanner } from '../features/pessoas/InvitationBanner'
 import { useToast } from '../ui/toastContext'
 import { parseMonth } from './paths'
 import { Brand } from '../ui/Brand'
@@ -132,7 +132,6 @@ export function AppShell() {
   useMonthStart(finance.data, toast)
   const review = useReview(finance.data)
   const inMonths = useMatch('/meses/:ym')
-  const invitation = useInvitations().data?.find((item) => !item.accepted)
   const openLaunch = () => {
     // Nothing to put things in yet.
     if (finance.data && !finance.data.months.length)
@@ -195,16 +194,7 @@ export function AppShell() {
                   <span>Conferir</span>
                 </button>
               )}
-              {invitation && inMonths && (
-                <Link className="review-banner" to="/config?aba=pessoas">
-                  <b>
-                    {invitation.fromUsername
-                      ? `@${invitation.fromUsername} quer te adicionar`
-                      : 'Alguém quer te adicionar'}
-                  </b>
-                  <span>Ver</span>
-                </Link>
-              )}
+              {inMonths && <InvitationBanner />}
               <Outlet />
             </main>
           </div>

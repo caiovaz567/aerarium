@@ -12,12 +12,12 @@ export interface Person {
 
 export interface Invitation {
   readonly personId: string
-  readonly fromUsername: string | null
+  /** "@caio", their Google name, or a masked e-mail. */
+  readonly fromName: string
   readonly accepted: boolean
 }
 
-export type InviteResult =
-  'ok' | 'no-person' | 'no-username' | 'not-found' | 'self' | 'already'
+export type AddResult = 'ok' | 'not-found' | 'self' | 'already'
 
 export async function loadUsername(): Promise<string | null> {
   const { data, error } = await supabase().from('usernames').select('username')
@@ -55,35 +55,25 @@ export async function removePerson(id: string) {
   if (error) throw error
 }
 
-export async function invitePerson(
-  id: string,
+/** Adds and invites in one step; nothing is saved unless it answers ok. */
+export async function addPersonByUsername(
   username: string,
-): Promise<InviteResult> {
-  const { data, error } = await supabase().rpc('invite_person', {
-    p_person: id,
+): Promise<AddResult> {
+  const { data, error } = await supabase().rpc('add_person', {
     p_username: username,
   })
   if (error) throw error
-  return data as InviteResult
-}
-
-export async function unlinkPerson(id: string) {
-  const { error } = await supabase().rpc('unlink_person', { p_person: id })
-  if (error) throw error
+  return data as AddResult
 }
 
 export async function loadInvitations(): Promise<Invitation[]> {
   const { data, error } = await supabase().rpc('my_invitations')
   if (error) throw error
   return (
-    data as {
-      person_id: string
-      from_username: string | null
-      accepted: boolean
-    }[]
+    data as { person_id: string; from_name: string; accepted: boolean }[]
   ).map((row) => ({
     personId: row.person_id,
-    fromUsername: row.from_username,
+    fromName: row.from_name,
     accepted: row.accepted,
   }))
 }

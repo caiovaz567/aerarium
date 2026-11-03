@@ -20,13 +20,25 @@ const open = async (
   await settle()
 }
 const dialog = (name: string) => screen.getByRole('dialog', { name })
+const addForm = () => {
+  fireEvent.click(screen.getByRole('button', { name: 'Adicionar pessoa' }))
+  return dialog('Adicionar pessoa')
+}
+const type = (form: HTMLElement, value: string) => {
+  fireEvent.change(within(form).getByLabelText('Nome ou @usuário'), {
+    target: { value },
+  })
+  fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }))
+}
+const rpcArgs = (name: string) =>
+  fake.current!.rpcCalls.find((item) => item.name === name)?.args
 
 beforeEach(() => {
   fake.current = fakeSupabase()
 })
 
 describe('seu usuário', () => {
-  it('escolhe, limpa o que foi digitado e confere o formato', async () => {
+  it('escolhe, aceita ponto e limpa o que foi digitado', async () => {
     await open()
     expect(screen.getByText('Nenhum ainda')).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Escolher' }))
@@ -38,16 +50,16 @@ describe('seu usuário', () => {
       expect(within(form).getByRole('alert')).toHaveTextContent(/3 a 20/),
     )
     expect(fake.current!.calls).toEqual([])
-    fireEvent.change(field, { target: { value: ' @Caio_1 ' } })
+    fireEvent.change(field, { target: { value: ' @Caio.Vaz ' } })
     fireEvent.click(within(form).getByRole('button', { name: 'Salvar' }))
     await waitFor(() =>
       expect(fake.current!.calls[0]).toMatchObject({
         table: 'usernames',
         op: 'upsert',
-        payload: { user_id: 'u1', username: 'caio_1' },
+        payload: { user_id: 'u1', username: 'caio.vaz' },
       }),
     )
-    expect(await screen.findByText('Agora você é @caio_1')).toBeVisible()
+    expect(await screen.findByText('Agora você é @caio.vaz')).toBeVisible()
   })
 
   it('mostra o que já tem', async () => {
@@ -58,37 +70,15 @@ describe('seu usuário', () => {
   })
 })
 
-describe('quem usa seus cartões', () => {
-  it('o Pai fica com o resto; só o nome, convidado e aceito', async () => {
-    fake.current!.rpcResults.my_people = [
-      { id: 'p1', name: 'Prima', username: null, accepted: false },
-      { id: 'p2', name: 'Ana', username: 'ana', accepted: false },
-      { id: 'p3', name: 'Bia', username: 'bia', accepted: true },
-    ]
-    await open('/config?aba=pessoas', 'Pai')
-    const list = screen.getByRole('region', { name: 'Quem usa seus cartões' })
-    expect(
-      within(list).getByText('Fica com o resto das faturas.'),
-    ).toBeVisible()
-    expect(
-      within(list).getByText('Só o nome. Essa pessoa não vê nada.'),
-    ).toBeVisible()
-    expect(within(list).getByText('@ana, esperando aceitar')).toBeVisible()
-    expect(within(list).getByText('@bia')).toBeVisible()
-  })
-
-  it('adiciona só com o nome, pra quem não usa o Aerarium', async () => {
+describe('adicionar pessoa, com um campo só', () => {
+  it('só o nome: entra sem convite, mesmo sem ter usuário', async () => {
     await open()
-    fireEvent.click(screen.getByRole('button', { name: 'Adicionar pessoa' }))
-    const form = dialog('Adicionar pessoa')
-    fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }))
+    const form = addForm()
+    type(form, '   ')
     await waitFor(() =>
-      expect(within(form).getByRole('alert')).toHaveTextContent(/nome/),
+      expect(within(form).getByRole('alert')).toHaveTextContent(/Coloca/),
     )
-    fireEvent.change(within(form).getByLabelText('Nome'), {
-      target: { value: ' Prima ' },
-    })
-    fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }))
+    type(form, ' Prima ')
     await waitFor(() =>
       expect(fake.current!.calls[0]).toMatchObject({
         table: 'people',
@@ -96,53 +86,69 @@ describe('quem usa seus cartões', () => {
         payload: { user_id: 'u1', name: 'Prima' },
       }),
     )
-    expect(fake.current!.rpcCalls.map((item) => item.name)).not.toContain(
-      'invite_person',
-    )
+    expect(rpcArgs('add_person')).toBeUndefined()
+    expect(await screen.findByText('Prima entrou na sua lista')).toBeVisible()
   })
 
-  it('usuário que não existe: o nome fica salvo e avisa', async () => {
-    fake.current!.tableResults.usernames = [{ username: 'caio' }]
-    fake.current!.rpcResults.invite_person = 'not-found'
+  it('com @: convida, mesmo sem ter usuário', async () => {
+    fake.current!.rpcResults.add_person = 'ok'
     await open()
-    fireEvent.click(screen.getByRole('button', { name: 'Adicionar pessoa' }))
-    const form = dialog('Adicionar pessoa')
-    fireEvent.change(within(form).getByLabelText('Nome'), {
-      target: { value: 'João' },
-    })
-    fireEvent.change(
-      within(form).getByLabelText('Usuário dela no Aerarium (opcional)'),
-      { target: { value: '@joao' } },
-    )
-    fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }))
-    expect(
-      await screen.findByText(/João entrou só com o nome\. Não achei/),
-    ).toBeVisible()
-    expect(fake.current!.calls[0]).toMatchObject({ table: 'people' })
-    expect(
-      fake.current!.rpcCalls.find((item) => item.name === 'invite_person')
-        ?.args,
-    ).toMatchObject({ p_username: 'joao' })
-  })
-
-  it('convidar depois mostra o problema na janela; remover pede confirmação', async () => {
-    fake.current!.rpcResults.my_people = [
-      { id: 'p1', name: 'João', username: null, accepted: false },
-    ]
-    fake.current!.rpcResults.invite_person = 'self'
-    await open()
-    fireEvent.click(screen.getByRole('button', { name: 'Convidar' }))
-    const form = dialog('Convidar João')
-    fireEvent.change(within(form).getByLabelText('Usuário no Aerarium'), {
-      target: { value: 'caio' },
-    })
-    fireEvent.click(within(form).getByRole('button', { name: 'Convidar' }))
+    type(addForm(), '@Joao.Silva')
     await waitFor(() =>
-      expect(within(form).getByRole('alert')).toHaveTextContent(
-        'Esse usuário é o seu.',
-      ),
+      expect(rpcArgs('add_person')).toEqual({ p_username: 'joao.silva' }),
     )
-    fireEvent.click(within(form).getByRole('button', { name: 'Cancelar' }))
+    expect(fake.current!.calls).toEqual([])
+    expect(
+      await screen.findByText('Convite enviado pra @joao.silva'),
+    ).toBeVisible()
+  })
+
+  it('usuário que não existe: avisa na janela e não salva nada', async () => {
+    fake.current!.rpcResults.add_person = 'not-found'
+    await open()
+    const form = addForm()
+    type(form, '@joao')
+    await waitFor(() =>
+      expect(within(form).getByRole('alert')).toHaveTextContent(/Não achei/),
+    )
+    expect(fake.current!.calls).toEqual([])
+  })
+
+  it('@ com formato errado nem pergunta pro banco', async () => {
+    await open()
+    const form = addForm()
+    type(form, '@a')
+    await waitFor(() =>
+      expect(within(form).getByRole('alert')).toHaveTextContent(/3 a 20/),
+    )
+    expect(rpcArgs('add_person')).toBeUndefined()
+  })
+})
+
+describe('quem usa seus cartões', () => {
+  it('o Pai fica com o resto; só o nome, convidado e aceito', async () => {
+    fake.current!.rpcResults.my_people = [
+      { id: 'p1', name: 'Prima', username: null, accepted: false },
+      { id: 'p2', name: 'ana', username: 'ana', accepted: false },
+      { id: 'p3', name: 'bia', username: 'bia', accepted: true },
+    ]
+    await open('/config?aba=pessoas', 'Pai')
+    const list = screen.getByRole('region', { name: 'Quem usa seus cartões' })
+    expect(
+      within(list).getByText('Fica com o resto das faturas.'),
+    ).toBeVisible()
+    expect(within(list).getByText('Prima')).toBeVisible()
+    expect(within(list).getByText('Só você vê.')).toBeVisible()
+    expect(within(list).getByText('@ana')).toBeVisible()
+    expect(within(list).getByText('Esperando aceitar.')).toBeVisible()
+    expect(within(list).getByText('Aceitou. Vê a parte dela.')).toBeVisible()
+  })
+
+  it('remover pede confirmação', async () => {
+    fake.current!.rpcResults.my_people = [
+      { id: 'p1', name: 'Prima', username: null, accepted: false },
+    ]
+    await open()
     fireEvent.click(screen.getByRole('button', { name: 'Remover' }))
     expect(fake.current!.calls).toEqual([])
     fireEvent.click(
@@ -159,46 +165,67 @@ describe('quem usa seus cartões', () => {
 })
 
 describe('convites que você recebeu', () => {
-  const invited = { person_id: 'p9', from_username: 'caio', accepted: false }
+  const invited = { person_id: 'p9', from_name: '@caio', accepted: false }
 
-  it('aparece em Meses e leva pra Pessoas', async () => {
+  it('em Meses: aceita com um toque, sem ir pros Ajustes', async () => {
     fake.current!.rpcResults.my_invitations = [invited]
     await open('/meses/2026-09')
-    expect(
-      await screen.findByRole('link', { name: /@caio quer te adicionar/ }),
-    ).toHaveAttribute('href', '/config?aba=pessoas')
-  })
-
-  it('sem convite, Meses fica igual', async () => {
-    await open('/meses/2026-09')
-    expect(screen.queryByText(/quer te adicionar/)).not.toBeInTheDocument()
-  })
-
-  it('aceitar grava a resposta', async () => {
-    fake.current!.rpcResults.my_invitations = [invited]
-    await open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Aceitar' }))
+    const banner = await screen.findByRole('region', { name: 'Convite' })
+    expect(banner).toHaveTextContent('@caio quer te adicionar.')
+    fireEvent.click(within(banner).getByRole('button', { name: 'Aceitar' }))
     await waitFor(() =>
-      expect(
-        fake.current!.rpcCalls.find((item) => item.name === 'answer_invitation')
-          ?.args,
-      ).toEqual({ p_person: 'p9', p_accept: true }),
+      expect(rpcArgs('answer_invitation')).toEqual({
+        p_person: 'p9',
+        p_accept: true,
+      }),
     )
   })
 
-  it('já aceito: dá pra sair, com confirmação', async () => {
+  it('em Meses: recusar pede confirmação', async () => {
+    fake.current!.rpcResults.my_invitations = [invited]
+    await open('/meses/2026-09')
+    const banner = await screen.findByRole('region', { name: 'Convite' })
+    fireEvent.click(within(banner).getByRole('button', { name: 'Recusar' }))
+    expect(rpcArgs('answer_invitation')).toBeUndefined()
+    fireEvent.click(
+      within(banner).getByRole('button', {
+        name: 'Toca de novo pra confirmar',
+      }),
+    )
+    await waitFor(() =>
+      expect(rpcArgs('answer_invitation')).toEqual({
+        p_person: 'p9',
+        p_accept: false,
+      }),
+    )
+  })
+
+  it('sem convite, ou já aceito, Meses fica igual', async () => {
+    await open('/meses/2026-09')
+    expect(screen.queryByRole('region', { name: 'Convite' })).toBeNull()
+    fake.current!.rpcResults.my_invitations = [{ ...invited, accepted: true }]
+    await open('/meses/2026-09')
+    expect(screen.queryByRole('region', { name: 'Convite' })).toBeNull()
+  })
+
+  it('nos Ajustes: quem te adicionou, e dá pra sair', async () => {
     fake.current!.rpcResults.my_invitations = [{ ...invited, accepted: true }]
     await open()
-    expect(screen.queryByRole('button', { name: 'Aceitar' })).toBeNull()
-    fireEvent.click(await screen.findByRole('button', { name: 'Sair' }))
+    const list = await screen.findByRole('region', {
+      name: 'Quem te adicionou',
+    })
+    expect(within(list).queryByRole('button', { name: 'Aceitar' })).toBeNull()
+    fireEvent.click(within(list).getByRole('button', { name: 'Sair' }))
     fireEvent.click(
-      screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
+      within(list).getByRole('button', {
+        name: 'Toca de novo pra confirmar',
+      }),
     )
     await waitFor(() =>
-      expect(
-        fake.current!.rpcCalls.find((item) => item.name === 'answer_invitation')
-          ?.args,
-      ).toEqual({ p_person: 'p9', p_accept: false }),
+      expect(rpcArgs('answer_invitation')).toEqual({
+        p_person: 'p9',
+        p_accept: false,
+      }),
     )
   })
 })

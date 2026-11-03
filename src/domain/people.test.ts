@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { cleanUsername, personNameProblem, usernameProblem } from './people'
+import {
+  cleanUsername,
+  personNameProblem,
+  readPersonInput,
+  usernameProblem,
+} from './people'
 
 describe('usuário', () => {
   it('guarda sem @, sem espaços e em minúsculas', () => {
@@ -19,6 +24,21 @@ describe('usuário', () => {
     expect(usernameProblem('a'.repeat(21))).toMatch(/3 a 20/)
     expect(usernameProblem('joão')).toMatch(/sem acento/)
     expect(usernameProblem('caio silva')).toMatch(/sem acento/)
+  })
+})
+
+describe('o campo de adicionar pessoa', () => {
+  it('sem @ é nome; com @ é usuário', () => {
+    expect(readPersonInput(' Prima ')).toEqual({ kind: 'name', name: 'Prima' })
+    expect(readPersonInput(' @Joao.Silva ')).toEqual({
+      kind: 'username',
+      username: 'joao.silva',
+    })
+  })
+
+  it('diz o que está errado em cada caso', () => {
+    expect(readPersonInput('  ')).toMatchObject({ kind: 'problem' })
+    expect(readPersonInput('@a')).toMatchObject({ kind: 'problem' })
   })
 })
 

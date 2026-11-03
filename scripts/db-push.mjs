@@ -76,7 +76,13 @@ if (target === 'dev') {
     }
   } finally {
     console.log('\nVoltando pro desenvolvimento...')
-    run(['link', '--project-ref', DEV])
+    try {
+      run(['link', '--project-ref', DEV])
+    } catch {
+      console.log(
+        '\nO desenvolvimento está pausado, então o terminal continua ligado na PRODUÇÃO. O que foi aplicado acima valeu; só não rode comandos supabase à mão.',
+      )
+    }
   }
 } else {
   console.log('Use: npm run db:dev  ou  npm run db:prod')

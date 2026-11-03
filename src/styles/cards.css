@@ -493,6 +493,24 @@ a.row-main {
   color: var(--warn);
 }
 
+/* An invitation, answered right there. */
+.invite-banner {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: var(--accent-soft);
+}
+.invite-banner p {
+  margin: 0;
+}
+.invite-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 10px;
+}
+
 /* "Chegou do banco". */
 .review-banner {
   display: flex;

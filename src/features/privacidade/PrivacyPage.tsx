@@ -29,7 +29,9 @@ export function PrivacyPage() {
           </li>
           <li>
             Seu usuário, se você escolher um, e as pessoas da sua lista. Quem te
-            convida só te encontra digitando o seu usuário exato.
+            convida só te encontra digitando o seu usuário exato. Quem você
+            convida vê seu usuário ou, sem ele, seu nome do Google ou parte do
+            seu e-mail.
           </li>
         </ul>
 

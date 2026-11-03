@@ -11,6 +11,26 @@ export function usernameProblem(username: string): string | null {
   return null
 }
 
+export type PersonInput =
+  | { readonly kind: 'name'; readonly name: string }
+  | { readonly kind: 'username'; readonly username: string }
+  | { readonly kind: 'problem'; readonly problem: string }
+
+/** The "Adicionar pessoa" field: with @ it is a username, else a name. */
+export function readPersonInput(value: string): PersonInput {
+  if (value.trim().startsWith('@')) {
+    const username = cleanUsername(value)
+    const problem = usernameProblem(username)
+    return problem
+      ? { kind: 'problem', problem }
+      : { kind: 'username', username }
+  }
+  const problem = personNameProblem(value)
+  return problem
+    ? { kind: 'problem', problem }
+    : { kind: 'name', name: value.trim() }
+}
+
 /** What is wrong with a person's name, or null. */
 export function personNameProblem(name: string): string | null {
   const clean = name.trim()
