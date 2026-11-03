@@ -349,10 +349,18 @@ body.has-stuck .app-header.scrolled {
     max-width: 420px;
     margin: 0 0 0 auto;
   }
+  .header-slot .profile-switch {
+    align-items: center;
+  }
   .header-slot .profile-switch button {
+    min-width: 64px;
     min-height: 32px;
     padding-block: 0;
     font-size: 14px;
+  }
+  .header-slot .profile-add {
+    width: 32px;
+    min-height: 32px;
   }
   .app-header:has(.header-slot:not(:empty)) .app-header-inner {
     padding-block: 10px 12px;
