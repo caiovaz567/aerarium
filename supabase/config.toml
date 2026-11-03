@@ -431,3 +431,7 @@ verify_jwt = false
 # share checks the session token itself (auth.getUser).
 [functions.share]
 verify_jwt = false
+
+# people checks the session token itself (auth.getUser).
+[functions.people]
+verify_jwt = false

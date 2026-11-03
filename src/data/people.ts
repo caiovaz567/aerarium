@@ -35,10 +35,15 @@ export async function saveUsername(userId: string, username: string) {
   return true
 }
 
-export async function loadPeople(): Promise<Person[]> {
-  const { data, error } = await supabase().rpc('my_people')
+async function people<T>(body: object): Promise<T> {
+  const { data, error } = await supabase().functions.invoke('people', { body })
   if (error) throw error
-  return data as Person[]
+  return data as T
+}
+
+export async function loadPeople(): Promise<Person[]> {
+  const data = await people<{ people: Person[] }>({ action: 'list' })
+  return data.people
 }
 
 export async function addPerson(userId: string, name: string) {
@@ -59,19 +64,19 @@ export async function removePerson(id: string) {
 export async function addPersonByUsername(
   username: string,
 ): Promise<AddResult> {
-  const { data, error } = await supabase().rpc('add_person', {
-    p_username: username,
-  })
-  if (error) throw error
-  return data as AddResult
+  const data = await people<{ result: AddResult }>({ action: 'add', username })
+  return data.result
 }
 
 export async function loadInvitations(): Promise<Invitation[]> {
-  const { data, error } = await supabase().rpc('my_invitations')
-  if (error) throw error
-  return (
-    data as { person_id: string; from_name: string; accepted: boolean }[]
-  ).map((row) => ({
+  const data = await people<{
+    invitations: {
+      person_id: string
+      from_name: string
+      accepted: boolean
+    }[]
+  }>({ action: 'invitations' })
+  return data.invitations.map((row) => ({
     personId: row.person_id,
     fromName: row.from_name,
     accepted: row.accepted,
@@ -80,11 +85,7 @@ export async function loadInvitations(): Promise<Invitation[]> {
 
 /** True accepts; false declines, or leaves one already accepted. */
 export async function answerInvitation(id: string, accept: boolean) {
-  const { error } = await supabase().rpc('answer_invitation', {
-    p_person: id,
-    p_accept: accept,
-  })
-  if (error) throw error
+  await people({ action: 'answer', person: id, accept })
 }
 
 export const usernameKey = (userId: string) => ['username', userId] as const

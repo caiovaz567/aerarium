@@ -30,11 +30,18 @@ const type = (form: HTMLElement, value: string) => {
   })
   fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }))
 }
-const rpcArgs = (name: string) =>
-  fake.current!.rpcCalls.find((item) => item.name === name)?.args
+// What the function "people" answers, by action.
+let answers: Record<string, unknown>
+const asked = (action: string) =>
+  fake.current!.functionCalls.find(
+    (item) => (item.body as { action: string }).action === action,
+  )?.body
 
 beforeEach(() => {
   fake.current = fakeSupabase()
+  answers = { list: { people: [] }, invitations: { invitations: [] } }
+  fake.current.functionResults.people = (body: { action: string }) =>
+    answers[body.action]
 })
 
 describe('seu usuário', () => {
@@ -86,16 +93,16 @@ describe('adicionar pessoa, com um campo só', () => {
         payload: { user_id: 'u1', name: 'Prima' },
       }),
     )
-    expect(rpcArgs('add_person')).toBeUndefined()
+    expect(asked('add')).toBeUndefined()
     expect(await screen.findByText('Prima entrou na sua lista')).toBeVisible()
   })
 
   it('com @: convida, mesmo sem ter usuário', async () => {
-    fake.current!.rpcResults.add_person = 'ok'
+    answers.add = { result: 'ok' }
     await open()
     type(addForm(), '@Joao.Silva')
     await waitFor(() =>
-      expect(rpcArgs('add_person')).toEqual({ p_username: 'joao.silva' }),
+      expect(asked('add')).toEqual({ action: 'add', username: 'joao.silva' }),
     )
     expect(fake.current!.calls).toEqual([])
     expect(
@@ -104,7 +111,7 @@ describe('adicionar pessoa, com um campo só', () => {
   })
 
   it('usuário que não existe: avisa na janela e não salva nada', async () => {
-    fake.current!.rpcResults.add_person = 'not-found'
+    answers.add = { result: 'not-found' }
     await open()
     const form = addForm()
     type(form, '@joao')
@@ -121,17 +128,19 @@ describe('adicionar pessoa, com um campo só', () => {
     await waitFor(() =>
       expect(within(form).getByRole('alert')).toHaveTextContent(/3 a 20/),
     )
-    expect(rpcArgs('add_person')).toBeUndefined()
+    expect(asked('add')).toBeUndefined()
   })
 })
 
 describe('quem usa seus cartões', () => {
   it('o Pai fica com o resto; só o nome, convidado e aceito', async () => {
-    fake.current!.rpcResults.my_people = [
-      { id: 'p1', name: 'Prima', username: null, accepted: false },
-      { id: 'p2', name: 'ana', username: 'ana', accepted: false },
-      { id: 'p3', name: 'bia', username: 'bia', accepted: true },
-    ]
+    answers.list = {
+      people: [
+        { id: 'p1', name: 'Prima', username: null, accepted: false },
+        { id: 'p2', name: 'ana', username: 'ana', accepted: false },
+        { id: 'p3', name: 'bia', username: 'bia', accepted: true },
+      ],
+    }
     await open('/config?aba=pessoas', 'Pai')
     const list = screen.getByRole('region', { name: 'Quem usa seus cartões' })
     expect(
@@ -145,9 +154,9 @@ describe('quem usa seus cartões', () => {
   })
 
   it('remover pede confirmação', async () => {
-    fake.current!.rpcResults.my_people = [
-      { id: 'p1', name: 'Prima', username: null, accepted: false },
-    ]
+    answers.list = {
+      people: [{ id: 'p1', name: 'Prima', username: null, accepted: false }],
+    }
     await open()
     fireEvent.click(screen.getByRole('button', { name: 'Remover' }))
     expect(fake.current!.calls).toEqual([])
@@ -168,34 +177,36 @@ describe('convites que você recebeu', () => {
   const invited = { person_id: 'p9', from_name: '@caio', accepted: false }
 
   it('em Meses: aceita com um toque, sem ir pros Ajustes', async () => {
-    fake.current!.rpcResults.my_invitations = [invited]
+    answers.invitations = { invitations: [invited] }
     await open('/meses/2026-09')
     const banner = await screen.findByRole('region', { name: 'Convite' })
     expect(banner).toHaveTextContent('@caio quer te adicionar.')
     fireEvent.click(within(banner).getByRole('button', { name: 'Aceitar' }))
     await waitFor(() =>
-      expect(rpcArgs('answer_invitation')).toEqual({
-        p_person: 'p9',
-        p_accept: true,
+      expect(asked('answer')).toEqual({
+        action: 'answer',
+        person: 'p9',
+        accept: true,
       }),
     )
   })
 
   it('em Meses: recusar pede confirmação', async () => {
-    fake.current!.rpcResults.my_invitations = [invited]
+    answers.invitations = { invitations: [invited] }
     await open('/meses/2026-09')
     const banner = await screen.findByRole('region', { name: 'Convite' })
     fireEvent.click(within(banner).getByRole('button', { name: 'Recusar' }))
-    expect(rpcArgs('answer_invitation')).toBeUndefined()
+    expect(asked('answer')).toBeUndefined()
     fireEvent.click(
       within(banner).getByRole('button', {
         name: 'Toca de novo pra confirmar',
       }),
     )
     await waitFor(() =>
-      expect(rpcArgs('answer_invitation')).toEqual({
-        p_person: 'p9',
-        p_accept: false,
+      expect(asked('answer')).toEqual({
+        action: 'answer',
+        person: 'p9',
+        accept: false,
       }),
     )
   })
@@ -203,13 +214,13 @@ describe('convites que você recebeu', () => {
   it('sem convite, ou já aceito, Meses fica igual', async () => {
     await open('/meses/2026-09')
     expect(screen.queryByRole('region', { name: 'Convite' })).toBeNull()
-    fake.current!.rpcResults.my_invitations = [{ ...invited, accepted: true }]
+    answers.invitations = { invitations: [{ ...invited, accepted: true }] }
     await open('/meses/2026-09')
     expect(screen.queryByRole('region', { name: 'Convite' })).toBeNull()
   })
 
   it('nos Ajustes: quem te adicionou, e dá pra sair', async () => {
-    fake.current!.rpcResults.my_invitations = [{ ...invited, accepted: true }]
+    answers.invitations = { invitations: [{ ...invited, accepted: true }] }
     await open()
     const list = await screen.findByRole('region', {
       name: 'Quem te adicionou',
@@ -222,9 +233,10 @@ describe('convites que você recebeu', () => {
       }),
     )
     await waitFor(() =>
-      expect(rpcArgs('answer_invitation')).toEqual({
-        p_person: 'p9',
-        p_accept: false,
+      expect(asked('answer')).toEqual({
+        action: 'answer',
+        person: 'p9',
+        accept: false,
       }),
     )
   })

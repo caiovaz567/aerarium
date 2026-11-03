@@ -75,26 +75,21 @@ export function fakeSupabase() {
   const functions = {
     invoke(name: string, options?: { body?: unknown }) {
       functionCalls.push({ name, body: options?.body })
+      const result = functionResults[name]
       return Promise.resolve({
-        data: functionResults[name] ?? null,
+        data:
+          typeof result === 'function'
+            ? (result as (body: unknown) => unknown)(options?.body)
+            : (result ?? null),
         error: null,
       })
     },
   }
-  // Database functions answer what a test sets (an empty list otherwise).
-  const rpcResults: Record<string, unknown> = {}
-  const rpcCalls: { name: string; args: unknown }[] = []
-  const rpc = (name: string, args?: unknown) => {
-    rpcCalls.push({ name, args })
-    return Promise.resolve({ data: rpcResults[name] ?? [], error: null })
-  }
   return {
-    client: { from, functions, rpc },
+    client: { from, functions },
     tableResults,
     functionResults,
     functionCalls,
-    rpcResults,
-    rpcCalls,
     calls,
     failNext: () => {
       failNext = true
