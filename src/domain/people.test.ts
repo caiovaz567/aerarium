@@ -6,8 +6,13 @@ describe('usuário', () => {
     expect(cleanUsername('  @@Caio_1 ')).toBe('caio_1')
   })
 
-  it('de 3 a 20 letras, sem acento, números e _', () => {
+  it('de 3 a 20 letras, sem acento, números, _ e ponto no meio', () => {
     expect(usernameProblem('caio_1')).toBeNull()
+    expect(usernameProblem('caio.vaz')).toBeNull()
+    expect(usernameProblem('a.b.c')).toBeNull()
+    expect(usernameProblem('.caio')).toMatch(/ponto no meio/)
+    expect(usernameProblem('caio.')).toMatch(/ponto no meio/)
+    expect(usernameProblem('caio..vaz')).toMatch(/ponto no meio/)
     expect(usernameProblem('abc')).toBeNull()
     expect(usernameProblem('a'.repeat(20))).toBeNull()
     expect(usernameProblem('ab')).toMatch(/3 a 20/)

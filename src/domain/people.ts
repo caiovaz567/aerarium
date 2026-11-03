@@ -6,8 +6,8 @@ export const cleanUsername = (value: string) =>
 export function usernameProblem(username: string): string | null {
   if (username.length < 3 || username.length > 20)
     return 'O usuário precisa ter de 3 a 20 letras.'
-  if (!/^[a-z0-9_]+$/.test(username))
-    return 'Usa só letras sem acento, números e _.'
+  if (!/^[a-z0-9_]+(\.[a-z0-9_]+)*$/.test(username))
+    return 'Usa só letras sem acento, números, _ e ponto no meio do nome.'
   return null
 }
 
