@@ -69,7 +69,7 @@ describe('seu usuário', () => {
   it('mostra o que já tem', async () => {
     fake.current!.tableResults.usernames = [{ username: 'caio' }]
     await open('/config?aba=conta')
-    expect(screen.getByText('@caio')).toBeVisible()
+    expect(await screen.findByText('@caio')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Trocar' })).toBeVisible()
   })
 })
@@ -143,7 +143,7 @@ describe('quem usa seus cartões', () => {
     expect(
       within(list).getByText('Fica com o resto das faturas.'),
     ).toBeVisible()
-    expect(within(list).getByText('Prima')).toBeVisible()
+    expect(await within(list).findByText('Prima')).toBeVisible()
     expect(within(list).getByText('Só você vê.')).toBeVisible()
     expect(within(list).getByText('@ana')).toBeVisible()
     expect(within(list).getByText('Esperando aceitar.')).toBeVisible()
@@ -155,7 +155,7 @@ describe('quem usa seus cartões', () => {
       people: [{ id: 'p1', name: 'Prima', username: null, accepted: false }],
     }
     await open()
-    fireEvent.click(screen.getByRole('button', { name: 'Remover' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Remover' }))
     expect(fake.current!.calls).toEqual([])
     fireEvent.click(
       screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
@@ -393,7 +393,7 @@ describe('compras das pessoas da lista', () => {
     }
     await open()
     fake.current!.failNext('23503')
-    fireEvent.click(screen.getByRole('button', { name: 'Remover' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Remover' }))
     fireEvent.click(
       screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
     )
