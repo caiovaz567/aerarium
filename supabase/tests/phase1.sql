@@ -255,7 +255,7 @@ update public.invoices set paid = true where id = '50000000-0000-4000-8000-00000
 reset role;
 delete from auth.users where id = '10000000-0000-4000-8000-000000000001';
 do $$ declare t text; remaining bigint; begin
-  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories','bank_accounts','bank_records'] loop
+  foreach t in array array['cards','months','incomes','bills','invoices','invoice_expenses','installment_plans','installment_payments','subscriptions','categories','bank_accounts','bank_records','usernames','people'] loop
     execute format('select count(*) from public.%I where user_id = %L', t, '10000000-0000-4000-8000-000000000001') into remaining;
     perform pg_temp.assert_true(remaining = 0, 'Excluir conta remove ' || t);
   end loop;

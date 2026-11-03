@@ -27,6 +27,10 @@ export function PrivacyPage() {
             O que você lança: meses, entradas, contas, cartões, faturas, gastos,
             parcelamentos e assinaturas.
           </li>
+          <li>
+            Seu usuário, se você escolher um, e as pessoas da sua lista. Quem te
+            convida só te encontra digitando o seu usuário exato.
+          </li>
         </ul>
 
         <h3>O que o app não guarda</h3>

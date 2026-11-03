@@ -81,11 +81,20 @@ export function fakeSupabase() {
       })
     },
   }
+  // Database functions answer what a test sets (an empty list otherwise).
+  const rpcResults: Record<string, unknown> = {}
+  const rpcCalls: { name: string; args: unknown }[] = []
+  const rpc = (name: string, args?: unknown) => {
+    rpcCalls.push({ name, args })
+    return Promise.resolve({ data: rpcResults[name] ?? [], error: null })
+  }
   return {
-    client: { from, functions },
+    client: { from, functions, rpc },
     tableResults,
     functionResults,
     functionCalls,
+    rpcResults,
+    rpcCalls,
     calls,
     failNext: () => {
       failNext = true

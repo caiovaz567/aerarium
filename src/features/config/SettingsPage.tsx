@@ -16,6 +16,7 @@ import {
 } from '../../ui/icons'
 import { useToast } from '../../ui/toastContext'
 import { BankSection, OtherPersonSection } from '../banco/BankSection'
+import { PeopleSection } from '../pessoas/PeopleSection'
 import { useBankEnabled } from '../banco/useBank'
 import { CategoriesModal } from './CategoriesModal'
 import { DeleteAccountModal } from './DeleteAccountModal'
@@ -58,8 +59,8 @@ const Chevron = () => (
 
 /**
  * Ajustes: the account on top, then tabs:
- * Geral (categories, your data), Bancos and Pai (Open Finance owner only) and
- * Conta (ways in, this device, deleting apart in red). One icon color per
+ * Geral (categories, your data), Bancos and Pai (Open Finance owner only),
+ * Pessoas (your username, who uses your cards) and Conta (ways in, this device, deleting apart in red). One icon color per
  * card.
  */
 export function SettingsPage() {
@@ -81,8 +82,7 @@ export function SettingsPage() {
     : null
   const hasPassword = identities.some((item) => item.provider === 'email')
   const categories = finance?.categories ?? []
-  // Tabs (the owner's layout): Geral, Bancos and Pai (Open Finance owner
-  // only), Conta. The tab is in the address, so it can be opened directly.
+  // Tabs: Geral, Bancos and Pai (Open Finance owner only), Pessoas, Conta. The tab is in the address, so it can be opened directly.
   const bankEnabled = useBankEnabled()
   const [params] = useSearchParams()
   const tabs: [string, string][] = [
@@ -93,6 +93,7 @@ export function SettingsPage() {
           ['pai', finance?.otherPerson ?? 'Outra pessoa'],
         ] as [string, string][])
       : []),
+    ['pessoas', 'Pessoas'],
     ['conta', 'Conta'],
   ]
   const asked = params.get('aba')
@@ -241,6 +242,9 @@ export function SettingsPage() {
           )}
           {tab === 'bancos' && finance && <BankSection finance={finance} />}
           {tab === 'pai' && finance && <OtherPersonSection finance={finance} />}
+          {tab === 'pessoas' && (
+            <PeopleSection otherPerson={finance?.otherPerson} />
+          )}
           {tab === 'conta' && (
             <>
               <section aria-labelledby="ajustes-entrar">

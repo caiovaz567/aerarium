@@ -14,6 +14,8 @@ export const ACCOUNT_TABLES = [
   'installment_payments',
   'subscriptions',
   'categories',
+  'usernames',
+  'people',
 ] as const
 
 type Rows = Record<string, unknown>[]
