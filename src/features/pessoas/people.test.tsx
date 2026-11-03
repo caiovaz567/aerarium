@@ -12,10 +12,7 @@ const fake = vi.hoisted(() => ({
 vi.mock('../../data/supabase', () => ({ supabase: () => fake.current!.client }))
 
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)))
-const open = async (
-  path = '/config?aba=pessoas',
-  other: string | null = null,
-) => {
+const open = async (path = '/pessoas', other: string | null = null) => {
   renderApp(path, undefined, { ...financeFixture(), otherPerson: other })
   await settle()
 }
@@ -46,7 +43,7 @@ beforeEach(() => {
 
 describe('seu usuário', () => {
   it('escolhe, aceita ponto e limpa o que foi digitado', async () => {
-    await open()
+    await open('/config?aba=conta')
     expect(screen.getByText('Nenhum ainda')).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Escolher' }))
     const form = dialog('Seu usuário')
@@ -71,7 +68,7 @@ describe('seu usuário', () => {
 
   it('mostra o que já tem', async () => {
     fake.current!.tableResults.usernames = [{ username: 'caio' }]
-    await open()
+    await open('/config?aba=conta')
     expect(screen.getByText('@caio')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Trocar' })).toBeVisible()
   })
@@ -141,7 +138,7 @@ describe('quem usa seus cartões', () => {
         { id: 'p3', name: 'bia', username: 'bia', accepted: true },
       ],
     }
-    await open('/config?aba=pessoas', 'Pai')
+    await open('/pessoas', 'Pai')
     const list = screen.getByRole('region', { name: 'Quem usa seus cartões' })
     expect(
       within(list).getByText('Fica com o resto das faturas.'),
@@ -401,5 +398,26 @@ describe('compras das pessoas da lista', () => {
       screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
     )
     expect(await screen.findByText(/tem compras marcadas/)).toBeVisible()
+  })
+})
+
+describe('onde fica', () => {
+  it('os Ajustes têm só uma porta; o usuário fica na Conta', async () => {
+    await open('/config')
+    expect(screen.queryByRole('link', { name: 'Pessoas' })).toBeNull()
+    expect(
+      screen.getByRole('link', { name: /Quem usa seus cartões/ }),
+    ).toHaveAttribute('href', '/pessoas')
+    expect(screen.queryByText('Seu usuário')).toBeNull()
+  })
+
+  it('o + do seletor abre as pessoas', async () => {
+    await open('/meses/2026-09', 'Pai')
+    expect(
+      within(screen.getByRole('group', { name: 'Ver gastos de' })).getByRole(
+        'link',
+        { name: 'Pessoas' },
+      ),
+    ).toHaveAttribute('href', '/pessoas')
   })
 })

@@ -1,5 +1,7 @@
+import { Link } from 'react-router'
 import { useProfile } from '../../app/profileContext'
 import type { Finance } from '../../data/finance'
+import { PlusIcon } from '../../ui/icons'
 
 /**
  * Eu | Pai | Vini at the top, only when someone else uses the cards. Finger-sized
@@ -34,6 +36,9 @@ export function ProfileSwitch({ finance }: { readonly finance: Finance }) {
           {label}
         </button>
       ))}
+      <Link className="profile-add" to="/pessoas" aria-label="Pessoas">
+        <PlusIcon />
+      </Link>
     </div>
   )
 }

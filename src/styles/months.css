@@ -716,6 +716,19 @@
 }
 
 /* The other person's spending, card by card, in their hero. */
+.profile-add {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  min-height: 44px;
+  border-radius: 8px;
+  color: var(--muted);
+}
+.profile-add svg {
+  width: 18px;
+  height: 18px;
+}
 .profile-switch {
   overflow-x: auto;
   scrollbar-width: none;

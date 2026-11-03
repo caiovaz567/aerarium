@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router'
 import { CardRedirect, CardsPage } from '../features/cartoes/CardsPage'
 import { SharedPage } from '../features/compartilhado/SharedPage'
 import { SettingsPage } from '../features/config/SettingsPage'
+import { PeoplePage } from '../features/pessoas/PeoplePage'
 import { LoginPage } from '../features/login/LoginPage'
 import { ResetPasswordPage } from '../features/login/ResetPasswordPage'
 import { MonthsIndex, MonthsPage } from '../features/meses/MonthsPage'
@@ -41,6 +42,7 @@ export function AppRoutes() {
           <Route path="cartoes/:id" element={<CardRedirect />} />
           <Route path="assinaturas" element={<SubscriptionsPage />} />
           <Route path="config" element={<SettingsPage />} />
+          <Route path="pessoas" element={<PeoplePage />} />
           <Route path="compartilhado" element={<SharedPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

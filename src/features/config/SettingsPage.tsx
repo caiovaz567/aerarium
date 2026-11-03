@@ -13,10 +13,11 @@ import {
   LogoutIcon,
   ShieldIcon,
   TrashIcon,
+  PeopleIcon,
 } from '../../ui/icons'
 import { useToast } from '../../ui/toastContext'
 import { BankSection, OtherPersonSection } from '../banco/BankSection'
-import { PeopleSection } from '../pessoas/PeopleSection'
+import { UsernameSection } from '../pessoas/PeopleSection'
 import { useBankEnabled } from '../banco/useBank'
 import { CategoriesModal } from './CategoriesModal'
 import { DeleteAccountModal } from './DeleteAccountModal'
@@ -59,8 +60,8 @@ const Chevron = () => (
 
 /**
  * Ajustes: the account on top, then tabs:
- * Geral (categories, your data), Bancos and Pai (Open Finance owner only),
- * Pessoas (your username, who uses your cards) and Conta (ways in, this device, deleting apart in red). One icon color per
+ * Geral (categories, your data), Bancos and Pai (Open Finance owner only) and
+ * Conta (ways in, this device, deleting apart in red). One icon color per
  * card.
  */
 export function SettingsPage() {
@@ -82,7 +83,7 @@ export function SettingsPage() {
     : null
   const hasPassword = identities.some((item) => item.provider === 'email')
   const categories = finance?.categories ?? []
-  // Tabs: Geral, Bancos and Pai (Open Finance owner only), Pessoas, Conta. The tab is in the address, so it can be opened directly.
+  // Tabs: Geral, Bancos and Pai (Open Finance owner only), Conta. The tab is in the address, so it can be opened directly.
   const bankEnabled = useBankEnabled()
   const [params] = useSearchParams()
   const tabs: [string, string][] = [
@@ -93,7 +94,6 @@ export function SettingsPage() {
           ['pai', finance?.otherPerson ?? 'Outra pessoa'],
         ] as [string, string][])
       : []),
-    ['pessoas', 'Pessoas'],
     ['conta', 'Conta'],
   ]
   const asked = params.get('aba')
@@ -199,6 +199,25 @@ export function SettingsPage() {
                 </ul>
               </section>
 
+              <section aria-labelledby="ajustes-pessoas-link">
+                <h3 id="ajustes-pessoas-link" className="settings-label">
+                  Pessoas
+                </h3>
+                <ul className="settings-card">
+                  <li>
+                    <Link className="settings-row action" to="/pessoas">
+                      <Row
+                        icon={<PeopleIcon />}
+                        tone="accent"
+                        title="Quem usa seus cartões"
+                        detail="Divida compras com outras pessoas"
+                        end={<Chevron />}
+                      />
+                    </Link>
+                  </li>
+                </ul>
+              </section>
+
               <section aria-labelledby="ajustes-dados">
                 <h3 id="ajustes-dados" className="settings-label">
                   Seus dados
@@ -242,11 +261,9 @@ export function SettingsPage() {
           )}
           {tab === 'bancos' && finance && <BankSection finance={finance} />}
           {tab === 'pai' && finance && <OtherPersonSection finance={finance} />}
-          {tab === 'pessoas' && (
-            <PeopleSection otherPerson={finance?.otherPerson} />
-          )}
           {tab === 'conta' && (
             <>
+              <UsernameSection />
               <section aria-labelledby="ajustes-entrar">
                 <h3 id="ajustes-entrar" className="settings-label">
                   Formas de entrar

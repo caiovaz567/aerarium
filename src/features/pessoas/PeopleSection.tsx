@@ -159,7 +159,7 @@ function AddPersonModal({ onClose }: { readonly onClose: () => void }) {
   )
 }
 
-/** Ajustes → Pessoas: who uses your cards, who added you, your username. */
+/** Who uses your cards, and who added you. */
 export function PeopleSection({
   otherPerson,
 }: {
@@ -168,10 +168,9 @@ export function PeopleSection({
   const userId = useUserId()
   const client = useQueryClient()
   const toast = useToast()
-  const username = useUsername()
   const people = usePeople()
   const invitations = useInvitations()
-  const [dialog, setDialog] = useState<'username' | 'add' | null>(null)
+  const [adding, setAdding] = useState(false)
 
   const change = (task: Promise<unknown>, done: string) => {
     void task
@@ -183,7 +182,7 @@ export function PeopleSection({
       .catch(() => toast(NOT_SAVED))
   }
 
-  if (username.isError || people.isError)
+  if (people.isError)
     return (
       <p className="muted small" role="alert">
         Não consegui carregar suas pessoas. Confere a internet e abre de novo.
@@ -244,7 +243,7 @@ export function PeopleSection({
             </li>
           ))}
         </ul>
-        <AddButton onClick={() => setDialog('add')}>Adicionar pessoa</AddButton>
+        <AddButton onClick={() => setAdding(true)}>Adicionar pessoa</AddButton>
       </section>
 
       {Boolean(invitations.data?.length) && (
@@ -298,35 +297,42 @@ export function PeopleSection({
         </section>
       )}
 
-      <section aria-labelledby="ajustes-usuario">
-        <h3 id="ajustes-usuario" className="settings-label">
-          Seu usuário
-        </h3>
-        <ul className="settings-card">
-          <li className="settings-row">
-            <span className="settings-text">
-              <b>{username.data ? `@${username.data}` : 'Nenhum ainda'}</b>
-              <small>Só precisa dele quem quer ser convidado.</small>
-            </span>
-            <button
-              type="button"
-              className="link-button"
-              disabled={username.isPending}
-              onClick={() => setDialog('username')}
-            >
-              {username.data ? 'Trocar' : 'Escolher'}
-            </button>
-          </li>
-        </ul>
-      </section>
+      {adding && <AddPersonModal onClose={() => setAdding(false)} />}
+    </>
+  )
+}
 
-      {dialog === 'username' && (
+/** Ajustes → Conta: the username others invite you with. */
+export function UsernameSection() {
+  const username = useUsername()
+  const [editing, setEditing] = useState(false)
+  return (
+    <section aria-labelledby="ajustes-usuario">
+      <h3 id="ajustes-usuario" className="settings-label">
+        Seu usuário
+      </h3>
+      <ul className="settings-card">
+        <li className="settings-row">
+          <span className="settings-text">
+            <b>{username.data ? `@${username.data}` : 'Nenhum ainda'}</b>
+            <small>Só precisa dele quem quer ser convidado.</small>
+          </span>
+          <button
+            type="button"
+            className="link-button"
+            disabled={username.isPending || username.isError}
+            onClick={() => setEditing(true)}
+          >
+            {username.data ? 'Trocar' : 'Escolher'}
+          </button>
+        </li>
+      </ul>
+      {editing && (
         <UsernameModal
           current={username.data ?? null}
-          onClose={() => setDialog(null)}
+          onClose={() => setEditing(false)}
         />
       )}
-      {dialog === 'add' && <AddPersonModal onClose={() => setDialog(null)} />}
-    </>
+    </section>
   )
 }

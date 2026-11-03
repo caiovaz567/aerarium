@@ -329,7 +329,7 @@ describe('do lado do dono', () => {
       within(screen.getByRole('navigation', { name: 'Partes dos ajustes' }))
         .getAllByRole('link')
         .map((item) => item.textContent),
-    ).toEqual(['Geral', 'Bancos', 'Pai', 'Pessoas', 'Conta'])
+    ).toEqual(['Geral', 'Bancos', 'Pai', 'Conta'])
     expect(
       screen.getByRole('link', { name: 'Pai', current: 'page' }),
     ).toBeVisible()
