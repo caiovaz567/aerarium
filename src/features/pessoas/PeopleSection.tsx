@@ -16,6 +16,7 @@ import {
 } from '../../data/people'
 import { financeKey, type Finance } from '../../data/finance'
 import { useUserId } from '../../data/useFinance'
+import { sharedKey } from '../../data/useShared'
 import {
   cleanUsername,
   readPersonInput,
@@ -174,6 +175,7 @@ export function PeopleSection({ finance }: { readonly finance?: Finance }) {
       .then(() => {
         void client.invalidateQueries({ queryKey: peopleKey(userId) })
         void client.invalidateQueries({ queryKey: invitationsKey(userId) })
+        void client.invalidateQueries({ queryKey: sharedKey(userId) })
         toast(done)
       })
       .catch(() => toast(NOT_SAVED))

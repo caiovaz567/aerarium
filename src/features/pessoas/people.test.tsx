@@ -571,6 +571,176 @@ describe('quem aceitou vê só o que é dele', () => {
     expect(screen.queryByText(/vini@x\.test/)).toBeNull()
   })
 
+  it('alguém aceita com seu app aberto: a cópia sai sem recarregar', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      fake.current!.tableResults.shares = []
+      renderApp('/meses/2026-09', undefined, finance())
+      await act(() => vi.advanceTimersByTimeAsync(2000))
+      expect(
+        fake.current!.calls.filter((item) => item.table === 'shares'),
+      ).toEqual([])
+      fake.current!.tableResults.shares = [
+        {
+          viewer_id: 'conta-vini',
+          person_id: 'vini',
+          viewer_email: 'v@x.test',
+          owner_name: 'Caio',
+          data: {},
+        },
+      ]
+      await act(() => vi.advanceTimersByTimeAsync(62_000))
+      const writes = fake.current!.calls.filter(
+        (item) => item.table === 'shares',
+      )
+      expect(writes).toHaveLength(1)
+      expect(
+        names(
+          (writes[0]!.payload as { data: Parameters<typeof names>[0] }).data,
+        ),
+      ).toEqual(['Compra do Vini'])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  const fromOwner = {
+    owner_id: 'o1',
+    owner_name: '@caio',
+    pix_key: null,
+    pix_bank: null,
+    data: {
+      cards: [],
+      expenses: [],
+      plans: [],
+      rests: [],
+      categories: [],
+      paidBack: [],
+    },
+  }
+  const invite = { person_id: 'p1', from_name: '@caio', accepted: false }
+
+  it('aceitar em Meses: a entrada aparece na hora', async () => {
+    answers.invitations = { invitations: [invite] }
+    fake.current!.tableResults.shares = []
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [],
+    })
+    const banner = await screen.findByRole('region', { name: 'Convite' })
+    expect(screen.queryByRole('link', { name: /Cartões do @caio/ })).toBeNull()
+    fake.current!.tableResults.shares = [fromOwner]
+    fireEvent.click(within(banner).getByRole('button', { name: 'Aceitar' }))
+    expect(
+      await screen.findByRole('link', { name: /Cartões do @caio/ }),
+    ).toBeVisible()
+  })
+
+  it('sair nos Ajustes: a entrada some ao voltar pra Meses', async () => {
+    answers.invitations = { invitations: [{ ...invite, accepted: true }] }
+    fake.current!.tableResults.shares = [fromOwner]
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [],
+    })
+    await screen.findByRole('link', { name: /Cartões do @caio/ })
+    fireEvent.click(screen.getAllByRole('link', { name: 'Ajustes' })[0]!)
+    fireEvent.click(
+      await screen.findByRole('link', { name: /Quem usa seus cartões/ }),
+    )
+    const leave = await screen.findByRole('button', { name: 'Sair' })
+    fake.current!.tableResults.shares = []
+    fireEvent.click(leave)
+    fireEvent.click(
+      await screen.findByRole('button', { name: /Sair|Confirmar|certeza/i }),
+    )
+    await waitFor(() => expect(asked('answer')).toBeTruthy())
+    await settle()
+    fireEvent.click(screen.getAllByRole('link', { name: 'Meses' })[0]!)
+    await settle()
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('link', { name: /Cartões do @caio/ }),
+      ).toBeNull(),
+    )
+  })
+
+  it('quem aceitou recebe as compras novas em até um minuto', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      fake.current!.tableResults.shares = [fromOwner]
+      renderApp('/meses/2026-09', undefined, {
+        ...financeFixture(),
+        otherPerson: null,
+        people: [],
+      })
+      await act(() => vi.advanceTimersByTimeAsync(1000))
+      expect(
+        screen.getByRole('link', { name: /Cartões do @caio/ }),
+      ).toHaveTextContent('Nada por enquanto')
+      const card = {
+        id: 'c1',
+        name: 'Revolut',
+        color: null,
+        bank: null,
+        sortOrder: 0,
+      }
+      fake.current!.tableResults.shares = [
+        {
+          ...fromOwner,
+          data: {
+            ...fromOwner.data,
+            cards: [card],
+            expenses: [
+              {
+                id: 'e1',
+                cardId: 'c1',
+                month: '2026-11',
+                description: 'Compra',
+                note: null,
+                amount: '2.32',
+                spentOn: '2026-11-03',
+                occurredAt: null,
+                categoryId: null,
+              },
+            ],
+          },
+        },
+      ]
+      await act(() => vi.advanceTimersByTimeAsync(61_000))
+      expect(
+        screen.getByRole('link', { name: /Cartões do @caio/ }),
+      ).not.toHaveTextContent('Nada por enquanto')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('sem ninguém te adicionando, não fica perguntando pro banco', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    try {
+      const from = fake.current!.client.from
+      const asks: string[] = []
+      fake.current!.client.from = ((table: string) => {
+        asks.push(table)
+        return from(table)
+      }) as typeof from
+      renderApp('/meses/2026-09', undefined, {
+        ...financeFixture(),
+        otherPerson: null,
+        people: [],
+      })
+      await act(() => vi.advanceTimersByTimeAsync(1000))
+      const before = asks.filter((table) => table === 'shares').length
+      await act(() => vi.advanceTimersByTimeAsync(130_000))
+      expect(asks.filter((table) => table === 'shares').length).toBe(before)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('adicionado por dois donos: uma entrada pra cada', async () => {
     const copy = {
       cards: [],

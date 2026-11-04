@@ -5,6 +5,7 @@ import {
   useInvitations,
 } from '../../data/people'
 import { useUserId } from '../../data/useFinance'
+import { sharedKey } from '../../data/useShared'
 import { ArmedButton } from '../../ui/controls'
 import { useToast } from '../../ui/toastContext'
 
@@ -20,6 +21,7 @@ export function InvitationBanner() {
     void answerInvitation(invitation.personId, accept)
       .then(() => {
         void client.invalidateQueries({ queryKey: invitationsKey(userId) })
+        void client.invalidateQueries({ queryKey: sharedKey(userId) })
         toast(done)
       })
       .catch(() =>
