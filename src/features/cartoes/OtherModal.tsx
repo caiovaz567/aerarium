@@ -28,12 +28,15 @@ export function OtherModal({
   invoice,
   card,
   finance,
+  startWithTotal = false,
   onClose,
   onSave,
 }: {
   readonly invoice: InvoiceRow
   readonly card: Card
   readonly finance: Finance
+  /** Opened from the invoice's total: asks for it first. */
+  readonly startWithTotal?: boolean
   readonly onClose: () => void
   readonly onSave: (changes: OtherChanges) => void
 }) {
@@ -44,7 +47,7 @@ export function OtherModal({
     parts.expensesAmount,
   ])
   const [other, setOther] = useState(formatMoneyInput(invoice.otherAmount))
-  const [totalMode, setTotalMode] = useState(false)
+  const [totalMode, setTotalMode] = useState(startWithTotal)
   const [total, setTotal] = useState(
     formatMoneyInput(sumMoney([fixed, invoice.otherAmount])),
   )
@@ -76,7 +79,7 @@ export function OtherModal({
 
   return (
     <Modal
-      title={`Outros gastos · ${card.name}`}
+      title={`${startWithTotal ? 'Total da fatura' : 'Outros gastos'} · ${card.name}`}
       onClose={onClose}
       actions={
         <>
@@ -99,7 +102,7 @@ export function OtherModal({
             label="Total da fatura"
             value={total}
             onChange={setTotal}
-            hint="Os outros gastos são calculados a partir dele."
+            hint="O que passar disso entra como outros gastos, na sua parte."
             autoFocus
           />
         ) : (

@@ -77,6 +77,7 @@ export function CardsPage() {
   const [dialog, setDialog] = useState<{
     kind: 'expense' | 'invoice'
     id: string
+    total?: boolean
   } | null>(null)
   const close = () => setDialog(null)
   const actions = usePlanActions(
@@ -277,6 +278,10 @@ export function CardsPage() {
             block.invoice &&
             setDialog({ kind: 'invoice', id: block.invoice.id })
           }
+          onTotal={() =>
+            block.invoice &&
+            setDialog({ kind: 'invoice', id: block.invoice.id, total: true })
+          }
           onPaid={(paid) => {
             const row = block.invoice!
             const day = today()
@@ -412,6 +417,7 @@ export function CardsPage() {
           invoice={invoice.invoice}
           card={invoice.card}
           finance={finance}
+          startWithTotal={dialog?.kind === 'invoice' && dialog.total}
           onClose={close}
           onSave={(changes) => {
             run(ops.updateInvoice(invoice.invoice!, changes))

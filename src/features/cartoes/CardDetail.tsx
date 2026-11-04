@@ -47,6 +47,7 @@ export function CardDetail({
   part,
   onExpense,
   onOther,
+  onTotal,
   onPaid,
 }: {
   readonly card: Card
@@ -57,6 +58,7 @@ export function CardDetail({
   readonly onExpense: (expense: ExpenseRow) => void
   /** "Outros gastos" and the note of the invoice. */
   readonly onOther: () => void
+  readonly onTotal: () => void
   readonly onPaid: (paid: boolean) => void
 }) {
   const editor = useEditor()
@@ -367,6 +369,15 @@ export function CardDetail({
                     {view.bankTotal === null
                       ? 'Digitar'
                       : formatMoney(view.bankTotal)}
+                  </b>
+                </button>
+              ) : !other && !view.invoice.paid ? (
+                <button type="button" className="whole" onClick={onTotal}>
+                  <small>Fatura toda</small>
+                  <b>
+                    {formatMoney(
+                      cents(view.mine + view.otherShare + view.peopleShare),
+                    )}
                   </b>
                 </button>
               ) : (

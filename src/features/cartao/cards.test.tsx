@@ -481,6 +481,93 @@ describe('Cartões, uma tela só', () => {
     )
   })
 
+  describe('sem ninguém com o resto, com alguém na lista', () => {
+    const withVini = () => {
+      const base = financeFixture()
+      const invoice = base.invoices.find(
+        (item) => item.cardId === 'c1' && item.month === '2026-09',
+      )!
+      return {
+        ...base,
+        otherPerson: null,
+        people: [{ id: 'vini', name: 'Vini' }],
+        expenses: [
+          ...base.expenses,
+          {
+            id: 'do-vini',
+            invoiceId: invoice.id,
+            description: 'Do Vini',
+            amount: 1000 as never,
+            spentOn: '2026-09-10' as never,
+            categoryId: null,
+            personId: 'vini',
+          },
+        ],
+      }
+    }
+
+    it('tocar em Fatura toda: digita o total, e o que sobra é seu', async () => {
+      renderApp('/cartoes?mes=2026-09', undefined, withVini())
+      expect(hero()).toContain(
+        'Fatura todaR$ 452,92Sua parteR$ 442,92Parte de ViniR$ 10,00',
+      )
+      fireEvent.click(screen.getByRole('button', { name: /^Fatura toda/ }))
+      const dialog = screen.getByRole('dialog', {
+        name: 'Total da fatura · Nubank Teste',
+      })
+      const field = within(dialog).getByLabelText('Total da fatura')
+      expect(field).toHaveValue('452,92')
+      fireEvent.change(field, { target: { value: '100,00' } })
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+      expect(within(dialog).getByRole('alert')).toHaveTextContent(
+        /não pode ser menor/,
+      )
+      expect(fake.current!.calls).toEqual([])
+      fireEvent.change(field, { target: { value: '500,00' } })
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Salvar' }))
+      await act(() => new Promise((resolve) => setTimeout(resolve, 0)))
+      expect(fake.current!.calls).toContainEqual(
+        expect.objectContaining({
+          table: 'invoices',
+          op: 'update',
+          payload: expect.objectContaining({ other_amount: '318.10' }),
+        }),
+      )
+      // The 47,08 over what was launched is yours; Vini's part stays.
+      expect(hero()).toContain(
+        'Fatura todaR$ 500,00Sua parteR$ 490,00Parte de ViniR$ 10,00',
+      )
+    })
+
+    it('fatura paga: o total não muda por aqui', () => {
+      const data = withVini()
+      renderApp('/cartoes?mes=2026-09', undefined, {
+        ...data,
+        invoices: data.invoices.map((item) =>
+          item.cardId === 'c1' && item.month === '2026-09'
+            ? {
+                ...item,
+                paid: true,
+                paidOn: '2026-09-20' as never,
+                closedTotal: 45292 as never,
+              }
+            : item,
+        ),
+      })
+      expect(hero()).toContain('Fatura toda')
+      expect(screen.queryByRole('button', { name: /^Fatura toda/ })).toBeNull()
+    })
+  })
+
+  it('com o Pai ficando com o resto: Fatura toda não abre nada', () => {
+    renderApp('/cartoes?mes=2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: 'Pai',
+      otherBankUntil: month('2026-09'),
+    })
+    expect(screen.queryByRole('button', { name: /^Fatura toda/ })).toBeNull()
+  })
+
   it('usuário normal não vê nada disso', () => {
     renderApp('/cartoes?mes=2026-09')
     expect(hero()).not.toContain('Total no banco')
