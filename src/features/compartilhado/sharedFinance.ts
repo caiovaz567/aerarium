@@ -5,11 +5,12 @@ import type {
   InvoiceRow,
   PlanRow,
 } from '../../data/finance'
+import { currentMonth } from '../../app/paths'
 import type { SharedView } from '../../data/shared'
 import { monthOutflowItems } from '../../domain/categories'
 import { installmentSchedule } from '../../domain/installments'
-import { cents, sumMoney, type Cents } from '../../domain/money'
-import { isoDate, type Month } from '../../domain/months'
+import { cents, formatMoney, sumMoney, type Cents } from '../../domain/money'
+import { isoDate, monthName, type Month } from '../../domain/months'
 
 const monthId = (ref: Month) => `mes:${ref}`
 const invoiceId = (cardId: string, ref: Month) => `fatura:${cardId}:${ref}`
@@ -164,4 +165,15 @@ export function sharedDefaultMonth(
   if (refs.includes(today)) return today
   const before = refs.filter((ref) => ref < today)
   return before.at(-1) ?? refs[0] ?? null
+}
+
+/** What is left to pay this month, in one line. */
+export function sharedLine(view: SharedView) {
+  const finance = sharedFinance(view, currentMonth())
+  const ref = sharedDefaultMonth(view, finance, currentMonth())
+  if (!ref) return 'Nada por enquanto'
+  const { due } = sharedMonth(view, finance, ref)
+  return due > 0
+    ? `${monthName(ref)}: falta pagar ${formatMoney(due)}`
+    : `${monthName(ref)}: nada a pagar`
 }

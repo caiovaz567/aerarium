@@ -869,6 +869,11 @@
     align-items: start;
     gap: 12px;
   }
+  /* Under the purchases: what can be changed about the person. */
+  .month-grid > .person-options {
+    grid-row: 2;
+    grid-column: 1;
+  }
   /* Profile "Pai": the purchases on the left, the summary beside them. */
   .month-grid > .hero {
     grid-row: 1;

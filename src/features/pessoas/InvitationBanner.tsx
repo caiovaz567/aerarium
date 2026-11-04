@@ -32,8 +32,8 @@ export function InvitationBanner() {
   return (
     <section className="invite-banner" aria-label="Convite">
       <p>
-        <b>{invitation.fromName} quer te adicionar.</b> Aceitando, pode marcar
-        compras como suas, e você vê só essas compras.
+        <b>{invitation.fromName} quer te adicionar.</b> Aceitando, você vê as
+        compras que essa pessoa marcar como suas.
       </p>
       <div className="invite-actions">
         <ArmedButton

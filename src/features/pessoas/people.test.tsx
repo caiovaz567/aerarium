@@ -1,5 +1,5 @@
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fakeSupabase } from '../../test/fakeSupabase'
 import { financeFixture } from '../../test/financeFixture'
 import { renderApp } from '../../test/renderApp'
@@ -22,8 +22,14 @@ const addForm = () => {
   fireEvent.click(screen.getByRole('button', { name: 'Adicionar pessoa' }))
   return dialog('Adicionar pessoa')
 }
-const type = (form: HTMLElement, value: string) => {
-  fireEvent.change(within(form).getByLabelText('Nome ou @usuário'), {
+const noAccount = (form: HTMLElement) =>
+  fireEvent.click(within(form).getByRole('button', { name: 'Não tem' }))
+const type = (
+  form: HTMLElement,
+  value: string,
+  label = 'Usuário da pessoa',
+) => {
+  fireEvent.change(within(form).getByLabelText(label), {
     target: { value },
   })
   fireEvent.click(within(form).getByRole('button', { name: 'Adicionar' }))
@@ -44,7 +50,7 @@ beforeEach(() => {
 
 describe('seu usuário', () => {
   it('escolhe, aceita ponto e limpa o que foi digitado', async () => {
-    await open('/config?aba=conta')
+    await open()
     expect(screen.getByText('Nenhum ainda')).toBeVisible()
     fireEvent.click(screen.getByRole('button', { name: 'Escolher' }))
     const form = dialog('Seu usuário')
@@ -69,21 +75,46 @@ describe('seu usuário', () => {
 
   it('mostra o que já tem', async () => {
     fake.current!.tableResults.usernames = [{ username: 'caio' }]
-    await open('/config?aba=conta')
+    await open()
     expect(await screen.findByText('@caio')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Trocar' })).toBeVisible()
   })
+
+  it('copia pra passar pra quem quer te adicionar', async () => {
+    fake.current!.tableResults.usernames = [{ username: 'caio' }]
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+    })
+    await open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Copiar' }))
+    expect(writeText).toHaveBeenCalledWith('@caio')
+    expect(await screen.findByText('Usuário copiado')).toBeVisible()
+  })
+
+  it('sem como copiar, mostra o usuário', async () => {
+    fake.current!.tableResults.usernames = [{ username: 'caio' }]
+    Object.defineProperty(navigator, 'clipboard', {
+      value: undefined,
+      configurable: true,
+    })
+    await open()
+    fireEvent.click(await screen.findByRole('button', { name: 'Copiar' }))
+    expect(await screen.findByText('Seu usuário: @caio')).toBeVisible()
+  })
 })
 
-describe('adicionar pessoa, com um campo só', () => {
-  it('só o nome: entra sem convite, mesmo sem ter usuário', async () => {
+describe('adicionar pessoa', () => {
+  it('não tem Aerarium: só o nome, sem convite', async () => {
     await open()
     const form = addForm()
-    type(form, '   ')
+    noAccount(form)
+    type(form, '   ', 'Nome')
     await waitFor(() =>
       expect(within(form).getByRole('alert')).toHaveTextContent(/Coloca/),
     )
-    type(form, ' Prima ')
+    type(form, ' @Prima ', 'Nome')
     await waitFor(() =>
       expect(fake.current!.calls[0]).toMatchObject({
         table: 'people',
@@ -95,10 +126,10 @@ describe('adicionar pessoa, com um campo só', () => {
     expect(await screen.findByText('Prima entrou na sua lista')).toBeVisible()
   })
 
-  it('com @: convida, mesmo sem ter usuário', async () => {
+  it('tem Aerarium: convida, com ou sem @', async () => {
     answers.add = { result: 'ok' }
     await open()
-    type(addForm(), '@Joao.Silva')
+    type(addForm(), 'Joao.Silva')
     await waitFor(() =>
       expect(asked('add')).toEqual({ action: 'add', username: 'joao.silva' }),
     )
@@ -112,51 +143,149 @@ describe('adicionar pessoa, com um campo só', () => {
     answers.add = { result: 'not-found' }
     await open()
     const form = addForm()
-    type(form, '@joao')
+    type(form, 'joao')
     await waitFor(() =>
       expect(within(form).getByRole('alert')).toHaveTextContent(/Não achei/),
     )
     expect(fake.current!.calls).toEqual([])
   })
 
-  it('@ com formato errado nem pergunta pro banco', async () => {
+  it('usuário com formato errado nem pergunta pro banco', async () => {
     await open()
     const form = addForm()
-    type(form, '@a')
+    type(form, 'a')
     await waitFor(() =>
       expect(within(form).getByRole('alert')).toHaveTextContent(/3 a 20/),
     )
     expect(asked('add')).toBeUndefined()
+    noAccount(form)
+    expect(within(form).getByRole('alert')).toHaveTextContent('')
   })
 })
 
 describe('quem usa seus cartões', () => {
-  it('o Pai fica com o resto; só o nome, convidado e aceito', async () => {
-    answers.list = {
-      people: [
-        { id: 'p1', name: 'Prima', username: null, accepted: false },
-        { id: 'p2', name: 'ana', username: 'ana', accepted: false },
-        { id: 'p3', name: 'bia', username: 'bia', accepted: true },
-      ],
-    }
+  const listed = {
+    people: [
+      { id: 'p1', name: 'Prima', username: null, accepted: false },
+      { id: 'p2', name: 'ana', username: 'ana', accepted: false },
+      { id: 'p3', name: 'bia', username: 'bia', accepted: true },
+    ],
+  }
+  afterEach(() => localStorage.removeItem('aerarium.perfil'))
+
+  it('uma linha por pessoa, o Pai igual aos outros', async () => {
+    answers.list = listed
     await open('/pessoas', 'Pai')
     const list = screen.getByRole('region', { name: 'Quem usa seus cartões' })
     expect(
-      within(list).getByText('Fica com o resto das faturas.'),
-    ).toBeVisible()
-    expect(await within(list).findByText('Prima')).toBeVisible()
-    expect(within(list).getByText('Só você vê.')).toBeVisible()
-    expect(within(list).getByText('@ana')).toBeVisible()
-    expect(within(list).getByText('Esperando aceitar.')).toBeVisible()
-    expect(within(list).getByText('Aceitou. Vê só a parte dela.')).toBeVisible()
+      await within(list).findByRole('link', { name: /Prima/ }),
+    ).toHaveTextContent('Só você vê')
+    expect(within(list).getByRole('link', { name: /Pai/ })).toHaveTextContent(
+      'Fica com o resto das faturas',
+    )
+    expect(within(list).getByRole('link', { name: /@ana/ })).toHaveTextContent(
+      'Esperando aceitar',
+    )
+    expect(within(list).getByRole('link', { name: /@bia/ })).toHaveTextContent(
+      'Vê só as compras marcadas',
+    )
+    expect(screen.queryByText(/Conta do Pai/)).toBeNull()
   })
 
-  it('remover pede confirmação', async () => {
-    answers.list = {
-      people: [{ id: 'p1', name: 'Prima', username: null, accepted: false }],
-    }
+  it('ninguém na lista: diz o que fazer', async () => {
     await open()
-    fireEvent.click(await screen.findByRole('button', { name: 'Remover' }))
+    expect(await screen.findByText(/Ninguém ainda/)).toBeVisible()
+  })
+
+  it('mostra quanto deve no mês e, depois, que pagou', async () => {
+    const base = financeFixture()
+    const invoice = base.invoices.find(
+      (item) => item.cardId === 'c1' && item.month === '2026-09',
+    )!
+    const owing = {
+      ...base,
+      otherPerson: null,
+      people: [{ id: 'p1', name: 'Prima' }],
+      expenses: [
+        ...base.expenses,
+        {
+          id: 'e-prima',
+          invoiceId: invoice.id,
+          description: 'Da Prima',
+          amount: 1000 as never,
+          spentOn: '2026-09-10' as never,
+          categoryId: null,
+          personId: 'p1',
+        },
+      ],
+    }
+    answers.list = { people: [listed.people[0]] }
+    const { unmount } = renderApp('/pessoas', undefined, owing)
+    const link = await screen.findByRole('link', { name: /Prima/ })
+    expect(link).toHaveTextContent(/Te deve R\$\s10,00 em Setembro/)
+    unmount()
+    renderApp('/pessoas', undefined, {
+      ...owing,
+      incomes: [
+        ...owing.incomes,
+        {
+          id: 'pago',
+          monthId: base.months.find((item) => item.ref === '2026-09')!.id,
+          month: '2026-09' as never,
+          description: 'Prima pagou',
+          amount: 1000 as never,
+          kind: 'from_other' as const,
+          sortOrder: 90,
+          personId: 'p1',
+        },
+      ],
+    })
+    expect(
+      await screen.findByRole('link', { name: /Prima/ }),
+    ).toHaveTextContent('Pagou Setembro')
+  })
+
+  it('tocar na pessoa abre o mês dela, com as opções embaixo', async () => {
+    answers.list = listed
+    renderApp('/pessoas', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [{ id: 'p1', name: 'Prima' }],
+    })
+    fireEvent.click(await screen.findByRole('link', { name: /Prima/ }))
+    expect(
+      within(
+        await screen.findByRole('group', { name: 'Ver gastos de' }),
+      ).getByRole('button', { name: 'Prima' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      within(
+        screen.getByRole('region', { name: 'Opções da pessoa' }),
+      ).getByRole('button', { name: 'Remover da lista' }),
+    ).toBeVisible()
+  })
+
+  it('tocar no Pai abre o mês dele, com as opções dele embaixo', async () => {
+    await open('/pessoas', 'Pai')
+    fireEvent.click(await screen.findByRole('link', { name: /Pai/ }))
+    expect(
+      within(
+        await screen.findByRole('region', { name: 'Opções da pessoa' }),
+      ).getByText('Fica com o resto das faturas.'),
+    ).toBeVisible()
+  })
+
+  it('remover pede confirmação e volta pra lista', async () => {
+    localStorage.setItem('aerarium.perfil', 'p1')
+    answers.list = { people: [listed.people[0]] }
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [{ id: 'p1', name: 'Prima' }],
+    })
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Remover da lista' }),
+    )
     expect(fake.current!.calls).toEqual([])
     fireEvent.click(
       screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
@@ -168,6 +297,9 @@ describe('quem usa seus cartões', () => {
         filters: [['id', 'p1']],
       }),
     )
+    expect(
+      await screen.findByRole('heading', { name: 'Pessoas' }),
+    ).toBeVisible()
   })
 })
 
@@ -217,18 +349,112 @@ describe('convites que você recebeu', () => {
     expect(screen.queryByRole('region', { name: 'Convite' })).toBeNull()
   })
 
-  it('nos Ajustes: quem te adicionou, e dá pra sair', async () => {
+  const copy = {
+    cards: [],
+    expenses: [],
+    plans: [],
+    rests: [],
+    categories: [],
+    paidBack: [],
+  }
+  const row = {
+    owner_id: 'o1',
+    person_id: 'p9',
+    owner_name: '@caio',
+    pix_key: null,
+    pix_bank: null,
+    data: copy,
+  }
+
+  it('em Pessoas: aceitar leva os cartões pra lista', async () => {
+    answers.invitations = { invitations: [invited] }
+    await open()
+    const list = await screen.findByRole('region', { name: 'Convites' })
+    expect(
+      screen.queryByRole('region', { name: 'Cartões que você acompanha' }),
+    ).toBeNull()
+    fake.current!.tableResults.shares = [row]
+    fireEvent.click(within(list).getByRole('button', { name: 'Aceitar' }))
+    await waitFor(() =>
+      expect(asked('answer')).toEqual({
+        action: 'answer',
+        person: 'p9',
+        accept: true,
+      }),
+    )
+    expect(
+      within(
+        await screen.findByRole('region', {
+          name: 'Cartões que você acompanha',
+        }),
+      ).getByRole('link', { name: /Cartões do @caio/ }),
+    ).toHaveAttribute('href', '/compartilhado?de=o1')
+  })
+
+  it('em Pessoas: recusar pede confirmação', async () => {
+    answers.invitations = { invitations: [invited] }
+    await open()
+    const list = await screen.findByRole('region', { name: 'Convites' })
+    fireEvent.click(within(list).getByRole('button', { name: 'Recusar' }))
+    expect(asked('answer')).toBeUndefined()
+    fireEvent.click(
+      within(list).getByRole('button', { name: 'Toca de novo pra confirmar' }),
+    )
+    await waitFor(() =>
+      expect(asked('answer')).toEqual({
+        action: 'answer',
+        person: 'p9',
+        accept: false,
+      }),
+    )
+  })
+
+  it('já aceito: sai de dentro dos cartões, e volta pra Pessoas', async () => {
+    answers.invitations = { invitations: [{ ...invited, accepted: true }] }
+    fake.current!.tableResults.shares = [row]
+    await open('/compartilhado')
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Sair da lista de @caio' }),
+    )
+    expect(asked('answer')).toBeUndefined()
+    fake.current!.tableResults.shares = []
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
+    )
+    await waitFor(() =>
+      expect(asked('answer')).toEqual({
+        action: 'answer',
+        person: 'p9',
+        accept: false,
+      }),
+    )
+    expect(
+      await screen.findByRole('heading', { name: 'Pessoas' }),
+    ).toBeVisible()
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('link', { name: /Cartões do @caio/ }),
+      ).toBeNull(),
+    )
+  })
+
+  it('o Pai, que não foi convidado, não tem como sair', async () => {
+    fake.current!.tableResults.shares = [{ ...row, person_id: null }]
+    await open('/compartilhado')
+    await screen.findByRole('heading', { name: 'Cartões do @caio' })
+    expect(screen.queryByRole('button', { name: /Sair da lista/ })).toBeNull()
+  })
+
+  it('aceito, mas sem cópia: ainda dá pra sair por Pessoas', async () => {
     answers.invitations = { invitations: [{ ...invited, accepted: true }] }
     await open()
     const list = await screen.findByRole('region', {
-      name: 'Quem te adicionou',
+      name: 'Cartões que você acompanha',
     })
-    expect(within(list).queryByRole('button', { name: 'Aceitar' })).toBeNull()
+    expect(within(list).getByText('Nada por enquanto')).toBeVisible()
     fireEvent.click(within(list).getByRole('button', { name: 'Sair' }))
     fireEvent.click(
-      within(list).getByRole('button', {
-        name: 'Toca de novo pra confirmar',
-      }),
+      within(list).getByRole('button', { name: 'Toca de novo pra confirmar' }),
     )
     await waitFor(() =>
       expect(asked('answer')).toEqual({
@@ -417,13 +643,21 @@ describe('compras das pessoas da lista', () => {
     answers.list = {
       people: [{ id: 'vini', name: 'Vini', username: null, accepted: false }],
     }
-    await open()
+    localStorage.setItem('aerarium.perfil', 'vini')
+    renderApp('/meses/2026-09', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [vini],
+    })
     fake.current!.failNext('23503')
-    fireEvent.click(await screen.findByRole('button', { name: 'Remover' }))
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Remover da lista' }),
+    )
     fireEvent.click(
       screen.getByRole('button', { name: 'Toca de novo pra confirmar' }),
     )
     expect(await screen.findByText(/tem compras marcadas/)).toBeVisible()
+    localStorage.removeItem('aerarium.perfil')
   })
 })
 
@@ -450,13 +684,17 @@ describe('o Pai na lista', () => {
 })
 
 describe('onde fica', () => {
-  it('os Ajustes têm só uma porta; o usuário fica na Conta', async () => {
+  it('os Ajustes têm só uma porta; o usuário fica em Pessoas', async () => {
     await open('/config')
-    expect(screen.queryByRole('link', { name: 'Pessoas' })).toBeNull()
     expect(
-      screen.getByRole('link', { name: /Quem usa seus cartões/ }),
+      screen.getByRole('link', { name: /Seu usuário, convites/ }),
     ).toHaveAttribute('href', '/pessoas')
-    expect(screen.queryByText('Seu usuário')).toBeNull()
+    expect(screen.queryByRole('region', { name: 'Seu usuário' })).toBeNull()
+  })
+
+  it('a Conta não tem mais o usuário', async () => {
+    await open('/config?aba=conta')
+    expect(screen.queryByRole('region', { name: 'Seu usuário' })).toBeNull()
   })
 
   it('o + do seletor abre as pessoas', async () => {
@@ -660,36 +898,6 @@ describe('quem aceitou vê só o que é dele', () => {
     expect(
       await screen.findByRole('link', { name: /Cartões do @caio/ }),
     ).toBeVisible()
-  })
-
-  it('sair nos Ajustes: a entrada some ao voltar pra Meses', async () => {
-    answers.invitations = { invitations: [{ ...invite, accepted: true }] }
-    fake.current!.tableResults.shares = [fromOwner]
-    renderApp('/meses/2026-09', undefined, {
-      ...financeFixture(),
-      otherPerson: null,
-      people: [],
-    })
-    await screen.findByRole('link', { name: /Cartões do @caio/ })
-    fireEvent.click(screen.getAllByRole('link', { name: 'Ajustes' })[0]!)
-    fireEvent.click(
-      await screen.findByRole('link', { name: /Quem usa seus cartões/ }),
-    )
-    const leave = await screen.findByRole('button', { name: 'Sair' })
-    fake.current!.tableResults.shares = []
-    fireEvent.click(leave)
-    fireEvent.click(
-      await screen.findByRole('button', { name: /Sair|Confirmar|certeza/i }),
-    )
-    await waitFor(() => expect(asked('answer')).toBeTruthy())
-    await settle()
-    fireEvent.click(screen.getAllByRole('link', { name: 'Meses' })[0]!)
-    await settle()
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('link', { name: /Cartões do @caio/ }),
-      ).toBeNull(),
-    )
   })
 
   it('quem aceitou recebe as compras novas em até um minuto', async () => {

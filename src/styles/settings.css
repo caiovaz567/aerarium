@@ -303,6 +303,18 @@
   color: var(--muted);
 }
 
+.shared-leave {
+  margin: 0;
+  text-align: center;
+}
+.shared-leave .link-button {
+  min-height: 44px;
+  font-size: 14px;
+}
+.shared-leave .link-button.armed {
+  color: var(--neg);
+}
+
 /* "Pagar por Pix": one key for the whole amount. */
 .pix-body {
   display: flex;

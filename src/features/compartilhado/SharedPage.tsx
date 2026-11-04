@@ -1,15 +1,19 @@
 import { PageColumns } from '../../ui/PageColumns'
 import { HeaderSlot } from '../../app/headerSlot'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { currentMonth, parseMonth } from '../../app/paths'
+import { answerInvitation, invitationsKey } from '../../data/people'
 import type { SharedView } from '../../data/shared'
-import { useSharedWithMe } from '../../data/useShared'
+import { useUserId } from '../../data/useFinance'
+import { sharedKey, useSharedWithMe } from '../../data/useShared'
 import { BANKS, bankName } from '../../domain/banks'
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 import { pixKeyKind, pixKeyText, pixKeyValue } from '../../domain/pix'
 import { BankLogo } from '../../ui/BankLogo'
+import { ArmedButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
 import { LoadError, Loading } from '../../ui/LoadStates'
 import { useToast } from '../../ui/toastContext'
@@ -178,6 +182,43 @@ function SharedMonths({
   )
 }
 
+/** Someone who accepted an invitation can leave it. */
+function LeaveList({
+  view,
+  personId,
+}: {
+  readonly view: SharedView
+  readonly personId: string
+}) {
+  const userId = useUserId()
+  const client = useQueryClient()
+  const toast = useToast()
+  const navigate = useNavigate()
+  return (
+    <p className="shared-leave">
+      <ArmedButton
+        className="link-button"
+        onConfirm={() =>
+          void answerInvitation(personId, false)
+            .then(() => {
+              void client.invalidateQueries({
+                queryKey: invitationsKey(userId),
+              })
+              void client.invalidateQueries({ queryKey: sharedKey(userId) })
+              toast(`Você saiu da lista de ${view.ownerName}`)
+              void navigate('/pessoas')
+            })
+            .catch(() =>
+              toast('Não consegui salvar. Confere a internet e tenta de novo.'),
+            )
+        }
+      >
+        {`Sair da lista de ${view.ownerName}`}
+      </ArmedButton>
+    </p>
+  )
+}
+
 /**
  * "Cartões do Caio": what someone who shares their cards marked as yours,
  * read only, kept fresh.
@@ -203,6 +244,7 @@ export function SharedPage() {
         view={view}
         base={owner ? `/compartilhado?de=${owner}` : '/compartilhado'}
       />
+      {view.personId && <LeaveList view={view} personId={view.personId} />}
     </>
   )
 }

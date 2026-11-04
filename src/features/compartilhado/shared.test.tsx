@@ -78,7 +78,10 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2026-09-15T12:00:00-03:00'))
 })
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+  vi.useRealTimers()
+  localStorage.removeItem('aerarium.perfil')
+})
 
 function renderApp(...args: Parameters<typeof render>) {
   const result = render(...args)
@@ -257,7 +260,8 @@ describe('do lado do dono', () => {
 
   it('compartilha com a conta do pai, com a chave Pix, e grava a cópia', async () => {
     fake.current!.functionResults.share = { found: true }
-    renderApp('/pessoas', undefined, withDad())
+    localStorage.setItem('aerarium.perfil', 'other')
+    renderApp('/meses/2026-09', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: 'Compartilhar' }))
     const dialog = screen.getByRole('dialog', {
       name: 'Compartilhar com o Pai',
@@ -321,14 +325,13 @@ describe('do lado do dono', () => {
         ),
       { timeout: 3000 },
     )
-    expect(
-      await screen.findByText(/Compartilhado com pai@example.test/),
-    ).toBeVisible()
+    expect(await screen.findByText(/Ele já vê, na conta dele/)).toBeVisible()
   })
 
   it('e-mail sem conta no Aerarium: avisa pra ele criar primeiro', async () => {
     fake.current!.functionResults.share = { found: false }
-    renderApp('/pessoas', undefined, withDad())
+    localStorage.setItem('aerarium.perfil', 'other')
+    renderApp('/meses/2026-09', undefined, withDad())
     fireEvent.click(screen.getByRole('button', { name: 'Compartilhar' }))
     const dialog = screen.getByRole('dialog', {
       name: 'Compartilhar com o Pai',

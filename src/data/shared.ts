@@ -12,6 +12,8 @@ import { supabase } from './supabase'
 export interface SharedView {
   readonly ownerId: string
   readonly ownerName: string
+  /** Their line in the owner's list; null for the other person. */
+  readonly personId: string | null
   /** One Pix key to pay it all back, and the bank it is at. */
   readonly pixKey: string | null
   readonly pixBank: string | null
@@ -67,6 +69,7 @@ export function parseShared(raw: unknown): SharedView {
   return {
     ownerId: text(view.ownerId),
     ownerName: text(view.ownerName),
+    personId: orNull(view.personId),
     pixKey: orNull(view.pixKey),
     pixBank: orNull(view.pixBank),
     cards: list(view.cards).map((row) => ({
@@ -120,7 +123,7 @@ export function parseShared(raw: unknown): SharedView {
 export async function loadSharedWithMe(userId: string): Promise<SharedView[]> {
   const { data, error } = await supabase()
     .from('shares')
-    .select('owner_id,owner_name,pix_key,pix_bank,data')
+    .select('owner_id,person_id,owner_name,pix_key,pix_bank,data')
     .eq('viewer_id', userId)
   if (error) throw error
   return list(data).map((row) =>
@@ -128,6 +131,7 @@ export async function loadSharedWithMe(userId: string): Promise<SharedView[]> {
       ...((row.data as Raw | null) ?? {}),
       ownerId: row.owner_id,
       ownerName: row.owner_name,
+      personId: row.person_id,
       pixKey: row.pix_key,
       pixBank: row.pix_bank,
     }),

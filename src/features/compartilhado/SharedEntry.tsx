@@ -1,11 +1,8 @@
 import { Link } from 'react-router'
-import { currentMonth } from '../../app/paths'
 import type { SharedView } from '../../data/shared'
 import { useSharedWithMe } from '../../data/useShared'
-import { formatMoney } from '../../domain/money'
-import { monthName } from '../../domain/months'
 import { ChevronRightIcon, PeopleIcon } from '../../ui/icons'
-import { sharedDefaultMonth, sharedFinance, sharedMonth } from './sharedFinance'
+import { sharedLine } from './sharedFinance'
 
 /**
  * In Meses, for someone whose cards are shared with this account: "Cartões do
@@ -35,9 +32,6 @@ function OneEntry({
   readonly view: SharedView
   readonly to: string
 }) {
-  const finance = sharedFinance(view, currentMonth())
-  const ref = sharedDefaultMonth(view, finance, currentMonth())
-  const due = ref ? sharedMonth(view, finance, ref).due : null
   return (
     <Link className="shared-entry" to={to}>
       <span className="settings-icon accent" aria-hidden="true">
@@ -45,13 +39,7 @@ function OneEntry({
       </span>
       <span className="shared-entry-text">
         <b>Cartões do {view.ownerName}</b>
-        <small>
-          {ref && due !== null
-            ? due > 0
-              ? `${monthName(ref)}: falta pagar ${formatMoney(due)}`
-              : `${monthName(ref)}: nada a pagar`
-            : 'Nada por enquanto'}
-        </small>
+        <small>{sharedLine(view)}</small>
       </span>
       <ChevronRightIcon />
     </Link>

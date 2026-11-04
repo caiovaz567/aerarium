@@ -29,6 +29,7 @@ import { IncomesBlock } from './MonthBlocks'
 import { OtherMonth } from './OtherMonth'
 import { OwedBlock } from './OwedBlock'
 import { paidBack } from './paidBack'
+import { PersonOptions } from '../pessoas/PersonOptions'
 import { ProfileSwitch } from './ProfileSwitch'
 import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
@@ -434,27 +435,35 @@ export function MonthsPage() {
         onClickCapture={forecast ? onlyLook : undefined}
       >
         {personLooked ? (
-          <OtherMonth
-            key={personLooked.id}
-            finance={shown}
-            month={selected}
-            person={personLooked}
-            owed={personBalance(selected, shown, personLooked.id).owed}
-            due={personBalance(selected, shown, personLooked.id).due}
-            onOpen={openOutflow}
-            onPaid={personPaid}
-            onUndo={() => undoPersonPaid(personLooked)}
-          />
+          <>
+            <OtherMonth
+              key={personLooked.id}
+              finance={shown}
+              month={selected}
+              person={personLooked}
+              owed={personBalance(selected, shown, personLooked.id).owed}
+              due={personBalance(selected, shown, personLooked.id).due}
+              onOpen={openOutflow}
+              onPaid={personPaid}
+              onUndo={() => undoPersonPaid(personLooked)}
+            />
+            {!forecast && (
+              <PersonOptions finance={finance} person={personLooked} />
+            )}
+          </>
         ) : profile === 'other' ? (
-          <OtherMonth
-            finance={shown}
-            month={selected}
-            owed={view.balance.otherOwed}
-            due={view.balance.otherDue}
-            onOpen={openOutflow}
-            onPaid={otherPaid}
-            onUndo={undoPaid}
-          />
+          <>
+            <OtherMonth
+              finance={shown}
+              month={selected}
+              owed={view.balance.otherOwed}
+              due={view.balance.otherDue}
+              onOpen={openOutflow}
+              onPaid={otherPaid}
+              onUndo={undoPaid}
+            />
+            {!forecast && <PersonOptions finance={finance} />}
+          </>
         ) : (
           <>
             {wide ? (

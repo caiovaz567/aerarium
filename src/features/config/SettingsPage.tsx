@@ -17,7 +17,6 @@ import {
 } from '../../ui/icons'
 import { useToast } from '../../ui/toastContext'
 import { BankSection } from '../banco/BankSection'
-import { UsernameSection } from '../pessoas/PeopleSection'
 import { useBankEnabled } from '../banco/useBank'
 import { CategoriesModal } from './CategoriesModal'
 import { DeleteAccountModal } from './DeleteAccountModal'
@@ -195,7 +194,7 @@ export function SettingsPage() {
 
               <section aria-labelledby="ajustes-pessoas-link">
                 <h3 id="ajustes-pessoas-link" className="settings-label">
-                  Pessoas
+                  Compartilhar
                 </h3>
                 <ul className="settings-card">
                   <li>
@@ -203,8 +202,8 @@ export function SettingsPage() {
                       <Row
                         icon={<PeopleIcon />}
                         tone="accent"
-                        title="Quem usa seus cartões"
-                        detail="Divida compras com outras pessoas"
+                        title="Pessoas"
+                        detail="Seu usuário, convites e quem usa seus cartões"
                         end={<Chevron />}
                       />
                     </Link>
@@ -256,7 +255,6 @@ export function SettingsPage() {
           {tab === 'bancos' && finance && <BankSection finance={finance} />}
           {tab === 'conta' && (
             <>
-              <UsernameSection />
               <section aria-labelledby="ajustes-entrar">
                 <h3 id="ajustes-entrar" className="settings-label">
                   Formas de entrar

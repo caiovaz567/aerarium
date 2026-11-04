@@ -1,30 +1,39 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
+import { currentMonth, monthPath } from '../../app/paths'
+import { useProfile } from '../../app/profileContext'
 import {
   addPerson,
   addPersonByUsername,
   answerInvitation,
   invitationsKey,
   peopleKey,
-  removePerson,
   saveUsername,
   useInvitations,
   usePeople,
   usernameKey,
   useUsername,
   type AddResult,
+  type Person,
 } from '../../data/people'
 import { financeKey, type Finance } from '../../data/finance'
 import { useUserId } from '../../data/useFinance'
-import { sharedKey } from '../../data/useShared'
+import { sharedKey, useSharedWithMe } from '../../data/useShared'
+import { monthBalance, personBalance } from '../../domain/balance'
+import { cents, formatMoney, type Cents } from '../../domain/money'
+import { monthName, type Month } from '../../domain/months'
 import {
   cleanUsername,
   readPersonInput,
   usernameProblem,
 } from '../../domain/people'
 import { AddButton, ArmedButton, TextField } from '../../ui/controls'
+import { ChevronRightIcon } from '../../ui/icons'
 import { Modal } from '../../ui/Modal'
 import { useToast } from '../../ui/toastContext'
+import { sharedLine } from '../compartilhado/sharedFinance'
+import { defaultMonth } from '../meses/monthView'
 import { OtherPersonRows } from './OtherPersonRows'
 
 const NOT_SAVED = 'Não consegui salvar. Confere a internet e tenta de novo.'
@@ -102,13 +111,21 @@ function AddPersonModal({ onClose }: { readonly onClose: () => void }) {
   const userId = useUserId()
   const client = useQueryClient()
   const toast = useToast()
+  const [hasAccount, setHasAccount] = useState(true)
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
+  const pick = (next: boolean) => {
+    setHasAccount(next)
+    setError('')
+  }
+
   const submit = async (event: FormEvent) => {
     event.preventDefault()
-    const input = readPersonInput(value)
+    const input = readPersonInput(
+      hasAccount ? `@${cleanUsername(value)}` : value.trim().replace(/^@+/, ''),
+    )
     if (input.kind === 'problem') return setError(input.problem)
     setBusy(true)
     setError('')
@@ -135,15 +152,36 @@ function AddPersonModal({ onClose }: { readonly onClose: () => void }) {
   return (
     <Modal title="Adicionar pessoa" onClose={onClose}>
       <form className="modal-form" onSubmit={submit} noValidate>
+        <div
+          className="segmented"
+          role="group"
+          aria-label="A pessoa usa o Aerarium?"
+        >
+          <button
+            type="button"
+            aria-pressed={hasAccount}
+            onClick={() => pick(true)}
+          >
+            Tem Aerarium
+          </button>
+          <button
+            type="button"
+            aria-pressed={!hasAccount}
+            onClick={() => pick(false)}
+          >
+            Não tem
+          </button>
+        </div>
         <TextField
-          label="Nome ou @usuário"
+          label={hasAccount ? 'Usuário da pessoa' : 'Nome'}
           value={value}
           onChange={setValue}
-          placeholder="Ex.: Prima ou @joao"
+          placeholder={hasAccount ? 'Ex.: @joao' : 'Ex.: Prima'}
         />
         <p className="muted small">
-          Só o nome, só você vê. Com @, a pessoa recebe um convite e também vê a
-          parte dela.
+          {hasAccount
+            ? 'Peça o usuário que aparece na tela Pessoas dela. Ela recebe um convite e vê só as compras que você marcar como dela.'
+            : 'Só você vê. Serve pra separar as compras dessa pessoa das suas.'}
         </p>
         <p className="form-error" role="alert">
           {error}
@@ -161,13 +199,121 @@ function AddPersonModal({ onClose }: { readonly onClose: () => void }) {
   )
 }
 
-/** Who uses your cards, and who added you. */
+/** The username others invite you with, ready to pass along. */
+function UsernameSection() {
+  const username = useUsername()
+  const toast = useToast()
+  const [editing, setEditing] = useState(false)
+  const copy = () => {
+    const value = `@${username.data}`
+    void (navigator.clipboard?.writeText(value) ?? Promise.reject())
+      .then(() => toast('Usuário copiado'))
+      .catch(() => toast(`Seu usuário: ${value}`))
+  }
+  return (
+    <section aria-labelledby="pessoas-usuario">
+      <h3 id="pessoas-usuario" className="settings-label">
+        Seu usuário
+      </h3>
+      <ul className="settings-card">
+        <li className="settings-row share-row">
+          <span className="settings-text">
+            <b>{username.data ? `@${username.data}` : 'Nenhum ainda'}</b>
+            <small>
+              {username.data
+                ? 'Passe pra quem quer te adicionar.'
+                : 'Escolha um pra outra pessoa poder te adicionar.'}
+            </small>
+            <span className="share-actions">
+              {username.data && (
+                <button type="button" className="link-button" onClick={copy}>
+                  Copiar
+                </button>
+              )}
+              <button
+                type="button"
+                className="link-button"
+                disabled={username.isPending || username.isError}
+                onClick={() => setEditing(true)}
+              >
+                {username.data ? 'Trocar' : 'Escolher'}
+              </button>
+            </span>
+          </span>
+        </li>
+      </ul>
+      {editing && (
+        <UsernameModal
+          current={username.data ?? null}
+          onClose={() => setEditing(false)}
+        />
+      )}
+    </section>
+  )
+}
+
+/** One line in the list: tapping it opens the person's month in Meses. */
+function PersonRow({
+  title,
+  status,
+  owed,
+  due,
+  month,
+  profile,
+}: {
+  readonly title: string
+  readonly status: string
+  readonly owed: Cents
+  readonly due: Cents
+  readonly month: Month
+  readonly profile: string
+}) {
+  const { setProfile } = useProfile(undefined)
+  const money =
+    due > 0
+      ? `Te deve ${formatMoney(due)} em ${monthName(month)}`
+      : owed > 0
+        ? `Pagou ${monthName(month)}`
+        : null
+  return (
+    <li>
+      <Link
+        className="settings-row action"
+        to={monthPath(month)}
+        onClick={() => setProfile(profile)}
+      >
+        <span className="settings-text">
+          <b>{title}</b>
+          <small>{money ? `${status} · ${money}` : status}</small>
+        </span>
+        <span className="settings-chevron" aria-hidden="true">
+          <ChevronRightIcon />
+        </span>
+      </Link>
+    </li>
+  )
+}
+
+const statusOf = (person: Person) =>
+  !person.username
+    ? 'Só você vê'
+    : person.accepted
+      ? 'Vê só as compras marcadas'
+      : 'Esperando aceitar'
+
+const NOTHING = { owed: cents(0), due: cents(0) }
+
+/**
+ * Pessoas: your username, invitations waiting, the cards you follow, and who
+ * uses your cards. A person's details are their month in Meses.
+ */
 export function PeopleSection({ finance }: { readonly finance?: Finance }) {
   const userId = useUserId()
   const client = useQueryClient()
   const toast = useToast()
   const people = usePeople()
   const invitations = useInvitations()
+  const shared = useSharedWithMe(false)
   const [adding, setAdding] = useState(false)
 
   const change = (task: Promise<unknown>, done: string) => {
@@ -181,14 +327,138 @@ export function PeopleSection({ finance }: { readonly finance?: Finance }) {
       .catch(() => toast(NOT_SAVED))
   }
 
+  const month =
+    (finance && defaultMonth(finance, currentMonth())) ?? currentMonth()
+  const known = finance?.months.some((item) => item.ref === month)
+    ? finance
+    : null
+  const pai = known && monthBalance(month, known)
+  const waiting = invitations.data?.filter((item) => !item.accepted) ?? []
+  const views = shared.data ?? []
+  // Accepted, but with no copy to open: the way out still has to be here.
+  const noCopy = shared.data
+    ? (invitations.data ?? []).filter(
+        (item) =>
+          item.accepted &&
+          !views.some((view) => view.personId === item.personId),
+      )
+    : []
+  const nobody = !finance?.otherPerson && people.data?.length === 0
+
   return (
     <>
-      <section aria-labelledby="ajustes-pessoas">
-        <h3 id="ajustes-pessoas" className="settings-label">
+      <UsernameSection />
+
+      {waiting.length > 0 && (
+        <section aria-labelledby="pessoas-convites">
+          <h3 id="pessoas-convites" className="settings-label">
+            Convites
+          </h3>
+          <ul className="settings-card">
+            {waiting.map((item) => (
+              <li className="settings-row share-row" key={item.personId}>
+                <span className="settings-text">
+                  <b>{item.fromName}</b>
+                  <small>
+                    Quer te adicionar. Aceitando, você vê as compras que essa
+                    pessoa marcar como suas.
+                  </small>
+                  <span className="share-actions">
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() =>
+                        change(
+                          answerInvitation(item.personId, true),
+                          `Você aceitou o convite de ${item.fromName}`,
+                        )
+                      }
+                    >
+                      Aceitar
+                    </button>
+                    <ArmedButton
+                      className="link-button"
+                      onConfirm={() =>
+                        change(
+                          answerInvitation(item.personId, false),
+                          'Convite recusado',
+                        )
+                      }
+                    >
+                      Recusar
+                    </ArmedButton>
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {views.length + noCopy.length > 0 && (
+        <section aria-labelledby="pessoas-acompanha">
+          <h3 id="pessoas-acompanha" className="settings-label">
+            Cartões que você acompanha
+          </h3>
+          <ul className="settings-card">
+            {views.map((view) => (
+              <li key={view.ownerId}>
+                <Link
+                  className="settings-row action"
+                  to={`/compartilhado?de=${view.ownerId}`}
+                >
+                  <span className="settings-text">
+                    <b>Cartões do {view.ownerName}</b>
+                    <small>{sharedLine(view)}</small>
+                  </span>
+                  <span className="settings-chevron" aria-hidden="true">
+                    <ChevronRightIcon />
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {noCopy.map((item) => (
+              <li className="settings-row share-row" key={item.personId}>
+                <span className="settings-text">
+                  <b>Cartões do {item.fromName}</b>
+                  <small>Nada por enquanto</small>
+                  <span className="share-actions">
+                    <ArmedButton
+                      className="link-button"
+                      onConfirm={() =>
+                        change(
+                          answerInvitation(item.personId, false),
+                          `Você saiu da lista de ${item.fromName}`,
+                        )
+                      }
+                    >
+                      Sair
+                    </ArmedButton>
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section aria-labelledby="pessoas-lista">
+        <h3 id="pessoas-lista" className="settings-label">
           Quem usa seus cartões
         </h3>
         <ul className="settings-card">
-          {finance && <OtherPersonRows finance={finance} />}
+          {finance?.otherPerson ? (
+            <PersonRow
+              title={finance.otherPerson}
+              status="Fica com o resto das faturas"
+              owed={pai ? pai.otherOwed : NOTHING.owed}
+              due={pai ? pai.otherDue : NOTHING.due}
+              month={month}
+              profile="other"
+            />
+          ) : (
+            finance && <OtherPersonRows finance={finance} />
+          )}
           {people.isError && (
             <li className="settings-row" role="alert">
               <span className="settings-text">
@@ -199,135 +469,37 @@ export function PeopleSection({ finance }: { readonly finance?: Finance }) {
               </span>
             </li>
           )}
-          {people.data?.map((person) => (
-            <li className="settings-row share-row" key={person.id}>
+          {people.data?.map((person) => {
+            const balance = known
+              ? personBalance(month, known, person.id)
+              : NOTHING
+            return (
+              <PersonRow
+                key={person.id}
+                title={person.username ? `@${person.username}` : person.name}
+                status={statusOf(person)}
+                owed={balance.owed}
+                due={balance.due}
+                month={month}
+                profile={person.id}
+              />
+            )
+          })}
+          {nobody && (
+            <li className="settings-row">
               <span className="settings-text">
-                <b>{person.username ? `@${person.username}` : person.name}</b>
                 <small>
-                  {!person.username
-                    ? 'Só você vê.'
-                    : person.accepted
-                      ? 'Aceitou. Vê só a parte dela.'
-                      : 'Esperando aceitar.'}
+                  Ninguém ainda. Adicione quem compra nos seus cartões pra
+                  separar o que é de cada um.
                 </small>
-                <span className="share-actions">
-                  <ArmedButton
-                    className="link-button"
-                    onConfirm={() =>
-                      void removePerson(person.id)
-                        .then((removed) => {
-                          if (!removed)
-                            return toast(
-                              'Essa pessoa tem compras marcadas. Troca o "De quem" delas antes.',
-                            )
-                          void client.invalidateQueries({
-                            queryKey: peopleKey(userId),
-                          })
-                          void client.invalidateQueries({
-                            queryKey: financeKey(userId),
-                          })
-                          toast(`${person.name} saiu da sua lista`)
-                        })
-                        .catch(() => toast(NOT_SAVED))
-                    }
-                  >
-                    Remover
-                  </ArmedButton>
-                </span>
               </span>
             </li>
-          ))}
+          )}
         </ul>
         <AddButton onClick={() => setAdding(true)}>Adicionar pessoa</AddButton>
       </section>
 
-      {Boolean(invitations.data?.length) && (
-        <section aria-labelledby="ajustes-convites">
-          <h3 id="ajustes-convites" className="settings-label">
-            Quem te adicionou
-          </h3>
-          <ul className="settings-card">
-            {invitations.data!.map((item) => (
-              <li className="settings-row share-row" key={item.personId}>
-                <span className="settings-text">
-                  <b>{item.fromName}</b>
-                  <small>
-                    {item.accepted
-                      ? 'Você aceitou. Essa pessoa pode marcar compras como suas.'
-                      : 'Quer te adicionar. Aceitando, pode marcar compras como suas, e você vê só essas compras.'}
-                  </small>
-                  <span className="share-actions">
-                    {!item.accepted && (
-                      <button
-                        type="button"
-                        className="link-button"
-                        onClick={() =>
-                          change(
-                            answerInvitation(item.personId, true),
-                            `Você aceitou o convite de ${item.fromName}`,
-                          )
-                        }
-                      >
-                        Aceitar
-                      </button>
-                    )}
-                    <ArmedButton
-                      className="link-button"
-                      onConfirm={() =>
-                        change(
-                          answerInvitation(item.personId, false),
-                          item.accepted
-                            ? `Você saiu da lista de ${item.fromName}`
-                            : 'Convite recusado',
-                        )
-                      }
-                    >
-                      {item.accepted ? 'Sair' : 'Recusar'}
-                    </ArmedButton>
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {adding && <AddPersonModal onClose={() => setAdding(false)} />}
     </>
-  )
-}
-
-/** Ajustes → Conta: the username others invite you with. */
-export function UsernameSection() {
-  const username = useUsername()
-  const [editing, setEditing] = useState(false)
-  return (
-    <section aria-labelledby="ajustes-usuario">
-      <h3 id="ajustes-usuario" className="settings-label">
-        Seu usuário
-      </h3>
-      <ul className="settings-card">
-        <li className="settings-row">
-          <span className="settings-text">
-            <b>{username.data ? `@${username.data}` : 'Nenhum ainda'}</b>
-            <small>Só precisa dele quem quer ser convidado.</small>
-          </span>
-          <button
-            type="button"
-            className="link-button"
-            disabled={username.isPending || username.isError}
-            onClick={() => setEditing(true)}
-          >
-            {username.data ? 'Trocar' : 'Escolher'}
-          </button>
-        </li>
-      </ul>
-      {editing && (
-        <UsernameModal
-          current={username.data ?? null}
-          onClose={() => setEditing(false)}
-        />
-      )}
-    </section>
   )
 }

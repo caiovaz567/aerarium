@@ -136,7 +136,7 @@ export function ShareSettings({ other }: { readonly other: string }) {
           <b>Conta do {other} no Aerarium</b>
           <small>
             {current
-              ? `Compartilhado com ${current.viewerEmail}. Ele vê só o que é dele.`
+              ? 'Ele já vê, na conta dele, só o que é dele.'
               : `Ele vê, na conta dele, só o que você marcar como dele.`}
           </small>
           <span className="share-actions">
