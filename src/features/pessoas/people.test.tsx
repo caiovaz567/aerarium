@@ -378,14 +378,39 @@ describe('compras das pessoas da lista', () => {
     })
   })
 
-  it('sem ninguém além de você, não aparece seletor', async () => {
+  it('sem ninguém além de você: só Eu e o +, pra poder adicionar', async () => {
     renderApp('/meses/2026-09', undefined, {
       ...financeFixture(),
       otherPerson: null,
       people: [],
     })
     await settle()
-    expect(screen.queryByRole('group', { name: 'Ver gastos de' })).toBeNull()
+    const group = screen.getByRole('group', { name: 'Ver gastos de' })
+    expect(
+      within(group)
+        .getAllByRole('button')
+        .map((item) => item.textContent),
+    ).toEqual(['Eu'])
+    expect(
+      within(group).getByRole('link', { name: 'Pessoas' }),
+    ).toHaveAttribute('href', '/pessoas')
+  })
+
+  it('sem nenhum mês criado, o + também aparece', async () => {
+    renderApp('/meses', undefined, {
+      ...financeFixture(),
+      otherPerson: null,
+      people: [],
+      months: [],
+    })
+    await settle()
+    expect(screen.getByText('Nenhum mês ainda')).toBeVisible()
+    expect(
+      within(screen.getByRole('group', { name: 'Ver gastos de' })).getByRole(
+        'link',
+        { name: 'Pessoas' },
+      ),
+    ).toHaveAttribute('href', '/pessoas')
   })
 
   it('pessoa com compra marcada não sai da lista, e avisa', async () => {

@@ -4,8 +4,8 @@ import type { Finance } from '../../data/finance'
 import { PlusIcon } from '../../ui/icons'
 
 /**
- * Eu | Pai | Vini at the top, only when someone else uses the cards. Finger-sized
- * buttons; with many people the row scrolls sideways.
+ * Eu | Pai | Vini at the top. Always there, because its "+" is how people get
+ * added. Finger-sized buttons; with many people the row scrolls sideways.
  */
 export function ProfileSwitch({ finance }: { readonly finance: Finance }) {
   const { profile, setProfile } = useProfile(finance)
@@ -19,7 +19,6 @@ export function ProfileSwitch({ finance }: { readonly finance: Finance }) {
       item.name,
     ]),
   ]
-  if (options.length < 2) return null
   return (
     <div
       className="segmented profile-switch"

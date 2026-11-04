@@ -116,6 +116,9 @@ export function MonthsPage() {
       <>
         <h2 className="visually-hidden">Meses</h2>
         <SharedEntry />
+        <HeaderSlot>
+          <ProfileSwitch finance={finance} />
+        </HeaderSlot>
         <EmptyState
           title="Nenhum mês ainda"
           action={

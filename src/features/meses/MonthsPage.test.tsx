@@ -748,10 +748,14 @@ describe('Pai usa os cartões', () => {
     localStorage.removeItem('aerarium.perfil')
   })
 
-  it('sem outra pessoa, não tem seletor e a visão é sempre a sua', () => {
+  it('sem outra pessoa, o seletor só tem você e a visão é sempre a sua', () => {
     localStorage.setItem('aerarium.perfil', 'other')
     renderApp('/meses/2026-09')
-    expect(screen.queryByRole('group', { name: 'Ver gastos de' })).toBeNull()
+    expect(
+      within(screen.getByRole('group', { name: 'Ver gastos de' }))
+        .getAllByRole('button')
+        .map((item) => item.textContent),
+    ).toEqual(['Eu'])
     expect(heroValue('Saídas')).toBe('R$ 873,17')
     localStorage.removeItem('aerarium.perfil')
   })
