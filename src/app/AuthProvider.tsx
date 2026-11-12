@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../data/supabase'
 import { AuthContext, type AuthState } from './authContext'
+import { localAccount } from './localAccount'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' })
@@ -18,6 +19,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         recovery = false
         // Never show one person's cached data to the next.
         queryClient.clear()
+      }
+      // npm run local: the demo account signs in by itself when the app
+      // opens (not after "Sair"); the screen keeps loading meanwhile.
+      const local = localAccount(import.meta.env)
+      if (event === 'INITIAL_SESSION' && !session && local) {
+        void auth.signInWithPassword(local).then(({ error }) => {
+          if (error) setState({ status: 'signed-out' })
+        })
+        return
       }
       setState(
         session

@@ -84,6 +84,9 @@ writeFileSync(
     `VITE_SUPABASE_URL=${url}`,
     `VITE_SUPABASE_PUBLISHABLE_KEY=${publishable}`,
     `E2E_PASSWORD=${PASSWORD}`,
+    // The app signs in to this account by itself (src/app/localAccount.ts).
+    `VITE_LOCAL_EMAIL=${EMAIL}`,
+    `VITE_LOCAL_PASSWORD=${PASSWORD}`,
     '',
   ].join('\n'),
 )
@@ -132,7 +135,7 @@ const app = spawn(
 )
 console.log(`
   Aerarium local: http://127.0.0.1:${port}
-  Entrar com ${EMAIL} e a senha ${PASSWORD}
+  Entra sozinho com ${EMAIL} (senha ${PASSWORD})
   Ver o banco: http://127.0.0.1:54323
   Pra desligar o banco: npx supabase stop
 `)

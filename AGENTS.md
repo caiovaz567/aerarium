@@ -40,7 +40,7 @@ O que fazer a seguir, em ordem: `docs/PLANO.md`. Marque o que terminar e siga o 
 
 ## Comandos
 
-- `npm run local`: o app com um Supabase **no próprio computador** (Docker Desktop + WSL), com dados fictícios e sem tocar na nuvem: liga o Docker e o banco (`supabase start`, todas as migrations e o seed), preenche a conta demo (`aerarium.demo@example.test`, senha `aerarium-local`, só local) e abre o app em http://127.0.0.1:5173 (ou 5174). É o jeito de testar enquanto o projeto de desenvolvimento na nuvem está pausado. `npm run local -- --novos-dados` refaz os dados; `npx supabase stop` desliga o banco.
+- `npm run local`: o app com um Supabase **no próprio computador** (Docker Desktop + WSL), com dados fictícios e sem tocar na nuvem: liga o Docker e o banco (`supabase start`, todas as migrations e o seed), preenche a conta demo (`aerarium.demo@example.test`, senha `aerarium-local`, só local), abre o app e já entra nela sozinho (`src/app/localAccount.ts`, só no modo `offline`) em http://127.0.0.1:5173 (ou 5174). É o jeito de testar enquanto o projeto de desenvolvimento na nuvem está pausado. `npm run local -- --novos-dados` refaz os dados; `npx supabase stop` desliga o banco.
 - `npm run dev`: servidor em http://127.0.0.1:5173.
 - `npm run check`: lint, formatação, Vitest e build. `npm test`, `npm run test:watch`, `npm run test:coverage` (cobertura de `src/domain`).
 - `npm run e2e`: Playwright no iPhone (WebKit) e computador (Chromium), dois temas, mais o projeto `pwa` no build de produção. `npm run e2e:install` instala os navegadores. `npm run e2e:user` cria as contas fictícias de teste (senha em `.env.local`).
