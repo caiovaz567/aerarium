@@ -7,6 +7,7 @@ import { monthName, type Month } from '../../domain/months'
 import { OtherByType } from './OtherByType'
 import { SpendingList } from './SpendingBlock'
 import { TimelineView } from './TimelineView'
+import { ChangingText } from '../../ui/ChangingText'
 
 type View = 'tipo' | 'data' | 'categoria'
 // Like the owner's Saídas: "Por tipo" first, and it always opens there.
@@ -55,7 +56,9 @@ export function OtherMonth({
         <div className="hero-label">
           Gastos {of} em {monthName(month)}
         </div>
-        <p className="hero-num">{formatMoney(total)}</p>
+        <p className="hero-num">
+          <ChangingText>{formatMoney(total)}</ChangingText>
+        </p>
         {owed > 0 && due === 0 ? (
           <p className="paid-status">
             Pagou tudo de {monthName(month).toLowerCase()}.

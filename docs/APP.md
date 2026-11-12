@@ -76,7 +76,7 @@ Só para a conta do dono. Compras dos cartões chegam do banco pelo Meu Pluggy (
 
 ## Regras de interface (critério de aceite)
 
-Celular primeiro (conferir em 390×844). Nada pula de lugar ao trocar de mês ou filtrar. Nada importante cortado com "…". Ícones em SVG. Modais no centro. Barras fixas ao rolar. Lixeira com Desfazer. Sem rolagem lateral da página. Textos em pt-BR, tom casual, sem travessão ou hífen como pontuação. Todo campo de data usa `DateInput` (`src/ui`): seletor do aparelho, mas a data sempre aparece dd/mm/aaaa e hora em 24h, qualquer que seja o idioma do aparelho. Acessibilidade AA (axe nos testes), foco visível, `prefers-reduced-motion`.
+Celular primeiro (conferir em 390×844). Nada pula de lugar ao trocar de mês ou filtrar. Nada importante cortado com "…". Ícones em SVG. Modais no centro. Barras fixas ao rolar. Lixeira com Desfazer. Sem rolagem lateral da página. Textos em pt-BR, tom casual, sem travessão ou hífen como pontuação. Todo campo de data usa `DateInput` (`src/ui`): seletor do aparelho, mas a data sempre aparece dd/mm/aaaa e hora em 24h, qualquer que seja o idioma do aparelho. Acessibilidade AA (axe nos testes), foco visível, `prefers-reduced-motion`. Movimento curto e só onde algo mudou (12/11/2026, ideias de transitions.dev, feitas em CSS, sem biblioteca): o destaque das abas e seletores desliza até o escolhido (`src/ui/slidingPills.ts`), o valor grande troca com um desfoque leve (`ChangingText`), o mês entra do lado de onde veio (`useMonthEnter`), o check de pago aparece com um pulo, a chave liga com um quique e a mensagem de erro treme. Com movimento reduzido, nada disso anima.
 
 ## Pendências e próximos passos
 

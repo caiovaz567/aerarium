@@ -30,6 +30,7 @@ import { OtherMonth } from './OtherMonth'
 import { OwedBlock } from './OwedBlock'
 import { paidBack } from './paidBack'
 import { PersonOptions } from '../pessoas/PersonOptions'
+import { useMonthEnter } from '../../ui/useMonthEnter'
 import { ProfileSwitch } from './ProfileSwitch'
 import { OutflowViews } from './OutflowViews'
 import { NewMonthModal } from './MonthModals'
@@ -72,6 +73,7 @@ export function MonthsPage() {
   const toast = useToast()
   const editor = useEditor()
   const wide = useWide()
+  const enter = useMonthEnter(ym ?? '')
   const { profile } = useProfile(query.data)
   const [dialog, setDialog] = useState<Dialog | null>(null)
   const close = () => setDialog(null)
@@ -427,6 +429,7 @@ export function MonthsPage() {
       <div
         className={[
           'month-grid',
+          enter,
           wide && profile === 'me' && 'page-cols',
           forecast && 'forecast-view',
         ]
