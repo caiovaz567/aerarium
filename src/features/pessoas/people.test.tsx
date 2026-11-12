@@ -52,7 +52,10 @@ describe('seu usuário', () => {
   it('escolhe, aceita ponto e limpa o que foi digitado', async () => {
     await open()
     expect(screen.getByText('Nenhum ainda')).toBeVisible()
-    fireEvent.click(screen.getByRole('button', { name: 'Escolher' }))
+    // The button waits for the username to load.
+    const choose = screen.getByRole('button', { name: 'Escolher' })
+    await waitFor(() => expect(choose).toBeEnabled())
+    fireEvent.click(choose)
     const form = dialog('Seu usuário')
     const field = within(form).getByLabelText('Usuário')
     fireEvent.change(field, { target: { value: 'jo' } })

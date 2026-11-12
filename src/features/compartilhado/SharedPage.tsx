@@ -13,6 +13,7 @@ import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
 import { pixKeyKind, pixKeyText, pixKeyValue } from '../../domain/pix'
 import { BankLogo } from '../../ui/BankLogo'
+import { ChangingText } from '../../ui/ChangingText'
 import { ArmedButton } from '../../ui/controls'
 import { EmptyState } from '../../ui/EmptyState'
 import { LoadError, Loading } from '../../ui/LoadStates'
@@ -123,7 +124,9 @@ function SharedMonths({
                   ? `Falta pagar ao ${view.ownerName} em ${monthName(selected)}`
                   : `${monthName(selected)} com ${view.ownerName}`}
               </div>
-              <p className="hero-num">{formatMoney(month.due)}</p>
+              <p className="hero-num">
+                <ChangingText>{formatMoney(month.due)}</ChangingText>
+              </p>
               {month.owed > 0 && month.due === 0 ? (
                 <p className="paid-status">
                   Você pagou tudo de {monthName(selected).toLowerCase()} (

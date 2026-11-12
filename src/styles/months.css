@@ -254,11 +254,21 @@
   border: 2px solid var(--line);
   border-radius: 50%;
   background: var(--surface);
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
+/* The check pops in when marked; nothing moves when a screen opens. */
 .check svg {
   width: 16px;
   height: 16px;
   opacity: 0;
+  transform: scale(0.4) rotate(-25deg);
+  filter: blur(2px);
+  transition:
+    opacity 0.18s,
+    filter 0.18s,
+    transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .check[aria-pressed='true'] {
   border-color: var(--pos);
@@ -267,6 +277,8 @@
 }
 .check[aria-pressed='true'] svg {
   opacity: 1;
+  transform: none;
+  filter: none;
 }
 .trash {
   display: grid;

@@ -1,5 +1,6 @@
 import { formatMoney, type Cents } from '../../domain/money'
 import { monthName, type Month } from '../../domain/months'
+import { ChangingText } from '../../ui/ChangingText'
 import { committedPercent } from './monthView'
 
 /** Blue summary. Fixed layout: nothing here changes height between months. */
@@ -26,7 +27,9 @@ export function MonthSummary({
         Disponível em {monthName(month)}
         {balance.available < 0 && <span className="pill">No vermelho</span>}
       </div>
-      <p className="hero-num">{formatMoney(balance.available)}</p>
+      <p className="hero-num">
+        <ChangingText>{formatMoney(balance.available)}</ChangingText>
+      </p>
       <div className={`bar${over ? ' over' : ''}`} aria-hidden="true">
         <span style={{ width: `${width}%` }} />
       </div>

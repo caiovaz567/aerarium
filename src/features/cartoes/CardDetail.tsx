@@ -20,6 +20,7 @@ import { Button } from '@heroui/react'
 import { CardIcon, RepeatIcon } from '../../ui/icons'
 import { PageColumns } from '../../ui/PageColumns'
 import { BankTotalModal } from '../cartao/BankTotalModal'
+import { ChangingText } from '../../ui/ChangingText'
 import {
   cardInvoiceView,
   dayLabel,
@@ -338,16 +339,18 @@ export function CardDetail({
               </span>
             </small>
             <b>
-              {formatMoney(
-                looked
-                  ? (view.people.find((item) => item.personId === looked)
-                      ?.amount ?? cents(0))
-                  : part === 'mine'
-                    ? view.mine
-                    : part === 'other'
-                      ? view.otherShare
-                      : view.total,
-              )}
+              <ChangingText>
+                {formatMoney(
+                  looked
+                    ? (view.people.find((item) => item.personId === looked)
+                        ?.amount ?? cents(0))
+                    : part === 'mine'
+                      ? view.mine
+                      : part === 'other'
+                        ? view.otherShare
+                        : view.total,
+                )}
+              </ChangingText>
             </b>
             {view.due && view.dueText && (
               <small>

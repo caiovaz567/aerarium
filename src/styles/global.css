@@ -1026,6 +1026,128 @@ body.has-stuck .app-header.scrolled {
   }
 }
 
+/* Motion: short, and only where something changed. Reduced motion turns it
+   all off (below). */
+
+/* Tabs and switches: one highlight slides to the chosen button. */
+.segmented,
+.theme-toggle {
+  position: relative;
+  isolation: isolate;
+}
+.segmented.has-pill::before,
+.theme-toggle.has-pill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: var(--pill-w);
+  height: var(--pill-h);
+  border-radius: 9px;
+  background: var(--surface-2);
+  transform: translate(var(--pill-x), var(--pill-y));
+  pointer-events: none;
+}
+.segmented.pill-moves::before,
+.theme-toggle.pill-moves::before {
+  transition:
+    transform 0.34s cubic-bezier(0.3, 1.25, 0.5, 1),
+    width 0.34s cubic-bezier(0.3, 1.25, 0.5, 1),
+    height 0.34s ease;
+}
+.segmented.has-pill > button[aria-pressed='true'],
+.theme-toggle.has-pill > button[aria-pressed='true'] {
+  background: transparent;
+}
+.segmented > button,
+.theme-toggle > button {
+  transition: color 0.2s;
+}
+/* The views are tabs: the highlight is the accent line under the chosen one. */
+.segmented.views.has-pill::before {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: translate(
+    var(--pill-x),
+    calc(var(--pill-y) + var(--pill-h) - 2px)
+  );
+}
+.segmented.views.has-pill > button[aria-pressed='true'] {
+  border-bottom-color: transparent;
+}
+
+/* A big value that changed softly takes its place. */
+.changed-text {
+  display: inline-block;
+  animation: changed-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes changed-in {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(0.18em);
+  }
+}
+
+/* Another month comes in from the side it is on. */
+.enter-next-0 {
+  animation: from-right-0 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.enter-next-1 {
+  animation: from-right-1 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.enter-prev-0 {
+  animation: from-left-0 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.enter-prev-1 {
+  animation: from-left-1 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes from-right-0 {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+@keyframes from-right-1 {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+@keyframes from-left-0 {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+@keyframes from-left-1 {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+}
+
+/* A message about what went wrong gives a short shake when it shows up. */
+.form-error:not(:empty) {
+  animation: shake 0.36s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes shake {
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
 @keyframes pop {
   from {
     opacity: 0;

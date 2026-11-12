@@ -12,6 +12,7 @@ import { useMonthStart } from '../features/meses/useMonthStart'
 import { ExcelButton } from '../features/exportar/ExcelButton'
 import { LaunchModal } from '../features/lancar/LaunchModal'
 import { InvitationBanner } from '../features/pessoas/InvitationBanner'
+import { watchSlidingPills } from '../ui/slidingPills'
 import { useToast } from '../ui/toastContext'
 import { parseMonth } from './paths'
 import { Brand } from '../ui/Brand'
@@ -129,6 +130,7 @@ export function AppShell() {
   const toast = useToast()
   useBankAutoSync(finance.data, toast)
   useShareSync(finance.data)
+  useEffect(() => watchSlidingPills(document.body), [])
   useMonthStart(finance.data, toast)
   const review = useReview(finance.data)
   const inMonths = useMatch('/meses/:ym')
