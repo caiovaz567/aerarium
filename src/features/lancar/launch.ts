@@ -17,7 +17,8 @@ import {
   type ISODate,
   type Month,
 } from '../../domain/months'
-import { archiveSplit, buildNewMonth, openFrom } from '../meses/monthView'
+import { createMonths, launchUntil, monthsUntil } from '../meses/forecast'
+import { archiveSplit, openFrom } from '../meses/monthView'
 
 export type LaunchKind = 'gasto' | 'parcelado' | 'entrada'
 /** A card id, or NO_CARD for Pix, boleto ou dinheiro. */
@@ -47,11 +48,20 @@ export function launchCards(finance: Finance): readonly Card[] {
     .sort((a, b) => (typed.get(b.id) ?? 0) - (typed.get(a.id) ?? 0))
 }
 
-/** Every existing month and the next one. */
+/** The months after the last one that a launch creates when it goes there. */
+function monthsAhead(finance: Finance): Month[] {
+  const last = finance.months.at(-1)?.ref
+  const until = launchUntil(finance)
+  const ahead: Month[] = []
+  if (last && until)
+    for (let ref = addMonths(last, 1); ref <= until; ref = addMonths(ref, 1))
+      ahead.push(ref)
+  return ahead
+}
+
+/** Every existing month and the ones ahead. */
 function openableMonths(finance: Finance): Month[] {
-  const refs = finance.months.map((item) => item.ref)
-  const last = refs[refs.length - 1]
-  return last ? [...refs, addMonths(last, 1)] : []
+  return [...finance.months.map((item) => item.ref), ...monthsAhead(finance)]
 }
 
 /**
@@ -68,8 +78,9 @@ export function launchMonths(
     finance.months.map((item) => item.ref),
     openFrom(finance, today),
   )
-  const last = active[active.length - 1]
-  const months = last ? [...active, addMonths(last, 1)] : []
+  const months = finance.months.length
+    ? [...active, ...monthsAhead(finance)]
+    : []
   return keep && !months.includes(keep) ? [keep, ...months].sort() : months
 }
 
@@ -196,22 +207,18 @@ export function buildLaunch(
     }
   }
 
-  // The month may be the next one, not created yet: create it the usual way
-  // (copying the previous month and its leftover) with the new item inside.
+  // The month may be ahead, not created yet: create it and the ones before it
+  // the usual way (copying the previous month and its leftover), with the new
+  // item inside.
   let created: MonthSnapshot | null = null
+  let before: readonly MonthSnapshot[] = []
   let monthEntry = finance.months.find((item) => item.ref === input.month)
   if (!monthEntry) {
-    const refs = finance.months.map((item) => item.ref)
-    const last = refs[refs.length - 1]
-    if (!last || addMonths(last, 1) !== input.month)
+    if (!monthsAhead(finance).includes(input.month))
       throw new RangeError('Esse mês não pode receber lançamentos.')
-    created = buildNewMonth(
-      finance,
-      input.month,
-      last,
-      { copy: true, carryover: true },
-      newId,
-    )
+    const chain = monthsUntil(finance, input.month, newId)
+    created = chain.at(-1)!
+    before = chain.slice(0, -1)
     monthEntry = created.entry
   }
   const monthId = monthEntry.id
@@ -230,14 +237,14 @@ export function buildLaunch(
     op: FinanceOp,
     undo: FinanceOp,
     message: string,
-  ): Launch =>
-    created
-      ? {
-          op: ops.createMonth(add(created)),
-          undo: ops.removeMonth(add(created)),
-          message: `${message} (${monthName(input.month)} criado)`,
-        }
-      : { op, undo, message }
+  ): Launch => {
+    if (!created) return { op, undo, message }
+    const months = createMonths([...before, add(created)])
+    const made = before[0]
+      ? `${monthName(before[0].entry.ref)} a ${monthName(input.month)} criados`
+      : `${monthName(input.month)} criado`
+    return { ...months, message: `${message} (${made})` }
+  }
 
   if (input.kind === 'entrada') {
     const income = {

@@ -708,6 +708,11 @@ a.row-main {
   }
 }
 
+/* Groups the page's content without a box of its own. */
+.look-only {
+  display: contents;
+}
+
 /* The cards in a row: a phone scrolls it sideways. */
 .card-strip {
   display: flex;

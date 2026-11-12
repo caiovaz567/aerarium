@@ -392,6 +392,42 @@ describe('Criar e excluir mês', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('mês mais à frente: cria ele e os do meio, e desfazer apaga todos', async () => {
+    renderApp('/meses/2026-12')
+    expect(screen.getByRole('region', { name: 'Previsão' })).toHaveTextContent(
+      'Lance algo nele e ele é criado sozinho.',
+    )
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Criar até Dezembro 2026' }),
+    )
+    await settle()
+    expect(screen.getByText('Outubro a Dezembro criados')).toBeVisible()
+    expect(screen.queryByRole('region', { name: 'Previsão' })).toBeNull()
+    const months = () =>
+      fake.current!.calls.filter((call) => call.table === 'months')
+    await waitFor(() =>
+      expect(months().map((call) => call.op)).toEqual([
+        'insert',
+        'insert',
+        'insert',
+      ]),
+    )
+    expect(
+      months().map((call) => (call.payload as { ref: string }).ref),
+    ).toEqual(['2026-10-01', '2026-11-01', '2026-12-01'])
+    fireEvent.click(screen.getByRole('button', { name: 'Desfazer' }))
+    await waitFor(() =>
+      expect(months().map((call) => call.op)).toEqual([
+        'insert',
+        'insert',
+        'insert',
+        'delete',
+        'delete',
+        'delete',
+      ]),
+    )
+  })
+
   it('cria outubro copiando setembro e levando a sobra', async () => {
     renderApp('/meses/2026-10')
     fireEvent.click(screen.getByRole('button', { name: 'Criar Outubro 2026' }))

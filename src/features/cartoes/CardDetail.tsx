@@ -48,6 +48,7 @@ export function CardDetail({
   onExpense,
   onOther,
   onTotal,
+  onOpenMonth,
   onPaid,
 }: {
   readonly card: Card
@@ -59,6 +60,8 @@ export function CardDetail({
   /** "Outros gastos" and the note of the invoice. */
   readonly onOther: () => void
   readonly onTotal: () => void
+  /** Opens a month tapped on the chart; false when it cannot be opened. */
+  readonly onOpenMonth?: (month: Month) => boolean
   readonly onPaid: (paid: boolean) => void
 }) {
   const editor = useEditor()
@@ -462,7 +465,13 @@ export function CardDetail({
         </section>
       }
     >
-      <CardChartBlock card={card} finance={finance} month={month} part={part} />
+      <CardChartBlock
+        card={card}
+        finance={finance}
+        month={month}
+        part={part}
+        onOpenMonth={onOpenMonth}
+      />
 
       <section className="block card-lists" aria-label={`Na fatura de ${name}`}>
         <div

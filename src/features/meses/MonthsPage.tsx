@@ -36,7 +36,12 @@ import { NewMonthModal } from './MonthModals'
 import { MonthNav } from './MonthNav'
 import { MonthSummary } from './MonthSummary'
 import { MoneyPlaces } from './MoneyPlaces'
-import { forecastFinance, forecastUntil } from './forecast'
+import {
+  createMonths,
+  forecastFinance,
+  forecastUntil,
+  monthsUntil,
+} from './forecast'
 import {
   buildNewMonth,
   defaultMonth,
@@ -407,8 +412,9 @@ export function MonthsPage() {
           <p>
             <b>Previsão.</b> {monthName(selected)} ainda não foi criado: aqui
             estão as parcelas, as assinaturas e o que se repete do último mês.
+            Lance algo nele e ele é criado sozinho.
           </p>
-          {selected === addMonths(last, 1) && (
+          {selected === addMonths(last, 1) ? (
             <button
               type="button"
               className="btn primary"
@@ -417,6 +423,21 @@ export function MonthsPage() {
               }
             >
               Criar {monthLabel(selected)}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                const months = createMonths(monthsUntil(finance, selected))
+                run(months.op)
+                toast(
+                  `${monthName(addMonths(last, 1))} a ${monthName(selected)} criados`,
+                  { label: 'Desfazer', onClick: () => run(months.undo) },
+                )
+              }}
+            >
+              Criar até {monthLabel(selected)}
             </button>
           )}
         </section>

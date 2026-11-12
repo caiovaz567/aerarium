@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { currentMonth } from '../../app/paths'
 import type { Card, Finance } from '../../data/finance'
 import {
@@ -34,12 +34,18 @@ export function CardChartBlock({
   finance,
   month,
   part = 'total',
+  onOpenMonth,
 }: {
   readonly card: Card
   readonly finance: Finance
   readonly month: Month
   /** Eu | Pai: whose part of each invoice. */
   readonly part?: CardPart
+  /**
+   * Opens the tapped month on the whole page (its cards and purchases);
+   * false when it cannot, and then only the chart moves.
+   */
+  readonly onOpenMonth?: (month: Month) => boolean
 }) {
   const now = currentMonth()
   const points = useMemo(
@@ -54,7 +60,13 @@ export function CardChartBlock({
       (item) => item && points.some((point) => point.month === item),
     ) ?? points[points.length - 1]?.month
   const index = points.findIndex((point) => point.month === selected)
-  const choose = (target: Month) => setPick({ from: month, month: target })
+  const choose = (target: Month) => {
+    if (!onOpenMonth?.(target)) setPick({ from: month, month: target })
+  }
+  const live = useRef(choose)
+  useEffect(() => {
+    live.current = choose
+  })
 
   // ← → walk the chart (computer). Not while a dialog is open or typing.
   useEffect(() => {
@@ -65,11 +77,11 @@ export function CardChartBlock({
       if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
       event.preventDefault()
       const next = points[index + (event.key === 'ArrowLeft' ? -1 : 1)]
-      if (next) setPick({ from: month, month: next.month })
+      if (next) live.current(next.month)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [points, index, month])
+  }, [points, index])
 
   const point = points[index]
   if (!point || !selected) return null
