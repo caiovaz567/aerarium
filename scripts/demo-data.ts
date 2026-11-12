@@ -1,7 +1,8 @@
 // Fills the demo account (development only) with fictitious data that looks
 // like a real person's months: to show the app, take screenshots or import
 // the screens into Figma without anyone's real numbers.
-// The account is created by `npm run e2e:user`; this wipes and refills it.
+// The account is created by `npm run e2e:user` (or by `npm run local`, on the
+// Supabase on this computer); this wipes and refills it.
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { DEFAULT_CATEGORIES } from '../src/domain/categories'
@@ -12,15 +13,20 @@ const development = JSON.parse(
   readFileSync('supabase/development.json', 'utf8'),
 )
 const env = Object.fromEntries(
-  readFileSync('.env.local', 'utf8')
+  readFileSync(process.env.DEMO_ENV_FILE ?? '.env.local', 'utf8')
     .split(/\r?\n/)
     .map((line) => line.match(/^([A-Z0-9_]+)=(.*)$/))
     .filter((match) => match !== null)
     .map((match) => [match[1], match[2]!.trim()]),
 )
+// The Supabase on this computer, or the development project; never production.
+const local = /^http:\/\/(127\.0\.0\.1|localhost)[:/]/.test(
+  String(env.VITE_SUPABASE_URL),
+)
 if (
-  development.purpose !== 'development-only' ||
-  !String(env.VITE_SUPABASE_URL).includes(development.projectRef)
+  !local &&
+  (development.purpose !== 'development-only' ||
+    !String(env.VITE_SUPABASE_URL).includes(development.projectRef))
 )
   throw new Error('Operação recusada: só no ambiente de desenvolvimento.')
 
