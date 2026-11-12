@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import {
   Link,
   Navigate,
@@ -29,6 +29,7 @@ import { PlanRow } from '../cartao/PlanRow'
 import { useEditor } from '../editar/editorContext'
 import { ExpenseModal } from '../meses/EditModals'
 import { expenseMonth, expenseMonths, saveExpense } from '../meses/expenseMove'
+import { forecastFinance, forecastUntil } from '../meses/forecast'
 import { MonthNav } from '../meses/MonthNav'
 import { ProfileSwitch } from '../meses/ProfileSwitch'
 import { defaultMonth } from '../meses/monthView'
@@ -99,13 +100,28 @@ export function CardsPage() {
 
   if (query.isPending) return <Loading />
   if (!query.data) return <LoadError onRetry={() => query.refetch()} />
-  const finance = query.data
-  const refs = finance.months.map((item) => item.ref)
+  const saved = query.data
+  const refs = saved.months.map((item) => item.ref)
+  const last = refs.at(-1)
+  // Past the last month, up to the last installment: a forecast to look at.
+  const until = forecastUntil(saved)
+  const canOpen = (ref: Month) =>
+    refs.includes(ref) || Boolean(last && until && ref > last && ref <= until)
   const asked = parseMonth(params.get('mes'))
   const selected =
-    asked && refs.includes(asked)
-      ? asked
-      : defaultMonth(finance, currentMonth())
+    asked && canOpen(asked) ? asked : defaultMonth(saved, currentMonth())
+  const forecast = Boolean(selected && last && selected > last)
+  const finance =
+    forecast && selected ? forecastFinance(saved, selected) : saved
+  // A forecast is only for looking: picking a card, the chart and the views
+  // still work, nothing else opens.
+  const onlyLook = (event: MouseEvent) => {
+    const target = event.target as HTMLElement
+    if (target.closest('.segmented, .card-strip, .card-chart, [aria-expanded]'))
+      return
+    event.preventDefault()
+    event.stopPropagation()
+  }
 
   if (!selected)
     return (
@@ -191,9 +207,10 @@ export function CardsPage() {
       <h2 className="visually-hidden">Cartões</h2>
       <HeaderSlot>
         <MonthNav
-          finance={finance}
+          finance={saved}
           selected={selected}
           pathFor={(month) => pathFor(month)}
+          forecastUntil={until}
         />
         <p className="all-invoices">
           {person
@@ -218,175 +235,197 @@ export function CardsPage() {
           Voltar pra Meses
         </button>
       )}
-      <div className="card-strip" role="group" aria-label="Escolher cartão">
-        {view.blocks.map(({ card, invoice }) => (
-          <button
-            type="button"
-            key={card.id}
-            aria-pressed={card.id === picked}
-            onClick={() => pick(card.id)}
-          >
-            <CardArt card={card} size="xs" />
-            <span className="pick-name">
-              <b>{card.name}</b>
-              <small>
-                {invoice
-                  ? formatMoney(shown.get(card.id) ?? cents(0))
-                  : 'sem fatura'}
-              </small>
-            </span>
-          </button>
-        ))}
-        {view.loose.length > 0 && (
-          <button
-            type="button"
-            aria-pressed={picked === LOOSE}
-            onClick={() => pick(LOOSE)}
-          >
-            <span className="card-art xs none" aria-hidden="true" />
-            <span className="pick-name">
-              <b>Fora dos cartões</b>
-              <small>{formatMoney(looseTotal)}</small>
-            </span>
-          </button>
-        )}
-        <button
-          type="button"
-          className="strip-new"
-          aria-label="Novo cartão"
-          onClick={() => editor.card(null)}
-        >
-          <PlusIcon />
-        </button>
-      </div>
-
-      {!view.blocks.length && (
-        <EmptyState title="Nenhum cartão ainda">
-          Seus cartões aparecem aqui. Toque no + pra criar o primeiro.
-        </EmptyState>
-      )}
-
-      {block && (
-        <CardDetail
-          key={block.card.id}
-          card={block.card}
-          finance={finance}
-          month={selected}
-          part={part}
-          onExpense={(item) => setDialog({ kind: 'expense', id: item.id })}
-          onOther={() =>
-            block.invoice &&
-            setDialog({ kind: 'invoice', id: block.invoice.id })
-          }
-          onTotal={() =>
-            block.invoice &&
-            setDialog({ kind: 'invoice', id: block.invoice.id, total: true })
-          }
-          onPaid={(paid) => {
-            const row = block.invoice!
-            const day = today()
-            run(ops.invoicePaid(row, paid, day))
-            toast(
-              paid
-                ? `Fatura ${block.card.name} paga`
-                : `Fatura ${block.card.name} em aberto`,
-              {
-                label: 'Desfazer',
-                onClick: () => run(ops.invoicePaid(row, !paid, day)),
-              },
-            )
-          }}
-        />
-      )}
-
-      {picked === LOOSE && (
-        <section className="block card-block" aria-label="Fora dos cartões">
-          <div className="card-head">
-            <div className="card-title">
-              <b>Fora dos cartões</b>
-              <small>Parcelas pagas à parte</small>
-            </div>
-            <span className="sum">{formatMoney(looseTotal)}</span>
-          </div>
-          <ul className="rows">
-            {view.loose.map((line) => (
-              <PlanRow
-                key={line.plan.id}
-                line={line}
-                onToggle={() => actions.toggle(line, selected)}
-                onOpen={() => editor.plan(line.plan.id)}
-                onDelete={() => actions.remove(line.plan)}
-              />
-            ))}
-          </ul>
-          <AddButton onClick={() => editor.plan(null, { cardId: null })}>
-            Parcela fora de cartão
-          </AddButton>
+      {forecast && (
+        <section className="forecast-note" aria-label="Previsão">
+          <p>
+            <b>Previsão.</b> {monthName(selected)} ainda não foi criado: aqui
+            estão as parcelas e as assinaturas. Lance algo nele e ele é criado
+            sozinho.
+          </p>
         </section>
       )}
+      <div
+        className="look-only"
+        onClickCapture={forecast ? onlyLook : undefined}
+      >
+        <div className="card-strip" role="group" aria-label="Escolher cartão">
+          {view.blocks.map(({ card, invoice }) => (
+            <button
+              type="button"
+              key={card.id}
+              aria-pressed={card.id === picked}
+              onClick={() => pick(card.id)}
+            >
+              <CardArt card={card} size="xs" />
+              <span className="pick-name">
+                <b>{card.name}</b>
+                <small>
+                  {invoice
+                    ? formatMoney(shown.get(card.id) ?? cents(0))
+                    : 'sem fatura'}
+                </small>
+              </span>
+            </button>
+          ))}
+          {view.loose.length > 0 && (
+            <button
+              type="button"
+              aria-pressed={picked === LOOSE}
+              onClick={() => pick(LOOSE)}
+            >
+              <span className="card-art xs none" aria-hidden="true" />
+              <span className="pick-name">
+                <b>Fora dos cartões</b>
+                <small>{formatMoney(looseTotal)}</small>
+              </span>
+            </button>
+          )}
+          <button
+            type="button"
+            className="strip-new"
+            aria-label="Novo cartão"
+            onClick={() => editor.card(null)}
+          >
+            <PlusIcon />
+          </button>
+        </div>
 
-      <section className="block">
-        <button
-          type="button"
-          className="archive-head"
-          aria-expanded={archiveOpen}
-          onClick={toggleArchive}
-        >
-          <span>Arquivados</span>
-          <span className="meta">
-            {view.archived.length
-              ? `${view.archived.length} quitado${view.archived.length > 1 ? 's' : ''}`
-              : 'vazio'}
-          </span>
-          <ChevronDownIcon />
-        </button>
-        {archiveOpen && !view.archived.length && (
-          <p className="empty-hint bordered">
-            Quando você pagar a última parcela de um parcelamento, ele vem pra
-            cá.
-          </p>
+        {!view.blocks.length && (
+          <EmptyState title="Nenhum cartão ainda">
+            Seus cartões aparecem aqui. Toque no + pra criar o primeiro.
+          </EmptyState>
         )}
-        {archiveOpen && view.archived.length > 0 && (
-          <ul className="rows bordered">
-            {view.archived.map(({ plan, settledOn, paidCount, card }) => (
-              <li className="row" key={plan.id}>
-                <button
-                  type="button"
-                  className="row-main"
-                  onClick={() => editor.plan(plan.id)}
-                >
-                  {card ? (
-                    <CardArt card={card} size="xs" />
-                  ) : (
-                    <span className="card-art xs none" aria-hidden="true" />
-                  )}
-                  <span className="desc">
-                    {plan.description}
-                    <span className="sub">
-                      {[
-                        settledOn
-                          ? `Quitado em ${dateBR(settledOn)}`
-                          : 'Quitado',
-                        `${paidCount} pagamento${paidCount > 1 ? 's' : ''}`,
-                        card?.name,
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </span>
-                  </span>
-                  <span className="val">
-                    {formatMoney(plan.installmentAmount)}
-                  </span>
-                </button>
-                <TrashButton
-                  label={plan.description}
-                  onClick={() => actions.remove(plan)}
+
+        {block && (
+          <CardDetail
+            key={block.card.id}
+            card={block.card}
+            finance={finance}
+            month={selected}
+            part={part}
+            onOpenMonth={(month) => {
+              if (!canOpen(month)) return false
+              setParams(
+                { mes: month, ...(picked && { cartao: picked }) },
+                { replace: true, state: location.state },
+              )
+              return true
+            }}
+            onExpense={(item) => setDialog({ kind: 'expense', id: item.id })}
+            onOther={() =>
+              block.invoice &&
+              setDialog({ kind: 'invoice', id: block.invoice.id })
+            }
+            onTotal={() =>
+              block.invoice &&
+              setDialog({ kind: 'invoice', id: block.invoice.id, total: true })
+            }
+            onPaid={(paid) => {
+              const row = block.invoice!
+              const day = today()
+              run(ops.invoicePaid(row, paid, day))
+              toast(
+                paid
+                  ? `Fatura ${block.card.name} paga`
+                  : `Fatura ${block.card.name} em aberto`,
+                {
+                  label: 'Desfazer',
+                  onClick: () => run(ops.invoicePaid(row, !paid, day)),
+                },
+              )
+            }}
+          />
+        )}
+
+        {picked === LOOSE && (
+          <section className="block card-block" aria-label="Fora dos cartões">
+            <div className="card-head">
+              <div className="card-title">
+                <b>Fora dos cartões</b>
+                <small>Parcelas pagas à parte</small>
+              </div>
+              <span className="sum">{formatMoney(looseTotal)}</span>
+            </div>
+            <ul className="rows">
+              {view.loose.map((line) => (
+                <PlanRow
+                  key={line.plan.id}
+                  line={line}
+                  onToggle={() => actions.toggle(line, selected)}
+                  onOpen={() => editor.plan(line.plan.id)}
+                  onDelete={() => actions.remove(line.plan)}
                 />
-              </li>
-            ))}
-          </ul>
+              ))}
+            </ul>
+            <AddButton onClick={() => editor.plan(null, { cardId: null })}>
+              Parcela fora de cartão
+            </AddButton>
+          </section>
         )}
-      </section>
+
+        <section className="block">
+          <button
+            type="button"
+            className="archive-head"
+            aria-expanded={archiveOpen}
+            onClick={toggleArchive}
+          >
+            <span>Arquivados</span>
+            <span className="meta">
+              {view.archived.length
+                ? `${view.archived.length} quitado${view.archived.length > 1 ? 's' : ''}`
+                : 'vazio'}
+            </span>
+            <ChevronDownIcon />
+          </button>
+          {archiveOpen && !view.archived.length && (
+            <p className="empty-hint bordered">
+              Quando você pagar a última parcela de um parcelamento, ele vem pra
+              cá.
+            </p>
+          )}
+          {archiveOpen && view.archived.length > 0 && (
+            <ul className="rows bordered">
+              {view.archived.map(({ plan, settledOn, paidCount, card }) => (
+                <li className="row" key={plan.id}>
+                  <button
+                    type="button"
+                    className="row-main"
+                    onClick={() => editor.plan(plan.id)}
+                  >
+                    {card ? (
+                      <CardArt card={card} size="xs" />
+                    ) : (
+                      <span className="card-art xs none" aria-hidden="true" />
+                    )}
+                    <span className="desc">
+                      {plan.description}
+                      <span className="sub">
+                        {[
+                          settledOn
+                            ? `Quitado em ${dateBR(settledOn)}`
+                            : 'Quitado',
+                          `${paidCount} pagamento${paidCount > 1 ? 's' : ''}`,
+                          card?.name,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                    </span>
+                    <span className="val">
+                      {formatMoney(plan.installmentAmount)}
+                    </span>
+                  </button>
+                  <TrashButton
+                    label={plan.description}
+                    onClick={() => actions.remove(plan)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
       {expense && (
         <ExpenseModal

@@ -69,22 +69,33 @@ let counter = 0
 const ids = () => `novo-${++counter}`
 
 describe('mês sugerido', () => {
-  it('meses possíveis: os não arquivados e o próximo, mais o escolhido', () => {
+  it('meses possíveis: os não arquivados e os à frente, mais o escolhido', () => {
     const today = month('2026-09')
-    expect(launchMonths(financeFixture(), today)).toEqual([
-      '2026-09',
-      '2026-10',
-    ])
+    const months = launchMonths(financeFixture(), today)
+    // A year past the last month (September), since the installments end
+    // before that.
+    expect(months.slice(0, 3)).toEqual(['2026-09', '2026-10', '2026-11'])
+    expect(months.at(-1)).toBe('2027-09')
+    expect(months).toHaveLength(13)
     // August is archived, but a card's open invoice can still be it.
-    expect(launchMonths(financeFixture(), today, month('2026-08'))).toEqual([
-      '2026-08',
-      '2026-09',
-      '2026-10',
-    ])
-    expect(launchMonths(financeFixture(), today, month('2026-10'))).toEqual([
-      '2026-09',
-      '2026-10',
-    ])
+    expect(
+      launchMonths(financeFixture(), today, month('2026-08')).slice(0, 3),
+    ).toEqual(['2026-08', '2026-09', '2026-10'])
+    expect(launchMonths(financeFixture(), today, month('2026-10'))).toEqual(
+      months,
+    )
+  })
+
+  it('parcelas que vão além de um ano: dá pra lançar até a última', () => {
+    const finance = financeFixture()
+    const long = {
+      ...finance,
+      plans: [
+        ...finance.plans,
+        { ...finance.plans[0]!, id: 'longo', totalInstallments: 24 },
+      ],
+    }
+    expect(launchMonths(long, month('2026-09')).at(-1)).toBe('2028-07')
   })
 
   it('o mês aberto em Meses vence; senão, o mês atual', () => {
@@ -144,7 +155,9 @@ describe('mês sugerido', () => {
         today: isoDate(day),
       })
     expect(on('2026-01-10')).toBe('2026-08')
-    expect(on('2027-03-10')).toBe('2026-10')
+    // A month ahead is created when launched into.
+    expect(on('2027-03-10')).toBe('2027-03')
+    expect(on('2028-01-10')).toBe('2027-09')
   })
 })
 
@@ -286,6 +299,46 @@ describe('o que cada lançamento grava', () => {
     const after = launch.op.apply(finance)
     expect(after.plans.at(-1)).toMatchObject({ firstMonth: '2026-10' })
     expect(after.months).toEqual(finance.months)
+  })
+
+  it('meses à frente: cria os do meio junto, e desfazer apaga todos', () => {
+    const launch = buildLaunch(
+      finance,
+      { ...base, month: month('2026-12') },
+      ids,
+    )
+    expect(spaced(launch.message)).toBe(
+      'R$ 12,00 na fatura Nubank Teste (Outubro a Dezembro criados)',
+    )
+    const after = launch.op.apply(finance)
+    expect(after.months.map((item) => item.ref)).toEqual([
+      '2026-08',
+      '2026-09',
+      '2026-10',
+      '2026-11',
+      '2026-12',
+    ])
+    const december = after.months.find((item) => item.ref === '2026-12')!
+    const invoice = after.invoices.find(
+      (item) => item.monthId === december.id && item.cardId === 'c1',
+    )!
+    expect(
+      after.expenses.filter((item) => item.invoiceId === invoice.id),
+    ).toHaveLength(1)
+    // Each month comes from the one before it: the salary is copied all along.
+    for (const ref of ['2026-10', '2026-11', '2026-12']) {
+      const id = after.months.find((item) => item.ref === ref)!.id
+      expect(
+        after.incomes.filter((item) => item.monthId === id).length,
+      ).toBeGreaterThan(0)
+    }
+    expect(launch.undo.apply(after)).toEqual(finance)
+  })
+
+  it('mês longe demais: não lança', () => {
+    expect(() =>
+      buildLaunch(finance, { ...base, month: month('2027-10') }, ids),
+    ).toThrow('Esse mês não pode receber lançamentos.')
   })
 
   it('mês seguinte ainda não criado: cria o mês com o gasto dentro', () => {

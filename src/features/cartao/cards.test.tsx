@@ -272,7 +272,7 @@ describe('Cartões, uma tela só', () => {
     expect(screen.getByText(/Quando você pagar a última parcela/)).toBeVisible()
   })
 
-  it('o gráfico abre no mês da tela; as setas do teclado andam só nele', () => {
+  it('o gráfico abre no mês da tela; as setas do teclado trocam o mês', () => {
     renderApp('/cartoes?mes=2026-09')
     const head = () =>
       spaced(document.querySelector('.chart-head')!.textContent)
@@ -288,7 +288,28 @@ describe('Cartões, uma tela só', () => {
     })
     expect(head()).toBe('Agosto 2026 · pagaR$ 359,90')
     expect(document.querySelector('.change-row')!.childElementCount).toBe(0)
-    expect(hero()).toContain('Fatura de setembro')
+    // The whole page goes with it: the invoice and its purchases.
+    expect(hero()).toContain('Fatura de agosto')
+  })
+
+  it('outro mês no gráfico abre ele; à frente, como previsão', () => {
+    renderApp('/cartoes?mes=2026-09')
+    const key = (name: string) =>
+      act(() => {
+        fireEvent.keyDown(document, { key: name })
+      })
+    key('ArrowRight')
+    expect(screen.getByRole('region', { name: 'Previsão' })).toHaveTextContent(
+      'Outubro ainda não foi criado',
+    )
+    expect(hero()).toContain('Fatura de outubro')
+    // Only for looking: the purchases open nothing.
+    fireEvent.click(screen.getByRole('button', { name: /^Notebook/ }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    key('ArrowLeft')
+    key('ArrowLeft')
+    expect(screen.queryByRole('region', { name: 'Previsão' })).toBeNull()
+    expect(hero()).toContain('Fatura de agosto')
   })
 
   it('assinatura que começa depois: aparece apagada e não conta no mês', () => {
